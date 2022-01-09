@@ -1,0 +1,34 @@
+<?php ob_start(); ?>
+<p>C'est une ébauche de strat, je referai une explication plus claire et détaillée plus tard</p>
+
+<p>Pour commencer, la guilde sera divisée en 3 groupes:</p>
+<ul>
+    <li>Ceux qui faisaient plus de 3M pour chaque team sur le raid précédent <a href="?page=raid&subpage=rank">(cf le top 14)</a><br>
+        Ils feront en priorité les boss (marqueur étoiles en jeu, steps vert <a href="?page=conquest&subpage=priority">ici</a>
+    </li>
+    <li>Ceux qui faisaient moins de 3M pour chaque team sur le raid précédent<br>
+        Ils feront en priorité les failles (marqueur drapeau en jeu, steps bleu <a href="?page=conquest&subpage=priority">ici</a>
+    </li>
+    <li>Ceux qui sont entre le deux <br>
+        Ils feront des 2 (failles et boss)
+    </li>
+</ul>
+
+<p>Deuxième point important, l'ordre des steps est à respecter au mieux possible. Ce n'est pas juste pour faire jolie, les failles
+    donnent des avantages, et faut en profiter au mieux et au bon moment.<br>
+Dans un même step il n'y a pas de prorité, mais n'oubliez pas qu'un bâtiment fini donne un avantage, donc il vaut mieux finir un bâtiment pour être boosté
+sur ceux d'à côté que d'attaquer 2 en même temps.<br>
+Ce point s'applique aussi pour les boss, il vaut mieux tuer les boss un par un pour diminuer la défense des autres.<br>
+Mais comme il est difficile de ne tuer qu'un boss à la fois, ils sont regroupés par niveau.
+</p>
+
+<p>Troisième point, restez intelligent. Si vous n'êtes pas capable de faire la tâche qu'on vous as confiée, vous avez le droit d'anticiper
+    les priorités suivantes.<br>
+    Si vraiment vous ne pouvez pas, essayez de tompriser en attendant une aide (un bâtiment qui buff / débuff) sinon vous pouvez attaquer un camion.
+    Le discord est fait pour discuter, n'hésitez pas à interagir pour savoir quoi faire.
+</p>
+
+<?php $content = ob_get_clean(); ?>
+
+
+<?php require('view/template.php');
