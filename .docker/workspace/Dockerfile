@@ -3,6 +3,7 @@ FROM php:${TARGET_PHP_VERSION}-cli
 
 ARG SERVICE_DIR="./workspace"
 COPY ./.shared/scripts/ /tmp/scripts/
+COPY ./workspace/composer.sh /tmp/scripts/
 RUN chmod +x -R /tmp/scripts/
 
 # set timezone
@@ -50,9 +51,11 @@ RUN mkdir -p /bin/docker-entrypoint/ \
  && chmod +x -R /bin/docker-entrypoint/ \
 ;
 
+RUN /tmp/scripts/composer.sh
+
 RUN /tmp/scripts/cleanup.sh
 
 # @see https://docs.docker.com/engine/examples/running_ssh_service/
-CMD ["/usr/sbin/sshd", "-D"]
+CMD composer install && /usr/sbin/sshd -D
 ENTRYPOINT ["/bin/docker-entrypoint/resolve-docker-host-ip.sh"]
 
