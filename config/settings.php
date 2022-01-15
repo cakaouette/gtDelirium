@@ -18,4 +18,11 @@ $settings['error'] = [
     'log_error_details' => true,
 ];
 
+$settings['logger'] = [
+    'name' => 'app',
+    'file' => __DIR__ . '/../logs/app.log',
+    'level' => \Monolog\Logger::DEBUG,
+    'file_permission' => 0775,
+];
+
 return $settings;

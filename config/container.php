@@ -1,12 +1,15 @@
 <?php
 
 use Slim\App;
+use Monolog\Logger;
 use Slim\Csrf\Guard;
 use Slim\Views\Twig;
+use Monolog\ErrorHandler;
 use Slim\Factory\AppFactory;
 use Twig\Extra\Html\HtmlExtension;
 use Slim\Middleware\ErrorMiddleware;
 use Psr\Container\ContainerInterface;
+use Monolog\Handler\RotatingFileHandler;
 use App\Middleware\TwigGlobalsMiddleware;
 use Psr\Http\Message\ResponseFactoryInterface;
 
@@ -27,6 +30,7 @@ return [
 
     ErrorMiddleware::class => function (ContainerInterface $container) {
         $app = $container->get(App::class);
+        $logger = $container->get(Logger::class);
         $settings = $container->get('settings')['error'];
 
         return new ErrorMiddleware(
@@ -34,7 +38,8 @@ return [
             $app->getResponseFactory(),
             (bool)$settings['display_error_details'],
             (bool)$settings['log_errors'],
-            (bool)$settings['log_error_details']
+            (bool)$settings['log_error_details'],
+            $logger
         );
     },
 
@@ -53,5 +58,13 @@ return [
     TwigGlobalsMiddleware::class => function (ContainerInterface $container) {
         $twig = $container->get(Twig::class);
         return new TwigGlobalsMiddleware($twig);
+    },
+
+    Logger::class => function (ContainerInterface $container) {
+        $settings = $container->get('settings')['logger'];
+        $logger = new Logger($settings['name']);
+        ErrorHandler::register($logger);
+        $logger->pushHandler(new RotatingFileHandler($settings['file'], 0, $settings['level'], true, $settings['file_permission']));
+        return $logger;
     }
 ];
