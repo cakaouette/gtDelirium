@@ -25,4 +25,8 @@ $settings['logger'] = [
     'file_permission' => 0775,
 ];
 
+$settings['session'] = [
+    'name' => 'app',
+    'cache_expire' => 0,
+];
 return $settings;

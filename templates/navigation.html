@@ -23,14 +23,14 @@
         </a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="?page=disconnect" class="nav-link">
+        <a href="{{ url_for ('disconnect') }}" class="nav-link">
             Déconnexion
             <i class="nav-icon fas fa-sign-out-alt"></i>
         </a>
     </li>
     {% else %}
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="?page=connect" class="nav-link">
+        <a href="{{ url_for ('connect') }}" class="nav-link">
             <i class="nav-icon fas fa-sign-in-alt"></i>
             Connexion
         </a>

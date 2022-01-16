@@ -2,8 +2,10 @@
 
 namespace App\Middleware;
 
+use Slim\Csrf\Guard;
 use Slim\Views\Twig;
 use Slim\Routing\RouteContext;
+use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
@@ -11,15 +13,19 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 class TwigGlobalsMiddleware
 {
     private Twig $twig;
+    private Guard $csrf;
+    private SessionInterface $session;
 
     /**
      * The constructor.
      *
      * @param Twig $twig The twig template engine
      */
-    public function __construct(Twig $twig)
+    public function __construct(Twig $twig, SessionInterface $session, Guard $csrf)
     {
         $this->twig = $twig;
+        $this->csrf = $csrf;
+        $this->session = $session;
     }
 
     /**
@@ -33,7 +39,8 @@ class TwigGlobalsMiddleware
     public function __invoke(Request $request, RequestHandler $handler): Response
     {
         $route = RouteContext::fromRequest($request)->getRoute();
-        $this->twig->getEnvironment()->addGlobal('page', new class ($route) {
+        $env = $this->twig->getEnvironment();
+        $env->addGlobal('page', new class ($route) {
             var $title;
             var $current;
             var $breadcrumb;
@@ -44,16 +51,39 @@ class TwigGlobalsMiddleware
                 $this->breadcrumb = [];
             }
         });
-        $this->twig->getEnvironment()->addGlobal('user', new class {
-            //TODO
-            var $isGestion = true;
-            var $isOfficier = true;
-            var $isJoueur = true;
-            var $isConnected = true;
+        $env->addGlobal('user', new class ($this->session) {
+            var $isGestion;
+            var $isOfficier;
+            var $isJoueur;
+            var $isConnected;
+            function __construct($session) {
+                //TODO change when we remove grades from session
+                $this->isGestion = $session->get("grade") <= $session->get("Gestion");
+                $this->isOfficier = $session->get("grade") <= $session->get("Officier");
+                $this->isJoueur = $session->get("grade") <= $session->get("Joueur");
+                $this->isConnected = $session->get("grade") < $session->get("Visiteur");
+            }
         });
-        $this->twig->getEnvironment()->addGlobal('members', new class {
-            //TODO
-            var $pending = 3;
+        $env->addGlobal('members', new class ($this->session) {
+            var $pending;
+            function __construct($session) {
+                $this->pending = $session->get('nbPending');
+            }
+        });
+        $env->addGlobal('flash', $this->session->getFlash());
+        $env->addGlobal('csrf', new class ($this->csrf, $request) {
+            var $nameKey;
+            var $valueKey;
+            var $name;
+            var $value;
+            function __construct($csrf, $request) {
+                if ($request->getMethod() === 'GET')  {
+                    $this->nameKey = $csrf->getTokenNameKey();
+                    $this->valueKey = $csrf->getTokenValueKey();
+                    $this->name = $request->getAttribute($this->nameKey);
+                    $this->value = $request->getAttribute($this->valueKey);
+                }
+            }
         });
         return $handler->handle($request);
     }

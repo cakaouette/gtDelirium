@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa1f174b9324c654e43cb11344e18bae",
+    "content-hash": "e3e323edb13255dd5ea0634c06c2a43d",
     "packages": [
         {
             "name": "fig/http-message-util",
@@ -210,6 +210,57 @@
                 "source": "https://github.com/nikic/FastRoute/tree/master"
             },
             "time": "2018-02-13T20:26:39+00:00"
+        },
+        {
+            "name": "odan/session",
+            "version": "5.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/odan/session.git",
+                "reference": "df95aeee04dec466172d4c4e0e3ac9245e8182b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/odan/session/zipball/df95aeee04dec466172d4c4e0e3ac9245e8182b0",
+                "reference": "df95aeee04dec466172d4c4e0e3ac9245e8182b0",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.3 || ^8.0",
+                "psr/http-message": "^1.0",
+                "psr/http-server-handler": "^1.0",
+                "psr/http-server-middleware": "^1.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "middlewares/utils": "^3.1",
+                "overtrue/phplint": "^1.1 || ^2.0",
+                "phpstan/phpstan": "0.*",
+                "phpunit/phpunit": "^7 || ^8 || ^9",
+                "slim/psr7": "^1.1",
+                "squizlabs/php_codesniffer": "^3.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Odan\\Session\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Slim session handler",
+            "homepage": "https://github.com/odan/session",
+            "keywords": [
+                "session",
+                "slim"
+            ],
+            "support": {
+                "issues": "https://github.com/odan/session/issues",
+                "source": "https://github.com/odan/session/tree/5.1.0"
+            },
+            "time": "2020-12-23T18:09:07+00:00"
         },
         {
             "name": "opis/closure",

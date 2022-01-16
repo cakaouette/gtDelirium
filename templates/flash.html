@@ -1,0 +1,15 @@
+{% macro message(type) %}
+    {% for msg in flash.get(type) %}
+        <div class="alert alert-{{ type }} alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true"><i class="fas fa-times"></i></button>
+            {{ msg }}
+        </div>
+    {% endfor %}
+{% endmacro %}
+
+{{ _self.message('success') }}
+{{ _self.message('danger') }}
+{{ _self.message('warning') }}
+{{ _self.message('primary') }}
+{{ _self.message('secondary') }}
+{{ _self.message('info') }}
