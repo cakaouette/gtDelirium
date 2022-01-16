@@ -371,5 +371,47 @@ class FightManager extends  AbstractManager
             throw new Exception($this->getError());
         }
     }
+    
+    public function getLastFightRecorded($guildId) {
+      $this->reset();
+      $str = "SELECT fight.id, pseudo.name as pseudoName, fight.bossId, boss.name as bossName,
+                     fight.damage, fight.date,
+                     fight.hero1Id, fight.hero2Id, fight.hero3Id, fight.hero4Id
+              FROM `fight`
+              LEFT JOIN member
+                      ON fight.recorderId = member.id
+              INNER JOIN permission
+                      ON member.permId = permission.id
+              LEFT JOIN (
+                      SELECT id, name
+                  FROM member
+              ) pseudo ON fight.pseudoId = pseudo.id
+              LEFT JOIN boss
+                      ON fight.bossId = boss.id
+              WHERE permission.grade <= 40 
+                      AND fight.guildId = $guildId
+                      AND fight.deleted != 1
+              ORDER BY fight.date DESC, fight.id DESC
+              LIMIT 1";
+        if($this->excuseCustomQuery($str)) {
+            $results = $this->getResult();
+            if (empty($results)) {
+                return new Fight(
+                  0, 0, 0, 0, 0, 0, 0, 0,
+                  0, 0, 0, 0,
+                  "", "", "", "", "", "Inconnu"
+                  );
+//                throw new Exception("Pas de combat trouvé");
+            }
+            $line = $results[0];
+            return new Fight(
+                $line["id"], 0, 0, 0, $line["date"], 0, $line["bossId"], $line["damage"],
+                $line["hero1Id"], $line["hero2Id"], $line["hero3Id"], $line["hero4Id"],
+                $line["bossName"], "", "", "", "", $line["pseudoName"]
+                );
+        } else {
+            throw new Exception($this->getError());
+        }
+    }
 
 }

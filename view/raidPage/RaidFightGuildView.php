@@ -16,6 +16,45 @@
   </div>
 </form>
 </div>
+<?php if ($_SESSION["grade"] <= $_SESSION["Benevole"]) { ?>
+<div class="col-md-5">
+  <div class="small-box" style="background-color: #145B5E">
+    <div class="small-box-header h4" style="background-color: #55B3B7; padding: 0 10">
+        <?= $v_lastFightRecord->getPseudoInfo()["name"] ?>
+    </div>
+    <div class="inner h4">
+      <img src="dist/image/heros/<?= $v_lastFightRecord->getHero1Info()["id"]?>_icon.png"
+           class="img-fluid img-thumbnail"
+           style="padding: 0; max-height: 60px; border: 0; box-shadow: 0 0 0"
+           alt="<?= $v_lastFightRecord->getHero1Info()["id"]?>">
+      <img src="dist/image/heros/<?= $v_lastFightRecord->getHero2Info()["id"]?>_icon.png"
+           class="img-fluid img-thumbnail"
+           style="padding: 0; max-height: 60px; border: 0; box-shadow: 0 0 0"
+           alt="<?= $v_lastFightRecord->getHero2Info()["id"]?>">
+      <img src="dist/image/heros/<?= $v_lastFightRecord->getHero3Info()["id"]?>_icon.png"
+           class="img-fluid img-thumbnail"
+           style="padding: 0; max-height: 60px; border: 0; box-shadow: 0 0 0"
+           alt="<?= $v_lastFightRecord->getHero3Info()["id"]?>">
+      <img src="dist/image/heros/<?= $v_lastFightRecord->getHero4Info()["id"]?>_icon.png"
+           class="img-fluid img-thumbnail"
+           style="padding: 0; max-height: 60px; border: 0; box-shadow: 0 0 0"
+           alt="<?= $v_lastFightRecord->getHero4Info()["id"]?>">
+      <span class="text-white">
+        <?=number_format($v_lastFightRecord->getDamage(), 0, ',', ' ')?>
+      </span>
+      <span class="text-blue">Dégâts</span>
+    </div>
+    <div class="icon">
+          <i class="">
+      <img src="dist/image/bosses/<?= $v_lastFightRecord->getBossInfo()["id"]?>.png"
+           class="img-fluid"
+           style="max-height: 100px;"           
+           alt="<?= $v_lastFightRecord->getBossInfo()["id"]?>">
+          </i>
+    </div>
+  </div>
+</div>
+<?php } ?>
 </div>
 <div class="row">
 <?php foreach ($v_fights as $memberId => $info) { 

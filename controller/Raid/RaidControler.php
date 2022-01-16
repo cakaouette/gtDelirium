@@ -585,6 +585,7 @@ class RaidControler extends AbstractControler
         $members = (new MemberManager)->getAllByGuildId($guildId, $filter);
         $teams = (new MemberManager())->getTeamsByGuild($guildId, $filter);
         $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, $filter);
+        $v_lastFightRecord = $this->_fightManager->getLastFightRecorded($guildId);
 
         $v_fights = [];
         foreach($members as $memId => $member) {
