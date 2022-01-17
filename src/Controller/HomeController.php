@@ -39,7 +39,7 @@ final class HomeController
     }
 
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        return $this->view->render($response, 'home/index.html');
+        return $this->view->render($response, 'home/index.twig');
     }
 
     public function connect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -50,16 +50,16 @@ final class HomeController
             $passwd = $form['passwdForm'];
             $checkPwd = $this->checkPasswd($passwd);
             if (!$checkPwd['accept']) {
-                $response->withStatus(302)->withHeader('Location', $this->routeParser->urlFor('register'));
+                return $response->withStatus(302)->withHeader('Location', $this->routeParser->urlFor('register'));
             }
             //TODO get it from settings
-            require('../private/indexPrivate.php');
+            require('private/indexPrivate.php');
             $redirect = $this->connectWith($login, md5($passwd.$_SALT.$login));
             if ($redirect !== false) {
-                $response->withStatus(302)->withHeader('Location', $redirect);
+                return $response->withStatus(302)->withHeader('Location', $redirect);
             }
         }
-        return $this->view->render($response, 'home/connect.html', [
+        return $this->view->render($response, 'home/connect.twig', [
             'savedLogin' => $login
         ]);
     }
@@ -77,13 +77,13 @@ final class HomeController
             $errorPasswd = $checkPwd['msg'];
             if (!is_null($pseudo) and !is_null($login) and ($checkPwd['accept'] === true)) {
                 //TODO get it from settings
-                require('../private/indexPrivate.php');
+                require('private/indexPrivate.php');
                 if ($this->addPending($pseudo, $login, md5($passwd.$_SALT.$login))) {
-                    $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
+                    return $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
                 }
             }
         }
-        return $this->view->render($response, 'home/register.html', [
+        return $this->view->render($response, 'home/register.twig', [
             'savedLogin' => $login,
             'errorPasswd' => $errorPasswd,
             'savedPseudo' => $pseudo
@@ -92,7 +92,7 @@ final class HomeController
 
     public function disconnect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $this->session->destroy();
-        $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
+        return $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
     }
 
     private function checkPasswd($passwd): array {
@@ -134,11 +134,12 @@ final class HomeController
                 //TODO uncomment when grades are out of the session (security risk)
                 //$this->session->destroy();
                 //$this->session->start();
-                $this->session->regenerateId();
+                //$this->session->regenerateId();
 
                 $permissionManager = new PermissionManager();
                 $guild = (new GuildManager())->getById($member->getGuildInfo()["id"]);
 
+                $this->session->set("id", $member->getId());
                 $this->session->set("login", $login);
                 $this->session->set("grade", $permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
@@ -147,7 +148,7 @@ final class HomeController
                 //$defaultPage = $this->route->urlFor('raid-info');
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
                 {
-                    $defaultPage = '?page=admin&subpage=dashboard';
+                    $defaultPage = '/?page=admin&subpage=dashboard';
                     //$defaultPage = $this->route->urlFor('admin-dashboard');
                     try {
                         $nb = count((new PendingManager())->getAll());

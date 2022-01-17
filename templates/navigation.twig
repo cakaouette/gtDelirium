@@ -4,7 +4,7 @@
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
     </li>
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="index.php" class="nav-link">Home</a>
+        <a href="/index.php" class="nav-link">Home</a>
     </li>
 </ul>
 
@@ -12,12 +12,12 @@
 <ul class="navbar-nav ml-auto">
     {% if user.isGestion %}
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="?page=debug" class="nav-link">debug</a>
+        <a href="/?page=debug" class="nav-link">debug</a>
     </li>
     {% endif %}
     {% if user.isConnected %}
     <li class="nav-item d-none d-sm-inline-block">
-        <a href="?page=profile" class="nav-link">
+        <a href="{{ url_for ('my-profile') }}" class="nav-link">
             <i class="nav-icon fas fa-user"></i>
             Profil
         </a>

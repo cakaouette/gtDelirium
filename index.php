@@ -147,4 +147,3 @@ if (isset($_GET['page'])) {
 $v_content_header = "Home";
 $v_title = "Delirium - Home";
 require('view/template.php');
-exit;

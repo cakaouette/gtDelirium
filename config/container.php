@@ -16,6 +16,7 @@ use App\Middleware\TwigGlobalsMiddleware;
 use Slim\Interfaces\RouteParserInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Odan\Session\Middleware\SessionMiddleware;
+use Slim\Handlers\Strategies\RequestResponseArgs;
 
 return [
     'settings' => function () {
@@ -24,8 +25,9 @@ return [
 
     App::class => function (ContainerInterface $container) {
         AppFactory::setContainer($container);
-
-        return AppFactory::create();
+        $app = AppFactory::create();
+        $app->getRouteCollector()->setDefaultInvocationStrategy(new RequestResponseArgs());
+        return $app;
     },
 
     ResponseFactoryInterface::class => function (ContainerInterface $container) {
@@ -52,7 +54,7 @@ return [
         $session = $container->get(SessionInterface::class);
         if (!$session->has('csrf') || $session->get('csrf') === null) $session->set('csrf', new CsrfStorage());
         $storage = $session->get('csrf');
-        return new Guard($responseFactory, 'csrf', $storage->value);
+        return (new Guard($responseFactory, 'csrf', $storage->value))->setPersistentTokenMode(true);
     },
 
     Twig::class => function (ContainerInterface $container) {

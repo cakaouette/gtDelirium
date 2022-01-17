@@ -5,7 +5,7 @@
 {{ html_classes('nav-link', {'active': page.current starts with name}) }}
 {% endmacro %}
 
-<a href="index.php" class="brand-link">
+<a href="/index.php" class="brand-link">
     <img src="/dist/image/delirium-logo1.jpg" alt="delirium Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
     <span class="brand-text font-weight-light">Alliance de la Delirium</span>
 </a>
@@ -15,7 +15,7 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <!--Alliance-->
             <li class="nav-item">
-                <a href="?page=alliance" class="nav-link">
+                <a href="/?page=alliance" class="nav-link">
                     <i class="nav-icon fas fa-shield-alt text-purple"></i>
                     <p>L'alliance</p>
                 </a>
@@ -32,7 +32,7 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=admin&subpage=dashboard" class="{{ _self.nav_link_class('admin-dashboard') }}">
+                        <a href="/?page=admin&subpage=dashboard" class="{{ _self.nav_link_class('admin-dashboard') }}">
                             <i class="nav-icon fas fa-tachometer-alt text-fuchsia"></i>
                             <p>Dashboard</p>
                         </a>
@@ -40,7 +40,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=admin&subpage=members" class="{{ _self.nav_link_class('admin-members') }}">
+                        <a href="/?page=admin&subpage=members" class="{{ _self.nav_link_class('admin-members') }}">
                             <i class="nav-icon fas fa-user-lock text-fuchsia"></i>
                             <p>Membres</p>
                         </a>
@@ -48,7 +48,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=admin&subpage=heros" class="{{ _self.nav_link_class('admin-heros') }}">
+                        <a href="/?page=admin&subpage=heros" class="{{ _self.nav_link_class('admin-heros') }}">
                             <i class="nav-icon fas fa-restroom text-fuchsia"></i>
                             <p>Héros & Armes</p>
                         </a>
@@ -56,7 +56,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=admin&subpage=bosses" class="{{ _self.nav_link_class('admin-bosses') }}">
+                        <a href="/?page=admin&subpage=bosses" class="{{ _self.nav_link_class('admin-bosses') }}">
                             <i class="nav-icon fas fa-pastafarianism text-fuchsia"></i>
                             <p>Boss</p>
                         </a>
@@ -76,7 +76,7 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=discord&subpage=alarm" class="{{ _self.nav_link_class('discord-alarm') }}">
+                        <a href="/?page=discord&subpage=alarm" class="{{ _self.nav_link_class('discord-alarm') }}">
                             <i class="nav-icon fas fa-info text-blue"></i>
                             <p>rappel</p>
                         </a>
@@ -95,44 +95,44 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=info" class="{{ _self.nav_link_class('raid-info') }}">
+                        <a href="/?page=raid&subpage=info" class="{{ _self.nav_link_class('raid-info') }}">
                             <i class="nav-icon fas fa-info text-red"></i>
                             <p>Informations</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=rank" class="{{ _self.nav_link_class('raid-rank') }}">
+                        <a href="/?page=raid&subpage=rank" class="{{ _self.nav_link_class('raid-rank') }}">
                             <i class="nav-icon fas fa-medal text-red"></i>
                             <p>Classement</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=meteo" class="{{ _self.nav_link_class('raid-meteo') }}">
+                        <a href="/?page=raid&subpage=meteo" class="{{ _self.nav_link_class('raid-meteo') }}">
                             <i class="nav-icon fas fa-cloud-sun-rain text-red"></i>
                             <p>Météo</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=followup" class="{{ _self.nav_link_class('raid-followup') }}">
+                        <a href="/?page=raid&subpage=followup" class="{{ _self.nav_link_class('raid-followup') }}">
                             <i class="nav-icon fas fa-list-ol text-red"></i>
                             <p>Tableau de Suivi</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=miss" class="{{ _self.nav_link_class('raid-miss') }}">
+                        <a href="/?page=raid&subpage=miss" class="{{ _self.nav_link_class('raid-miss') }}">
                             <i class="nav-icon fas fa-user-slash text-red"></i>
                             <p>Les loupés <i class="fas fa-sad-cry"></i></p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=summary" class="{{ _self.nav_link_class('raid-summary') }}">
+                        <a href="/?page=raid&subpage=summary" class="{{ _self.nav_link_class('raid-summary') }}">
                             <i class="nav-icon fas fa-th-list text-red"></i>
                             <p>Résumé des attaques</p>
                         </a>
                     </li>
                     {% if user.isJoueur %}
                     <li class="nav-item">
-                        <a href="?page=raid&subpage=fightByGuild" class="{{ _self.nav_link_class('raid-fight') }}">
+                        <a href="/?page=raid&subpage=fightByGuild" class="{{ _self.nav_link_class('raid-fight') }}">
                             <i class="nav-icon fas fa-crosshairs text-red"></i>
                             <p>Attaques</p>
                         </a>
@@ -151,25 +151,25 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=conquest&subpage=priority" class="{{ _self.nav_link_class('conquest-priority') }}">
+                        <a href="/?page=conquest&subpage=priority" class="{{ _self.nav_link_class('conquest-priority') }}">
                             <i class="nav-icon fas fa-chess-knight text-orange"></i>
                             <p>Plan de bataille</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=conquest&subpage=tremens" class="{{ _self.nav_link_class('conquest-tremens') }}">
+                        <a href="/?page=conquest&subpage=tremens" class="{{ _self.nav_link_class('conquest-tremens') }}">
                             <i class="nav-icon fas fa-chess-knight text-warning"></i>
                             <p>Strat Tremens</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=conquest&subpage=nocturnum" class="{{ _self.nav_link_class('conquest-nocturnum') }}">
+                        <a href="/?page=conquest&subpage=nocturnum" class="{{ _self.nav_link_class('conquest-nocturnum') }}">
                             <i class="nav-icon fas fa-chess-knight text-lightblue"></i>
                             <p>Strat Nocturnum</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="?page=conquest&subpage=old" class="{{ _self.nav_link_class('conquest-old') }}">
+                        <a href="/?page=conquest&subpage=old" class="{{ _self.nav_link_class('conquest-old') }}">
                             <i class="nav-icon fas fa-chess-knight text-orange"></i>
                             <p>strat (old)</p>
                         </a>
@@ -190,14 +190,14 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="?page=member&subpage=alliance" class="{{ _self.nav_link_class('member-alliance') }}">
+                        <a href="/?page=member&subpage=alliance" class="{{ _self.nav_link_class('member-alliance') }}">
                             <i class="nav-icon fas fa-list-ul text-purple"></i>
                             <p>Liste des membres</p>
                         </a>
                     </li>
                     {% if user.isOfficier %}
                     <li class="nav-item">
-                        <a href="?page=member&subpage=pending" class="{{ _self.nav_link_class('member-pending') }}">
+                        <a href="/?page=member&subpage=pending" class="{{ _self.nav_link_class('member-pending') }}">
                             <i class="nav-icon fas fa-clipboard-list text-purple"></i>
                             <p>En attente</p>
                             <span class="badge badge-danger right">{{ (members.pending is defined and members.pending != 0) ? members.pending : '' }}</span>
@@ -205,7 +205,7 @@
                     </li>
                     {% endif %}
                     <li class="nav-item">
-                        <a href="?page=member&subpage=new" class="{{ _self.nav_link_class('member-new') }}">
+                        <a href="/?page=member&subpage=new" class="{{ _self.nav_link_class('member-new') }}">
                             <i class="nav-icon fas fa-plus text-purple"></i>
                             <p>Ajouter</p>
                         </a>
@@ -214,7 +214,7 @@
             </li>
             <!--Boss-->
             <li class="nav-item">
-                <a href="?page=boss" class="{{ _self.nav_link_class('boss') }}">
+                <a href="/?page=boss" class="{{ _self.nav_link_class('boss') }}">
                     <i class="nav-icon fas fa-pastafarianism text-teal"></i>
                     <p>
                         Boss
@@ -222,7 +222,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="?page=tip" class="{{ _self.nav_link_class('tip') }}">
+                <a href="/?page=tip" class="{{ _self.nav_link_class('tip') }}">
                     <i class="nav-icon fas fa-question text-white"></i>
                     <p>
                         Astuces

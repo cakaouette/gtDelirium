@@ -6,9 +6,8 @@ use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
 use Slim\Middleware\ErrorMiddleware;
 use App\Middleware\TwigGlobalsMiddleware;
+use App\Middleware\CoexistenceMiddleware;
 use Odan\Session\Middleware\SessionMiddleware;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 return function (App $app) {
     //Twig globals
@@ -33,12 +32,5 @@ return function (App $app) {
     $app->add(ErrorMiddleware::class);
 
     // This should always stay last until no old index routes are used
-    $app->add(function (Request $request, RequestHandler $handler) {
-        $currentPath = $request->getUri()->getPath();
-        if ($currentPath == "/" || $currentPath == "/index.php") {
-            require("../index.php");
-        }
-
-        return $handler->handle($request);
-    });
+    $app->add(CoexistenceMiddleware::class);
 };

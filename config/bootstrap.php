@@ -7,7 +7,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 //In order to use legacy code with new one
 set_include_path(get_include_path() . PATH_SEPARATOR . __DIR__ . '/..' . PATH_SEPARATOR . __DIR__ . '/../model');
-error_reporting(0);
+setlocale(LC_TIME, 'fr_FR.utf8','fra');
+error_reporting(E_ERROR);
 
 $containerBuilder = new ContainerBuilder();
 

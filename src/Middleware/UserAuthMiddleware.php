@@ -26,17 +26,16 @@ final class UserAuthMiddleware implements MiddlewareInterface
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface{
-        if ($this->session->has('login')) {
+        if ($this->session->get('login')) {
             // User is logged in
             //TODO redirect to 403 if not authorized
+            //return $this->responseFactory->createResponse()->withStatus(302)->withHeader('Location', $router->urlFor('x403'));
             return $handler->handle($request);
         }
 
         $this->session->set('redirectUrl', $request->getRequestTarget());
 
         // User is not logged in. Redirect to login page.
-        return $this->responseFactory->createResponse()
-            ->withStatus(302)
-            ->withHeader('Location', $router->urlFor('connect'));
+        return $this->responseFactory->createResponse()->withStatus(302)->withHeader('Location', $this->router->urlFor('connect'));
     }
 }

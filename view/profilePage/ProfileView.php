@@ -1,5 +1,4 @@
 <?php
-setlocale(LC_TIME, 'fr_FR.utf8','fra');
 
 function printActiveTab($param, $val) {
   return $param == $val ? "active" : "";
