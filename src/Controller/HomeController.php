@@ -48,10 +48,6 @@ final class HomeController
             $form = $request->getParsedBody();
             $login = $form['loginForm'];
             $passwd = $form['passwdForm'];
-            $checkPwd = $this->checkPasswd($passwd);
-            if (!$checkPwd['accept']) {
-                return $response->withStatus(302)->withHeader('Location', $this->routeParser->urlFor('register'));
-            }
             //TODO get it from settings
             require('private/indexPrivate.php');
             $redirect = $this->connectWith($login, md5($passwd.$_SALT.$login));
@@ -79,7 +75,7 @@ final class HomeController
                 //TODO get it from settings
                 require('private/indexPrivate.php');
                 if ($this->addPending($pseudo, $login, md5($passwd.$_SALT.$login))) {
-                    return $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
+                    return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('home'));
                 }
             }
         }
@@ -92,7 +88,7 @@ final class HomeController
 
     public function disconnect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $this->session->destroy();
-        return $response->withStatus(302)->withHeader('Location', $this->route->urlFor('home'));
+        return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('home'));
     }
 
     private function checkPasswd($passwd): array {
@@ -145,11 +141,11 @@ final class HomeController
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
                 //TODO replace url when the page is finished
                 $defaultPage = '/index.php?page=raid&subpage=info';
-                //$defaultPage = $this->route->urlFor('raid-info');
+                //$defaultPage = $this->router->urlFor('raid-info');
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
                 {
                     $defaultPage = '/?page=admin&subpage=dashboard';
-                    //$defaultPage = $this->route->urlFor('admin-dashboard');
+                    //$defaultPage = $this->router->urlFor('admin-dashboard');
                     try {
                         $nb = count((new PendingManager())->getAll());
                         $this->session->set("nbPending", $nb);

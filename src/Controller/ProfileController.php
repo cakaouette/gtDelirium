@@ -82,7 +82,7 @@ final class ProfileController
               
         return $this->view->render($response, 'profile/index.twig', [
             'heros' => $v_heros,
-            'isProfile' => true,
+            'isProfile' => $this->session->get('id') === $id,
             'activeTab' => 'heros',
             'member' => [
                 'id' => $v_member->getId(),

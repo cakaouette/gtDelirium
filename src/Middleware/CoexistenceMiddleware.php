@@ -75,8 +75,17 @@ final class CoexistenceMiddleware implements MiddlewareInterface
     private function getNewPath($request) {
         $uri = $request->getUri();
         $path = $uri->getPath();
+        $query = $uri->getQuery();
         if ($path == "/" || $path == "/index.php") {
-            if ($request->getMethod() === 'GET' && $uri->getQuery() === 'page=profile') {
+            switch ($_GET['page']) {
+                case 'connect';
+                    return $this->router->urlFor('connect');
+                    break;
+                case 'profile';
+                    if ($request->getMethod() === 'GET') return $this->router->urlFor('my-profile');
+                    break;
+            }
+            if ($request->getMethod() === 'GET' && $query === 'page=profile') {
                 return $this->router->urlFor('my-profile');
             }
             return false;
