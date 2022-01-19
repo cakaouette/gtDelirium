@@ -374,21 +374,13 @@ class FightManager extends  AbstractManager
     
     public function getLastFightRecorded($guildId) {
       $this->reset();
-      $str = "SELECT fight.id, pseudo.name as pseudoName, fight.bossId, boss.name as bossName,
+      $str = "SELECT fight.id, member.name as pseudoName, fight.bossId,
                      fight.damage, fight.date,
                      fight.hero1Id, fight.hero2Id, fight.hero3Id, fight.hero4Id
               FROM `fight`
               LEFT JOIN member
-                      ON fight.recorderId = member.id
-              INNER JOIN permission
-                      ON member.permId = permission.id
-              LEFT JOIN (
-                      SELECT id, name
-                  FROM member
-              ) pseudo ON fight.pseudoId = pseudo.id
-              LEFT JOIN boss
-                      ON fight.bossId = boss.id
-              WHERE permission.grade <= 40 
+                      ON fight.pseudoId = member.id
+              WHERE fight.pseudoId != fight.recorderId 
                       AND fight.guildId = $guildId
                       AND fight.deleted != 1
               ORDER BY fight.date DESC, fight.id DESC
@@ -405,9 +397,9 @@ class FightManager extends  AbstractManager
             }
             $line = $results[0];
             return new Fight(
-                $line["id"], 0, 0, 0, $line["date"], 0, $line["bossId"], $line["damage"],
+                $line["id"], 0, 0, 0, "", 0, $line["bossId"], $line["damage"],
                 $line["hero1Id"], $line["hero2Id"], $line["hero3Id"], $line["hero4Id"],
-                $line["bossName"], "", "", "", "", $line["pseudoName"]
+                "", "", "", "", "", $line["pseudoName"]
                 );
         } else {
             throw new Exception($this->getError());

@@ -16,11 +16,13 @@
   </div>
 </form>
 </div>
-<?php if ($_SESSION["grade"] <= $_SESSION["Benevole"]) { ?>
 <div class="col-md-5">
+<?php if ($_SESSION["grade"] <= $_SESSION["Benevole"]) { ?>
   <div class="small-box" style="background-color: #145B5E">
     <div class="small-box-header h4" style="background-color: #55B3B7; padding: 0 10">
+      <span class="margin-left">
         <?= $v_lastFightRecord->getPseudoInfo()["name"] ?>
+      </span>
     </div>
     <div class="inner h4">
       <img src="dist/image/heros/<?= $v_lastFightRecord->getHero1Info()["id"]?>_icon.png"
@@ -43,18 +45,30 @@
         <?=number_format($v_lastFightRecord->getDamage(), 0, ',', ' ')?>
       </span>
       <span class="text-blue">Dégâts</span>
+<!--      <span height="100px" style="position:absolute; overflow:hidden">
+        <img src="dist/image/bosses/<?= $v_lastFightRecord->getBossInfo()["id"]?>.png"
+             style="position:relative;margin:auto;height:60px;top:-20px; down:-20px;"
+             alt="<?= $v_lastFightRecord->getBossInfo()["id"]?>">
+      </span>-->
+      <span>
+        <img src="dist/image/bosses/<?= $v_lastFightRecord->getBossInfo()["id"]?>.png"
+             class="img-fluid img-thumbnail"
+             style="background-color: #00000000; border: 0; box-shadow: 0 0 0"
+             width="100"
+             alt="<?= $v_lastFightRecord->getBossInfo()["id"]?>">
+      </span>
     </div>
-    <div class="icon">
-          <i class="">
-      <img src="dist/image/bosses/<?= $v_lastFightRecord->getBossInfo()["id"]?>.png"
-           class="img-fluid"
-           style="max-height: 100px;"           
-           alt="<?= $v_lastFightRecord->getBossInfo()["id"]?>">
-          </i>
-    </div>
+<!--    <div class="icon">
+      <i class="">
+        <img src="dist/image/bosses/<?= $v_lastFightRecord->getBossInfo()["id"]?>.png"
+             class="img-fluid"
+             style="max-height: 100px;"           
+             alt="<?= $v_lastFightRecord->getBossInfo()["id"]?>">
+      </i>
+    </div>-->
   </div>
-</div>
 <?php } ?>
+</div>
 </div>
 <div class="row">
 <?php foreach ($v_fights as $memberId => $info) { 
