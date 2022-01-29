@@ -109,7 +109,8 @@
         </div>
         {% if isProfile %}
         <div class="tab-pane {{ _self.active_tab('settings', activeTab) }}" id="settings">
-          <form class="form-horizontal" role="form" action="/?page=profile" actionpage="/?page=profile" method="post">
+          <form class="form-horizontal" role="form" action="{{ url_for('profile-settings', { 'id': id }) }}" method="post">
+            {% include 'csrf.twig' %}
             <input type="hidden"
                     name="idForm"
                     value="{{ member.id }}">

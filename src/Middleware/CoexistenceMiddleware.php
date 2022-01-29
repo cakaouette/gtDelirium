@@ -82,8 +82,7 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                     return $this->router->urlFor('connect');
                     break;
                 case 'profile':
-                    //TODO migrate POST request
-                    if ($request->getMethod() === 'GET') return $this->router->urlFor('my-profile');
+                    return $this->router->urlFor('my-profile');
                     break;
                 case 'boss':
                     return $this->router->urlFor('bosses');

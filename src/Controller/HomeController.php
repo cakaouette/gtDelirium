@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Exception;
+use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -49,7 +50,7 @@ final class HomeController extends BaseController
             $login = $form['loginForm'];
             $pseudo = $form['pseudoForm'];
             $passwd = $form['passwdForm'];
-            $checkPwd = $this->checkPasswd($passwd);
+            $checkPwd = (new PasswordValidator())->validate($passwd);;
             $errorPasswd = $checkPwd['msg'];
             if (!is_null($pseudo) and !is_null($login) and ($checkPwd['accept'] === true)) {
                 //TODO get it from settings
@@ -69,25 +70,6 @@ final class HomeController extends BaseController
     public function disconnect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $this->session->destroy();
         return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('home'));
-    }
-
-    private function checkPasswd($passwd): array {
-        if (is_null($passwd)) {
-            return array("accept" => false, "msg" => "Chosisser un mot de passe non vide");
-        }
-        if (!preg_match("~.{10,}~", $passwd)) {
-            return array("accept" => false, "msg" => "Chosisser un mot de passe d'au moins 10 caractères");
-        }
-        if (!preg_match("~[a-z]~", $passwd)) {
-            return array("accept" => false, "msg" => "Chosisser un mot de passe avec au moins une lettre minuscule");
-        }
-        if (!preg_match("~[A-Z]~", $passwd)) {
-            return array("accept" => false, "msg" => "Chosisser un mot de passe avec au moins une lettre Majuscule");
-        }
-        if (!preg_match("~\\d+~", $passwd)) {
-            return array("accept" => false, "msg" => "Chosisser un mot de passe avec au moins un chiffre");
-        }
-        return array("accept" => true, "msg" => "");
     }
 
     //TODO move out of the controller

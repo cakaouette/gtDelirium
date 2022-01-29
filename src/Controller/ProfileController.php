@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Exception;
+use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -57,12 +58,11 @@ final class ProfileController extends BaseController
                 ];
         }
 
-      
-      
         $v_member = (new MemberManager())->getDetailById($id);
         $v_guild = $v_member->getGuildInfo();
               
         return $this->view->render($response, 'profile/index.twig', [
+            'id' => $id,
             'heros' => $v_heros,
             'isProfile' => $this->session->get('id') === $id,
             'activeTab' => 'heros',
@@ -79,7 +79,29 @@ final class ProfileController extends BaseController
         ]);
     }
 
-    public function settings(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+    public function settings(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
+        $form = $request->getParsedBody();
+        $update = isset($form["updateMemberForm"]);
+        if ($update) {
+            $id = $form["idForm"];
+            $passwd = $form["oldPasswdForm"];
+            //TODO get it from settings
+            require('private/indexPrivate.php');
+            if ($id == $this->session->get('id') and $this->passwdUpdateGrated($id, $passwd.$_SALT)) {
+                $newPasswd = $form["newPasswdForm"];
+                $newPasswd = !empty($newPasswd) ? $newPasswd : $passwd;
+                $result = (new PasswordValidator())->validate($newPasswd);
+                $login = $form["loginForm"];
+                if ($result["accept"]) {
+                    $this->updateMember($id, $login, md5($newPasswd.$_SALT.$login));
+                } else {
+                    $this->addMsg("warning", $result["msg"]);
+                }
+            } else {
+                $this->addMsg("warning", "Mot de passe incorrect");
+            }
+        }
+        return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('profile', ['id' => $id]));
     }
 
     //TODO move out of the controller
@@ -91,4 +113,22 @@ final class ProfileController extends BaseController
         }
         return "Normal";
     }
-}
+
+    //TODO move out of the controller
+    private function passwdUpdateGrated($id, $passwd) {
+        $v_member = (new MemberManager())->getDetailById($id);
+        return $v_member->getPasswd() == md5($passwd.$v_member->getLogin());
+    }
+  
+    //TODO move out of the controller
+    private function updateMember($id, $login, $passwd) {
+        if (empty($login)) {
+          $this->addMsg("warning", "Le login ne doit pas être vide");
+          return;
+        }
+        
+        if((new MemberManager())->updateLoginPasswd($id, $login, $passwd)){
+            $this->addMsg("success", "Login et/ou mot de passe sauvegardé");
+        }
+      }
+  }
