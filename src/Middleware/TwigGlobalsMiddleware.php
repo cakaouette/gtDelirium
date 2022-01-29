@@ -40,36 +40,19 @@ class TwigGlobalsMiddleware
     {
         $route = RouteContext::fromRequest($request)->getRoute();
         $env = $this->twig->getEnvironment();
-        $env->addGlobal('page', new class ($route) {
-            var $title;
-            var $current;
-            var $breadcrumb;
-            function __construct($route) {
-                $this->title = $route->getArgument('content-title');
-                $this->current = $route->getName();
-                //TODO
-                $this->breadcrumb = [];
-            }
-        });
-        $env->addGlobal('user', new class ($this->session) {
-            var $isGestion;
-            var $isOfficier;
-            var $isJoueur;
-            var $isConnected;
-            function __construct($session) {
-                //TODO change when we remove grades from session
-                $this->isGestion = $session->get("grade") <= $session->get("Gestion");
-                $this->isOfficier = $session->get("grade") <= $session->get("Officier");
-                $this->isJoueur = $session->get("grade") <= $session->get("Joueur");
-                $this->isConnected = $session->get("grade") < $session->get("Visiteur");
-            }
-        });
-        $env->addGlobal('members', new class ($this->session) {
-            var $pending;
-            function __construct($session) {
-                $this->pending = $session->get('nbPending');
-            }
-        });
+        $env->addGlobal('page', [
+            'title' => $route->getArgument('content-title'),
+            'current' => $route->getName(),
+            'breadcrumb' => []
+        ]);
+        $env->addGlobal('user', [
+            //TODO change when we remove grades from session
+            'isGestion' => $this->session->get("grade") <= $this->session->get("Gestion"),
+            'isOfficier' => $this->session->get("grade") <= $this->session->get("Officier"),
+            'isJoueur' => $this->session->get("grade") <= $this->session->get("Joueur"),
+            'isConnected' => $this->session->get("grade") < $this->session->get("Visiteur")
+        ]);
+        $env->addGlobal('members', ['pending' => $this->session->get('nbPending')]);
         $env->addGlobal('flash', $this->session->getFlash());
         $env->addGlobal('csrf', new class ($this->csrf, $request) {
             var $nameKey;

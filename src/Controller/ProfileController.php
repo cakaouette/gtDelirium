@@ -3,10 +3,7 @@
 namespace App\Controller;
 
 use Exception;
-use Slim\Views\Twig;
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Interfaces\RouteParserInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 //TODO use namespace and use instead of require once migration is over
@@ -17,23 +14,8 @@ use CharacterManager;
 require_once('model/Manager/MemberManager.php');
 use MemberManager;
 
-final class ProfileController
+final class ProfileController extends BaseController
 {
-    private Twig $view;
-    private SessionInterface $session;
-    private RouteParserInterface $router;
-
-    /**
-     * The constructor.
-     *
-     * @param Twig $twig The twig template engine
-     */
-    public function __construct(Twig $twig, SessionInterface $session, RouteParserInterface $router) {
-        $this->view = $twig;
-        $this->session = $session;
-        $this->router = $router;
-    }
-
     public function me(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         return $this->index($request, $response, $this->session->get('id'));
     }

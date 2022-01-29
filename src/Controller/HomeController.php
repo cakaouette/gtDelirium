@@ -3,10 +3,7 @@
 namespace App\Controller;
 
 use Exception;
-use Slim\Views\Twig;
-use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
-use Slim\Interfaces\RouteParserInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 //TODO use namespace and use instead of require once migration is over
@@ -21,23 +18,8 @@ use RaidManager;
 require_once('model/Manager/PermissionManager.php');
 use PermissionManager;
 
-final class HomeController
+final class HomeController extends BaseController
 {
-    private Twig $view;
-    private SessionInterface $session;
-    private RouteParserInterface $router;
-
-    /**
-     * The constructor.
-     *
-     * @param Twig $twig The twig template engine
-     */
-    public function __construct(Twig $twig, SessionInterface $session, RouteParserInterface $router) {
-        $this->view = $twig;
-        $this->session = $session;
-        $this->router = $router;
-    }
-
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         return $this->view->render($response, 'home/index.twig');
     }
@@ -55,9 +37,7 @@ final class HomeController
                 return $response->withStatus(302)->withHeader('Location', $redirect);
             }
         }
-        return $this->view->render($response, 'home/connect.twig', [
-            'savedLogin' => $login
-        ]);
+        return $this->view->render($response, 'home/connect.twig', ['savedLogin' => $login]);
     }
 
     public function register(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -114,14 +94,13 @@ final class HomeController
     private function connectWith($login, $passwd)
     {
         if (!(is_null($login) or $login == "") and !is_null($passwd)) {
-            $flash = $this->session->getFlash();
             try {
                 //TODO inject in the constructor
                 $memberManager = new MemberManager();
                 $member = $memberManager->getByLogin($login);
             } catch (Exception $ex) {
                 $member = NULL;
-                $flash->add("danger", "Login ou mdp incorrect");
+                $this->addMsg("danger", "Login ou mdp incorrect");
             }
             
             if (!is_null($member) and ($member->getPasswd() == $passwd)) {
@@ -165,21 +144,20 @@ final class HomeController
     {
         //TODO inject in the constructor
         $pendingManager = new PendingManager();
-        $flash = $this->session->getFlash();
         if(!is_null($pendingManager->getPendingByPseudo($pseudo))) {
-            $flash->add("warning", "Vous êtes toujours en attente de validation, "
+            $this->addMsg("warning", "Vous êtes toujours en attente de validation, "
             . "Si c'est urgent, vous pouvez contacter un admin/chef sur le channel \"Site\" du discord");
             return false;
         }
         try {
             if ($pendingManager->addPending($pseudo, $login, $passwd)) {
-                $flash->add("success", "Pré-inscription réussite");
-                $flash->add("info", "Patientez le temps qu'un admin valide le compte"
+                $this->addMsg("success", "Pré-inscription réussite");
+                $this->addMsg("info", "Patientez le temps qu'un admin valide le compte"
                         . " (ou contacter un admin/chef sur le channel \"Site\" du discord)");
                 return false;
             }
         } catch (Exception $e) {
-            $flash->add("danger", $e->getMessage());
+            $this->addMsg("danger", $e->getMessage());
         }
         return true;
     }
