@@ -1,0 +1,26 @@
+{% extends "layout.twig" %}
+
+{% block title %}Bosses{% endblock %}
+
+{% block content %}
+<div class="row">
+    {% for id, name in bosses %}
+    <div class="col-lg-3 col-sm-4 col-6">
+        <div class="info-box">
+            <div class=" col-4">
+            <a href="{{ url_for('boss', { 'id': id }) }}">
+                <img src="/dist/image/bosses/{{ id }}.png"
+                    class="img-fluid img-thumbnail"
+                    style="padding: 0"
+                    width="200" height="200"
+                    alt="{{ name }}">
+            </a>
+            </div>
+            <div class="info-box-content col-6">
+                {{ name }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

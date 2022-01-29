@@ -77,11 +77,11 @@
             <tbody>
                 {% for characId, info in heros|filter(i => i.isPull) %}
                 <tr style="background-color: {{ info.charac.color.background }}">
-                    <td><?=$charac["grade"]["value"]?></td>
-                    <td><?=$charac["grade"]["name"]?></td>
-                    <td><?=$charac["element"]?></td>
+                    <td>{{ info.charac.grade.value }}</td>
+                    <td>{{ info.charac.grade.name }}</td>
+                    <td>{{ info.charac.element }}</td>
                     <td>
-                        <img src="dist/image/heros/{{ characId }}_icon.png"
+                        <img src="/dist/image/heros/{{ characId }}_icon.png"
                             class="img-fluid img-thumbnail"
                             width="50" height="50"
                             style="border: 2px solid {{ info.charac.color.frame }}; padding: 0; background-color: #a56e957a"
@@ -91,7 +91,7 @@
                     <td>{{ info.charac.stars }}</td>
                     <td>{{ info.charac.level }}</td>
                     <td>{% if info.charac.hasWeapon %}
-                            <img src="dist/image/heros/{{ characId }}_weapon.png"
+                            <img src="/dist/image/heros/{{ characId }}_weapon.png"
                                 class="img-fluid img-thumbnail"
                                 width="50" height="50"
                                 style="background-color: #00000000; border: 0; box-shadow: 0 0 0"

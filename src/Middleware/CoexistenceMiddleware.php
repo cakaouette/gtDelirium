@@ -78,15 +78,16 @@ final class CoexistenceMiddleware implements MiddlewareInterface
         $query = $uri->getQuery();
         if ($path == "/" || $path == "/index.php") {
             switch ($_GET['page']) {
-                case 'connect';
+                case 'connect':
                     return $this->router->urlFor('connect');
                     break;
-                case 'profile';
+                case 'profile':
+                    //TODO migrate POST request
                     if ($request->getMethod() === 'GET') return $this->router->urlFor('my-profile');
                     break;
-            }
-            if ($request->getMethod() === 'GET' && $query === 'page=profile') {
-                return $this->router->urlFor('my-profile');
+                case 'boss':
+                    return $this->router->urlFor('bosses');
+                    break;
             }
             return false;
         }

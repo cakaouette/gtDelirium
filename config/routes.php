@@ -20,5 +20,10 @@ return function (App $app) {
             $profile->get('/{id}', [C\ProfileController::class, 'index'])->setName('profile');
             $profile->post('/{id}/settings', [C\ProfileController::class, 'settings'])->setName('profile-settings');
         })->add(Auth::class);
+        $group->group('/boss', function ($boss) {
+            $boss->get('', [C\BossController::class, 'index'])->setName('bosses')->setArgument('content-title', 'Liste des Boss');
+            $boss->get('/{id}', [C\BossController::class, 'info'])->setName('boss');
+            $boss->post('/{id}/ailment', [C\BossController::class, 'ailment'])->setName('boss-ailment');
+        })->add(Auth::class);
     });
 };
