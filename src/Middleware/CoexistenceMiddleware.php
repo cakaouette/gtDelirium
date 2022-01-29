@@ -90,7 +90,10 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 case 'tip':
                     return $this->router->urlFor('tip');
                     break;
-                }
+                case 'conquest':
+                    return $this->router->urlFor('conquest-' . $_GET['subpage']);
+                    break;
+            }
             return false;
         }
         return true;

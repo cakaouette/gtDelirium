@@ -151,25 +151,25 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=conquest&subpage=priority" class="{{ _self.nav_link_class('conquest-priority') }}">
+                        <a href="{{ url_for('conquest-priority') }}" class="{{ _self.nav_link_class('conquest-priority') }}">
                             <i class="nav-icon fas fa-chess-knight text-orange"></i>
                             <p>Plan de bataille</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=conquest&subpage=tremens" class="{{ _self.nav_link_class('conquest-tremens') }}">
+                        <a href="{{ url_for('conquest-tremens') }}" class="{{ _self.nav_link_class('conquest-tremens') }}">
                             <i class="nav-icon fas fa-chess-knight text-warning"></i>
                             <p>Strat Tremens</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=conquest&subpage=nocturnum" class="{{ _self.nav_link_class('conquest-nocturnum') }}">
+                        <a href="{{ url_for('conquest-nocturnum') }}" class="{{ _self.nav_link_class('conquest-nocturnum') }}">
                             <i class="nav-icon fas fa-chess-knight text-lightblue"></i>
                             <p>Strat Nocturnum</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=conquest&subpage=old" class="{{ _self.nav_link_class('conquest-old') }}">
+                        <a href="{{ url_for('conquest-old') }}" class="{{ _self.nav_link_class('conquest-old') }}">
                             <i class="nav-icon fas fa-chess-knight text-orange"></i>
                             <p>strat (old)</p>
                         </a>
@@ -222,7 +222,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="/?page=tip" class="{{ _self.nav_link_class('tip') }}">
+                <a href="url_for('tip')" class="{{ _self.nav_link_class('tip') }}">
                     <i class="nav-icon fas fa-question text-white"></i>
                     <p>
                         Astuces
