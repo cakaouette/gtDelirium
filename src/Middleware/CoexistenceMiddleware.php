@@ -87,7 +87,10 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 case 'boss':
                     return $this->router->urlFor('bosses');
                     break;
-            }
+                case 'tip':
+                    return $this->router->urlFor('tip');
+                    break;
+                }
             return false;
         }
         return true;

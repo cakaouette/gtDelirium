@@ -1,6 +1,7 @@
 <?php
 
 use Slim\App;
+use Slim\Views\Twig;
 use App\Controller as C;
 use App\Middleware\UserAuthMiddleware as Auth;
 
@@ -24,6 +25,9 @@ return function (App $app) {
             $boss->get('', [C\BossController::class, 'index'])->setName('bosses')->setArgument('content-title', 'Liste des Boss');
             $boss->get('/{id}', [C\BossController::class, 'info'])->setName('boss');
             $boss->post('/{id}/ailment', [C\BossController::class, 'ailment'])->setName('boss-ailment');
+        })->add(Auth::class);
+        $group->group('/tip', function ($tip) {
+            $tip->get('', fn ($request, $response, $args) => $this->get(Twig::class)->render($response, 'tip/index.twig'))->setName('tip')->setArgument('content-title', 'Liens & Astuces');
         })->add(Auth::class);
     });
 };
