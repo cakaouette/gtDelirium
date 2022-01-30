@@ -52,6 +52,11 @@ class TwigGlobalsMiddleware
             'isJoueur' => $this->session->get("grade") <= $this->session->get("Joueur"),
             'isConnected' => $this->session->get("grade") < $this->session->get("Visiteur")
         ]);
+        $env->addGlobal('guild', $this->session->has("guild") ? [
+            'id' => $this->session->get("guild")->id,
+            'name' => $this->session->get("guild")->name,
+            'color' => $this->session->get("guild")->color
+        ] : []);
         $env->addGlobal('members', ['pending' => $this->session->get('nbPending')]);
         $env->addGlobal('flash', $this->session->getFlash());
         $env->addGlobal('csrf', new class ($this->csrf, $request) {

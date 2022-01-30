@@ -93,6 +93,9 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 case 'conquest':
                     return $this->router->urlFor('conquest-' . $_GET['subpage']);
                     break;
+                case 'alliance':
+                    return $this->router->urlFor('alliance');
+                    break;
             }
             return false;
         }

@@ -15,7 +15,7 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
             <!--Alliance-->
             <li class="nav-item">
-                <a href="/?page=alliance" class="nav-link">
+                <a href="{{ url_for('alliance') }}" class="nav-link">
                     <i class="nav-icon fas fa-shield-alt text-purple"></i>
                     <p>L'alliance</p>
                 </a>
@@ -222,7 +222,7 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="url_for('tip')" class="{{ _self.nav_link_class('tip') }}">
+                <a href="{{ url_for('tip') }}" class="{{ _self.nav_link_class('tip') }}">
                     <i class="nav-icon fas fa-question text-white"></i>
                     <p>
                         Astuces

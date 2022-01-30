@@ -58,7 +58,7 @@ return [
     },
 
     Twig::class => function (ContainerInterface $container) {
-        $twig = Twig::create('../templates', ['cache' => false]);
+        $twig = Twig::create('../templates', ['cache' => false]);//'../cache' in prod
         $twig->addExtension(new HtmlExtension());
         return $twig;
     },

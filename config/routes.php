@@ -6,7 +6,7 @@ use App\Controller as C;
 use App\Middleware\UserAuthMiddleware as Auth;
 
 return function (App $app) {
-    $app->group('/slim', function ($group) {
+    $app->group('/v2', function ($group) {
         $group->group('', function ($home) {
             $home->get('', [C\HomeController::class, 'index'])->setName('home')->setArgument('content-title', 'Home');
             $home->map(['GET', 'POST'], '/connect', [C\HomeController::class, 'connect'])->setName('connect')->setArgument('content-title', 'Connexion');
@@ -35,5 +35,10 @@ return function (App $app) {
             $tip->get('/tremens', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/tremens.twig'))->setName('conquest-tremens')->setArgument('content-title', 'Stratégie des Tremens');
             $tip->get('/nocturnum', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/nocturnum.twig'))->setName('conquest-nocturnum')->setArgument('content-title', 'Stratégie des Nocturnums');
         })->add(Auth::class);
+        $group->group('/alliance', function ($home) {
+            $home->get('', [C\AllianceController::class, 'index'])->setName('alliance')->setArgument('content-title', 'L\'alliance Délirium');
+            $home->map(['GET', 'POST'], '/guild', [C\AllianceController::class, 'new'])->setName('alliance-new-guild')->setArgument('content-title', 'Nouvelle guilde');
+            $home->map(['GET', 'POST'], '/guild/{id}', [C\AllianceController::class, 'guild'])->setName('alliance-guild');
+        });
     });
 };
