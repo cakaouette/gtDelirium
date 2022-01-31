@@ -128,7 +128,7 @@ final class AllianceController extends BaseController
             try {
                 if ($this->_guildManager->add($form["nameForm"], $form["colorForm"])) {
                     $this->addMsg("success", "Guilde ajoutée");
-                    return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('alliance'));
+                    return $this->redirect($response, ['alliance']);
                 }
             } catch (Exception $e) {
                 $this->addMsg("danger", $e->getMessage());

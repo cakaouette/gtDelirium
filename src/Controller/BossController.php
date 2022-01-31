@@ -110,7 +110,7 @@ final class BossController extends BaseController
                 $rate = $form["rateForm"],
             );
         }
-        return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('boss', ['id' => $id]));
+        return $this->redirect($response, ['boss', ['id' => $id]]);
     }
 
     private function addAe($weaponId, $bossId, $rate) {

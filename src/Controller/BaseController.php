@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use Slim\Views\Twig;
 use Odan\Session\SessionInterface;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Interfaces\RouteParserInterface;
 
 class BaseController
@@ -28,5 +29,12 @@ class BaseController
 
     protected function addMsg(string $type, string $message) {
         $this->session->getFlash()->add($type, $message);
+    }
+
+    protected function redirect(ResponseInterface $response, string|array $args) {
+        $url = $args;
+        if (is_array($args))
+            $url = $this->router->urlFor(...$args);
+        return $response->withStatus(302)->withHeader('Location', $url);
     }
 }

@@ -35,7 +35,7 @@ final class HomeController extends BaseController
             require('private/indexPrivate.php');
             $redirect = $this->connectWith($login, md5($passwd.$_SALT.$login));
             if ($redirect !== false) {
-                return $response->withStatus(302)->withHeader('Location', $redirect);
+                return $this->redirect($response, $redirect);
             }
         }
         return $this->view->render($response, 'home/connect.twig', ['savedLogin' => $login]);
@@ -56,7 +56,7 @@ final class HomeController extends BaseController
                 //TODO get it from settings
                 require('private/indexPrivate.php');
                 if ($this->addPending($pseudo, $login, md5($passwd.$_SALT.$login))) {
-                    return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('home'));
+                    return $this->redirect($response, ['home']);
                 }
             }
         }
@@ -69,7 +69,7 @@ final class HomeController extends BaseController
 
     public function disconnect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $this->session->destroy();
-        return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('home'));
+        return $this->redirect($response, ['home']);
     }
 
     //TODO move out of the controller

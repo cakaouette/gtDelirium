@@ -101,7 +101,7 @@ final class ProfileController extends BaseController
                 $this->addMsg("warning", "Mot de passe incorrect");
             }
         }
-        return $response->withStatus(302)->withHeader('Location', $this->router->urlFor('profile', ['id' => $id]));
+        return $this->redirect($response, ['profile', ['id' => $id]]);
     }
 
     //TODO move out of the controller
