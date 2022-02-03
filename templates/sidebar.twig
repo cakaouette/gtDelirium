@@ -32,7 +32,7 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=admin&subpage=dashboard" class="{{ _self.nav_link_class('admin-dashboard') }}">
+                        <a href="{{ url_for('admin-dashboard') }}" class="{{ _self.nav_link_class('admin-dashboard') }}">
                             <i class="nav-icon fas fa-tachometer-alt text-fuchsia"></i>
                             <p>Dashboard</p>
                         </a>
@@ -40,7 +40,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=admin&subpage=members" class="{{ _self.nav_link_class('admin-members') }}">
+                        <a href="{{ url_for('admin-members') }}" class="{{ _self.nav_link_class('admin-members') }}">
                             <i class="nav-icon fas fa-user-lock text-fuchsia"></i>
                             <p>Membres</p>
                         </a>
@@ -48,7 +48,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=admin&subpage=heros" class="{{ _self.nav_link_class('admin-heros') }}">
+                        <a href="{{ url_for('admin-heroes') }}" class="{{ _self.nav_link_class('admin-heros') }}">
                             <i class="nav-icon fas fa-restroom text-fuchsia"></i>
                             <p>Héros & Armes</p>
                         </a>
@@ -56,7 +56,7 @@
                 </ul>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=admin&subpage=bosses" class="{{ _self.nav_link_class('admin-bosses') }}">
+                        <a href="{{ url_for('admin-bosses') }}" class="{{ _self.nav_link_class('admin-bosses') }}">
                             <i class="nav-icon fas fa-pastafarianism text-fuchsia"></i>
                             <p>Boss</p>
                         </a>

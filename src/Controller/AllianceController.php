@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use Exception;
-use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

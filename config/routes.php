@@ -35,10 +35,17 @@ return function (App $app) {
             $tip->get('/tremens', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/tremens.twig'))->setName('conquest-tremens')->setArgument('content-title', 'Stratégie des Tremens');
             $tip->get('/nocturnum', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/nocturnum.twig'))->setName('conquest-nocturnum')->setArgument('content-title', 'Stratégie des Nocturnums');
         });
-        $group->group('/alliance', function ($home) {
-            $home->get('', [C\AllianceController::class, 'index'])->setName('alliance')->setArgument('content-title', 'L\'alliance Délirium');
-            $home->map(['GET', 'POST'], '/guild', [C\AllianceController::class, 'new'])->setName('alliance-new-guild')->setArgument('content-title', 'Nouvelle guilde');
-            $home->map(['GET', 'POST'], '/guild/{id}', [C\AllianceController::class, 'guild'])->setName('alliance-guild');
+        $group->group('/alliance', function ($alliance) {
+            $alliance->get('', [C\AllianceController::class, 'index'])->setName('alliance')->setArgument('content-title', 'L\'alliance Délirium');
+            $alliance->map(['GET', 'POST'], '/guild', [C\AllianceController::class, 'new'])->setName('alliance-new-guild')->setArgument('content-title', 'Nouvelle guilde')->add(Auth::class);
+            $alliance->map(['GET', 'POST'], '/guild/{id}', [C\AllianceController::class, 'guild'])->setName('alliance-guild')->add(Auth::class);
         });
+        $group->group('/admin', function ($admin) {
+            $admin->map(['GET', 'POST'], '/heroes', [C\AdminController::class, 'heroes'])->setName('admin-heroes')->setArgument('content-title', 'Liste des Héros et des armes');
+            $admin->get('/heroes/{id}/delete', [C\AdminController::class, 'delhero'])->setName('admin-hero-delete');
+            $admin->map(['GET', 'POST'], '/dashboard', [C\AdminController::class, 'todo'])->setName('admin-dashboard')->setArgument('content-title', 'TODO');
+            $admin->map(['GET', 'POST'], '/bosses', [C\AdminController::class, 'todo'])->setName('admin-bosses')->setArgument('content-title', 'TODO');
+            $admin->map(['GET', 'POST'], '/members', [C\AdminController::class, 'todo'])->setName('admin-members')->setArgument('content-title', 'TODO');
+        })->add(Auth::class);
     });
 };
