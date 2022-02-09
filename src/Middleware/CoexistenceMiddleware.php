@@ -99,6 +99,9 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 case 'admin':
                     return $this->router->urlFor('admin-dashboard');
                     break;
+                case 'member':
+                    return $this->router->urlFor('member-alliance');
+                    break;
             }
             return false;
         }

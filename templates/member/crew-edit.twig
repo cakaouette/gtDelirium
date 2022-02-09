@@ -1,0 +1,177 @@
+{% extends "layout.twig" %}
+
+{% block title %}Membres{% endblock %}
+
+{% block content %}
+{% if (user.isJoueur and id == user.id) %}
+<div class="row">
+  <div class="col-md-1">
+    <a class="btn btn-secondary" href="{{ url_for('my-profile') }}" role="button">Consultation</a>
+  </div>
+</div>
+<br>
+{% endif %}
+<div class="row">
+{% set nextColor = null %}
+{% for characId, info in heroes %}
+    {% set isLbWeapon, nextColor = (info.charac.hasWeapon and info.charac.nbWeaponBreak > 0), info.charac.color.background %}
+    {% set printDFlex = (isLbWeapon ? '' : 'd-flex') %}
+    {% if prevColor is not null and nextColor != prevColor %}
+        </div><div class="row">
+    {% endif %}
+    {% set prevColor = nextColor %}
+    <div class="col-lg-3 col-md-5 col-sm-6 col-12">
+        <div class="info-box" style="background-color: {{ nextColor }}">
+            <!--<span class="">Image du héro</span>-->
+            <span class="info-box-icon">
+                {% if user.isJoueur %}
+                <a class="btn-lg btn-default" 
+                   data-toggle="modal" 
+                   data-target="#modal-{{ characId }}" 
+                   style="padding: 0">
+                {% endif %}
+                <!--<i class="far fa-envelope"></i>-->
+                    <img src="/dist/image/heros/{{ characId }}_icon.png"
+                         class="img-fluid img-thumbnail"
+                         style="border: 5px solid {{ info.charac.color.frame }}; padding: 0; background-color: #a56e957a"
+                         alt="{{ info.charac.name }}">
+                {% if user.isJoueur %}
+                </a>
+                {% endif %}
+           </span>
+           {% if info.isPull or user.isVisiteur %}
+            <div class="info-box-content">
+                {% if info.charac.level == 0 %}
+                    <span class="info-box-text">-</span>
+                    <span class="info-box-text" >-</span>
+                {% else %}
+                    <span class="info-box-number">niv. {{ info.charac.level }}</span>
+                    <span class="info-box-number" >{{ info.charac.stars }} <i class="fa fa-star" style="color: {{ info.charac.color.frame }}"></i></span>
+                {% endif %}
+            </div>
+            <div class="info-box-content">
+                <span class="info-box-{{ info.charac.nbBreak == 5 ? 'number' : 'text' }}">
+                {% if info.charac.nbBreak == 0 %}
+                -
+                {% elseif info.charac.nbBreak == 5 %}
+                Mlb
+                {% else %}
+                lb: {{ info.charac.nbBreak }}
+                {% endif %}
+                </span>
+            </div>
+            <div class="description-block border-left {{ printDFlex }}" style="margin: 0">
+                {% if isLbWeapon %}
+                    <span class="info-box-{{ info.charac.nbWeaponBreak < 5 ? "text" : "number" }}">{{ info.charac.nbWeaponBreak < 5 ? "+#{info.charac.nbWeaponBreak}" : "Mlb" }}</span>
+                {% endif %}
+                <span class="info-box-icon">
+                    {% if info.charac.hasWeapon %}
+                    <img src="/dist/image/heros/{{ characId }}_weapon.png"
+                         class="img-fluid img-thumbnail"
+                         style="background-color: #00000000; border: 0; box-shadow: 0 0 0"
+                         alt="{{ info.charac.name }} weapon">
+                    {% endif %}
+                </span>
+            </div>
+            {% else %}
+            <div class="info-box-content">
+              {% if user.id == id %}
+                <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modal-{{ characId }}">
+                  ajouter
+                </button>
+              {% endif %}
+            </div>
+            {% endif %}
+       </div>
+    </div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block modal %}
+{% for characId, info in heroes %}
+{% set isEdit = info.charac.level is not null %}
+<div class="modal fade" id="modal-{{ characId }}">
+  <div class="modal-dialog">
+    <div class="modal-content bg-default">
+        <div class="modal-header bg-info">
+          <h4 class="modal-title">{{ info.charac.name }}</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form class="form" role="form" actionpage="{{ url_for('member-crew-edit', { id: id }) }}" method="post">
+          {% include 'csrf.twig' %}
+          <div class="modal-body">
+              <input type="hidden" name="crewIdForm" value="{{ info.charac.crewId }}"/>
+              <input type="hidden" name="memberIdForm" value="{{ id }}"/>
+              <input type="hidden" name="charactIdForm" value="{{ characId }}"/>
+              <div class="form-group">
+                  <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           name="isMlbForm"
+                           id="isMlbFormId"/>
+                    <label class="form-check-label" for="isMlbFormId">Mlb ? (si sélectionné, pas besoin de remplir les 3 champs suivants)</label>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <input type="number"
+                         name="levelForm"
+                         id="levelFormId"
+                         {{ isEdit ? "value=#{info.charac.level}" : ''}}
+                  />
+                  <label for="levelFormId">Niveau</label>
+              </div>
+              <div class="form-group">
+                  <input type="number"
+                         name="evolutionForm"
+                         id="evolutionFormId"
+                         {{ isEdit ? "value=#{info.charac.stars}" : ''}}
+                  />
+                  <label for="evolutionFormId">Evolution</label>
+              </div>
+              <div class="form-group">
+                  <input type="number"
+                         name="breakForm"
+                         id="breakFormId"
+                         {{ isEdit ? "value=#{info.charac.nbBreak}" : ''}}
+                  />
+                  <label for="breakFormId">Rupture de limite</label>
+              </div>
+              <div class="form-group">
+                  <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           name="weaponForm"
+                           id="weaponFormId"
+                           {{ info.charac.hasWeapon ? 'checked' : ''}}
+                    />
+                    <label class="form-check-label" for="weaponFormId">Possède l'arme exclusive ?</label>
+                  </div>
+              </div>
+              <div class="form-group">
+                  <input type="number"
+                         name="weaponBreakForm"
+                         id="weaponBreakFormId"
+                         {{ isEdit ? "value=#{info.charac.nbWeaponBreak}" : ''}}
+                  />
+                  <label for="weaponBreakFormId">Rupture de limite de l'arme</label>
+              </div>
+          </div>
+          <div class="modal-footer justify-content-between bg-secondary">
+            <button type="button" class="btn btn-outline-light" data-dismiss="modal">Close</button>
+            {% if isEdit %}
+                <button type="submit" class="btn btn-outline-light" name="updateForm">Sauvegarder</button>
+            {% else %}
+                <button type="submit" class="btn btn-outline-light" name="pullHeroOrWeaponForm">Ajouter</button>
+            {% endif %}
+          </div>
+        </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+{% endfor %}
+{% endblock %}

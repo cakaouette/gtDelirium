@@ -1,0 +1,49 @@
+{% extends "layout.twig" %}
+
+{% block title %}Membres{% endblock %}
+
+{% block content %}
+<div id="accordion">
+<div class="row">
+    {% for guildName, guildContent in members %}
+    {% set isSel = guild.name == guildName %}
+    <div class="col-md-4">
+      <div class="card card-{{ guildContent.color }}">
+        <div class="card-header">
+          <h3 class="card-title w-100">
+              <a class="d-block w-100 {{ isSel ? "" : "collapsed" }}" data-toggle="collapse" href="#collapse{{ guildContent.guildId }}" aria-expanded="{{ isSel ? "true" : "false" }}">{{ guildName }}</a>
+          </h3>
+        </div>
+        <!-- /.card-header -->
+        <div id="collapse{{ guildContent.guildId }}" class="collapse {{ isSel ? 'show' : '' }}" data-parent="#accordion">
+        <div class="card-body">
+          <table>
+            <tr>
+              <th>Nom</th>
+              <th>Date d'arrivée</th>
+              {% if user.isOfficier %}
+              <th></th>
+              {% endif %}
+            </tr>
+            {% for id, member in guildContent.members %}
+            <tr>
+              <td><a href="{{ url_for('member-crew-edit', { id: id }) }}">{{ member.name }}</a></td>
+              <td>{{ member.startDate }}</td>
+              {% if user.isOfficier %}
+              <td>
+                  <a href="{{ url_for('member-edit', { id: id }) }}" style="padding-right: 15px"><i class="fas fa-edit"></i></a>
+                  <a href="{{ url_for('member-delete', { id: id }) }}" ><i class="fas fa-trash-alt"></i></a>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+        </div>
+         <!-- /.card-body -->
+      </div>
+    </div>
+    {% endfor %}
+</div>
+</div>
+{% endblock %}

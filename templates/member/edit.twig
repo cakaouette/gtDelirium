@@ -1,0 +1,22 @@
+{% extends "layout.twig" %}
+
+{% block title %}Membres{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% include 'csrf.twig' %}
+    <p>
+        <input type="hidden" name="idForm" value="{{ id }}">
+        <input type="text" name="nameForm" value="{{ name }}">
+        <select name="guildForm">
+            <option value="0" {{ guildId == 0 ? 'selected' : '' }}></option>
+            {% for guild in guilds %}
+                <option value="{{ guild.id }}" {{ guildId == guild.id ? 'selected' : '' }}>{{ guild.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="dateStartForm" value="{{ startDate }}">
+        <input type="submit" name="editMemberForm" value="Sauvegarder" />
+    </p>
+</form>
+<a href="{{ url_for('member-alliance') }}">Retour</a>
+{% endblock %}

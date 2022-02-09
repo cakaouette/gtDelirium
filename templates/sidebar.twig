@@ -190,14 +190,14 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=member&subpage=alliance" class="{{ _self.nav_link_class('member-alliance') }}">
+                        <a href="{{ url_for('member-alliance') }}" class="{{ _self.nav_link_class('member-alliance') }}">
                             <i class="nav-icon fas fa-list-ul text-purple"></i>
                             <p>Liste des membres</p>
                         </a>
                     </li>
                     {% if user.isOfficier %}
                     <li class="nav-item">
-                        <a href="/?page=member&subpage=pending" class="{{ _self.nav_link_class('member-pending') }}">
+                        <a href="{{ url_for('member-pending') }}" class="{{ _self.nav_link_class('member-pending') }}">
                             <i class="nav-icon fas fa-clipboard-list text-purple"></i>
                             <p>En attente</p>
                             <span class="badge badge-danger right">{{ (members.pending is defined and members.pending != 0) ? members.pending : '' }}</span>
@@ -205,7 +205,7 @@
                     </li>
                     {% endif %}
                     <li class="nav-item">
-                        <a href="/?page=member&subpage=new" class="{{ _self.nav_link_class('member-new') }}">
+                        <a href="{{ url_for('member-new') }}" class="{{ _self.nav_link_class('member-new') }}">
                             <i class="nav-icon fas fa-plus text-purple"></i>
                             <p>Ajouter</p>
                         </a>

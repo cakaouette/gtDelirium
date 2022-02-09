@@ -228,7 +228,7 @@ $(function () {
     ,{
           text: 'modifier Héros',
           action: function ( e, dt, node, config ) {
-              location.href = '/?page=member&subpage=crew&id='+jsMemberId;
+              location.href = '{{ url_for('member-crew-edit', { id: member.id }) }}';
           }
       }
     {% endif %}

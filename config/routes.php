@@ -47,5 +47,15 @@ return function (App $app) {
             $admin->map(['GET', 'POST'], '/bosses', [C\AdminController::class, 'todo'])->setName('admin-bosses')->setArgument('content-title', 'TODO');
             $admin->map(['GET', 'POST'], '/members', [C\AdminController::class, 'todo'])->setName('admin-members')->setArgument('content-title', 'TODO');
         })->add(Auth::class);
+        $group->group('/members', function ($members) {
+            $members->map(['GET', 'POST'], '/new', [C\MemberController::class, 'new'])->setName('member-new')->setArgument('content-title', 'Nouveau membre');
+            $members->map(['GET', 'POST'], '/{id}/edit', [C\MemberController::class, 'edit'])->setName('member-edit');
+            $members->post('/{id}/delete', [C\MemberController::class, 'delete'])->setName('member-delete');
+            $members->map(['GET', 'POST'], '/{id}/team', [C\MemberController::class, 'team'])->setName('member-team')->setArgument('content-title', 'Liste des teams');
+            $members->map(['GET', 'POST'], '/pending', [C\MemberController::class, 'pending'])->setName('member-pending')->setArgument('content-title', 'Associer un compte à un joueur');
+            $members->get( '/alliance', [C\MemberController::class, 'alliance'])->setName('member-alliance')->setArgument('content-title', 'Listes des Membres');
+            $members->get('/{id}/crew', [C\MemberController::class, 'crew'])->setName('member-crew');
+            $members->map(['GET', 'POST'], '/{id}/crew/edit', [C\MemberController::class, 'crewedit'])->setName('member-crew-edit');
+        });
     });
 };

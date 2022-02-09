@@ -6,7 +6,7 @@ function printSelectHero($teamNb, $heroNb, $characters, $elements) {
     foreach ($characters as $charId => $charInfo) {
         $charName = ($charId == 0) ? $charInfo->getName() : $charInfo["level"]."* ".$charInfo->getName();
         if ($prevLevel != $charInfo->getGrade()) {
-            $prevLevel = $charInfogetGrade();
+            $prevLevel = $charInfo->getGrade();
             echo "<optgroup label='Level $prevLevel*'>";
         }
         if ($prevElement != $charInfo->getElementInfo()["id"]) {

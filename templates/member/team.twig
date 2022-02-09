@@ -1,0 +1,42 @@
+{% extends "layout.twig" %}
+
+{% macro print_select_hero(team, position, charactersByGradeAndElement) %}
+<select name="hero{{ position }}Form">
+    {% for grade in charactersByGradeAndElement %}
+        <optgroup label="Level {{ grade.name }}*">
+        {% for element in grade.elements %}
+            <optgroup label=".{{element.name}}">
+            {% for id, name in element.characters %}
+                <option value="{{id}}" {{ team.members[position] == id ? "selected" : "" }}>{{name}}</option>
+            {% endfor %}
+            </optgroup>
+        {% endfor %}
+        </optgroup>
+    {% endfor %}
+</select>
+{% endmacro %}
+
+{% block title %}Membres{% endblock %}
+
+{% block content %}
+{% for number, team in teams %}
+<p>Team {{ number }}</p>
+<form method="post">
+    {% include 'csrf.twig' %}
+    <p>
+        <input type="hidden" name="idForm" value="{{ team.id }}"/>
+        <input type="hidden" name="memberForm" value="{{ id }}"/>
+        <input type="hidden" name="teamForm" value="{{ number }}"/>
+        {{ _self.print_select_hero(team, 1, characters) }}
+        {{ _self.print_select_hero(team, 2, characters) }}
+        {{ _self.print_select_hero(team, 3, characters) }}
+        {{ _self.print_select_hero(team, 4, characters) }}
+        {% if team.id == 0 %}
+            <input type="submit" name="team1AddForm" value="Save" />
+        {% else %}
+            <input type="submit" name="team1UpdateForm" value="Save" />
+        {% endif %}
+    </p>
+</form>
+{% endfor %}
+{% endblock %}

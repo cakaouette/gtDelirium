@@ -61,52 +61,52 @@ final class AllianceController extends BaseController
         $rankChill = Array();
         
         foreach ($v_info[1]["ranks"] as $raidId => $info) {
-          $rankTremens[] = $info["timestamp"].", ".$info["rank"];
+            $rankTremens[] = $info["timestamp"].", ".$info["rank"];
         }
         $dataTremens = implode("],[", $rankTremens);
         
         foreach ($v_raids as $raidId => $timeRaid) {
-          if (array_key_exists($raidId, $v_info[1]["objectives"])) {
-            $objectiv = $v_info[1]["objectives"][$raidId]["rank"];
-            if ($toSetTremens) {
-              $objectivTremens[] = $timeRaid.", ".$lastObjectivTremens;
+            if (array_key_exists($raidId, $v_info[1]["objectives"])) {
+                $objectiv = $v_info[1]["objectives"][$raidId]["rank"];
+                if ($toSetTremens) {
+                    $objectivTremens[] = $timeRaid.", ".$lastObjectivTremens;
+                }
+                $objectivTremens[] = $timeRaid.", ".$objectiv;
+                $lastObjectivTremens = $objectiv;
+                $toSetTremens = false;
+            } else {
+                $toSetTremens = true;
             }
-            $objectivTremens[] = $timeRaid.", ".$objectiv;
-            $lastObjectivTremens = $objectiv;
-            $toSetTremens = false;
-          } else {
-            $toSetTremens = true;
-          }
           
-          if (array_key_exists($raidId, $v_info[2]["objectives"])) {
-            $objectiv = $v_info[2]["objectives"][$raidId]["rank"];
-            if ($toSetNocturnum) {
-              $objectivNocturnum[] = $timeRaid.", ".$lastObjectivNocturnum;
+            if (array_key_exists($raidId, $v_info[2]["objectives"])) {
+                $objectiv = $v_info[2]["objectives"][$raidId]["rank"];
+                if ($toSetNocturnum) {
+                    $objectivNocturnum[] = $timeRaid.", ".$lastObjectivNocturnum;
+                }
+                $objectivNocturnum[] = $timeRaid.", ".$objectiv;
+                $lastObjectivNocturnum = $objectiv;
+                $toSetNocturnum = false;
+            } else {
+                $toSetNocturnum = true;
             }
-            $objectivNocturnum[] = $timeRaid.", ".$objectiv;
-            $lastObjectivNocturnum = $objectiv;
-            $toSetNocturnum = false;
-          } else {
-            $toSetNocturnum = true;
-          }
         }
         if ($toSetTremens) {
-          $objectivTremens[] = end($v_raids).", ".$lastObjectivTremens;
+            $objectivTremens[] = end($v_raids).", ".$lastObjectivTremens;
         }
         $dataObjectivTremens = implode("],[", $objectivTremens);
         if ($toSetNocturnum) {
-          $objectivNocturnum[] = end($v_raids).", ".$lastObjectivNocturnum;
+            $objectivNocturnum[] = end($v_raids).", ".$lastObjectivNocturnum;
         }
         $dataObjectivNocturnum = implode("],[", $objectivNocturnum);
         
         
         foreach ($v_info[2]["ranks"] as $raidId => $info) {
-          $rankNocturnum[] = $info["timestamp"].", ".$info["rank"];
+            $rankNocturnum[] = $info["timestamp"].", ".$info["rank"];
         }
         $dataNocturnum = implode("],[", $rankNocturnum);
         
         foreach ($v_info[3]["ranks"] as $raidId => $info) {
-          $rankChill[] = $info["timestamp"].", ".$info["rank"];
+            $rankChill[] = $info["timestamp"].", ".$info["rank"];
         }
         $dataChill = implode("],[", $rankChill);
 

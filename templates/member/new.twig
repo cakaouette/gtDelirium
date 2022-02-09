@@ -1,0 +1,21 @@
+{% extends "layout.twig" %}
+
+{% block title %}Membres{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% include 'csrf.twig' %}
+    <p>
+        <input type="text" name="nameForm" placeholder="Pseudo Guardian Tales"/>
+        <select name="guildForm">
+            <option value="0"></option>
+            {% for guild in guilds %}
+            <option value="{{ guild.id }}">{{ guild.name }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" name="dateStartForm">(*)
+        <input type="submit" name="addMemberForm" value="Ajouter" />
+    </p>
+    (*) date autorisée à raid = lendemain de la d'arrivée dans la guilde
+</form>
+{% endblock %}

@@ -50,7 +50,8 @@ class TwigGlobalsMiddleware
             'isGestion' => $this->session->get("grade") <= $this->session->get("Gestion"),
             'isOfficier' => $this->session->get("grade") <= $this->session->get("Officier"),
             'isJoueur' => $this->session->get("grade") <= $this->session->get("Joueur"),
-            'isConnected' => $this->session->get("grade") < $this->session->get("Visiteur")
+            'isConnected' => $this->session->get("grade") < $this->session->get("Visiteur"),
+            'id' => $this->session->get("id")
         ]);
         $env->addGlobal('guild', $this->session->has("guild") ? [
             'id' => $this->session->get("guild")["id"],
