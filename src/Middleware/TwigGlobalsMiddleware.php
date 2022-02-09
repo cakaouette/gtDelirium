@@ -66,12 +66,13 @@ class TwigGlobalsMiddleware
             var $name;
             var $value;
             function __construct($csrf, $request) {
-                if ($request->getMethod() === 'GET')  {
+                //TODO uncomment after solving POST issue
+                //if ($request->getMethod() === 'GET')  {
                     $this->nameKey = $csrf->getTokenNameKey();
                     $this->valueKey = $csrf->getTokenValueKey();
                     $this->name = $request->getAttribute($this->nameKey);
                     $this->value = $request->getAttribute($this->valueKey);
-                }
+                //}
             }
         });
         return $handler->handle($request);
