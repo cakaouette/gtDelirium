@@ -98,6 +98,10 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                             return $this->router->urlFor('raid-info');
                         case 'rank':
                             return $this->router->urlFor('raid-rank');
+                        case 'meteo':
+                            return $this->router->urlFor('raid-meteo');
+                        case 'followup':
+                            return $this->router->urlFor('raid-followup');
                     }
                     break;
                 default:

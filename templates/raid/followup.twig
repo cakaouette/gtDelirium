@@ -1,0 +1,62 @@
+{% extends "layout.twig" %}
+
+{% block title %}Raid{% endblock %}
+
+{% block content %}
+<style>
+    .withoutLineBreak { white-space:nowrap; }
+</style>
+<div class="card-body table-responsive p-0" style="height: 500px;">
+<table class="table table-head-fixed table-hover">
+    <tr>
+        <th border="none"></th>
+        <th>Pseudo</th>
+        <th>Total j={{ prevDay }}</th>
+        {% for i in 1..14 %}
+        <th>{{ i }}</th>
+        {% endfor %}
+        <th>Total</th>
+    </tr>
+    {% for rank, damage in damages %}
+    <tr>
+        <td>{{ rank == 0 ? '1er' : "#{rank+1}ème" }}</td>
+        <td>{{ damage.memberName }}</td>
+        <td>
+            {% set diff = damage.yesterdaySumPrev is null ? null : (damage.yesterdaySum - damage.yesterdaySumPrev) %}
+            {% set sign = diff > 0 ? '+' : '' %}
+            <div class="withoutLineBreak">
+                {{ damage.yesterdaySum | number_format(0, ',', ' ') }}
+            </div>
+            <div class="withoutLineBreak">
+                {{ diff is null ? '' : " (#{sign}#{diff|number_format(0, ',', ' ')})" }}
+            </div>
+        </td>
+        {% for i in 0..13 %}
+        <td>
+            {% set day, prev = attribute(damage, "day#{i}"), attribute(damage, "day#{i}Prev") %}
+            {% set diff = (day is null or prev is null) ? null : (day - prev) %}
+            {% set sign = diff > 0 ? '+' : '' %}
+            <div class="withoutLineBreak">
+                {{ a1 }}
+                {{ day is null ? '' : "#{day|number_format(0, ',', ' ')}" }}
+            </div>
+            <div class="withoutLineBreak">
+                {{ diff is null ? '' : " (#{sign}#{diff|number_format(0, ',', ' ')})" }}
+            </div>
+        </td>
+        {% endfor %}
+        <td>
+            {% set diff = damage.daysSumPrev is null ? null : (damage.daysSum - damage.daysSumPrev) %}
+            {% set sign = diff > 0 ? '+' : '' %}
+            <div class="withoutLineBreak">
+                {{ damage.daysSum | number_format(0, ',', ' ') }}
+            </div>
+            <div class="withoutLineBreak">
+                {{ diff is null ? '' : " (#{sign}#{diff|number_format(0, ',', ' ')})" }}
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% endblock %}

@@ -107,13 +107,13 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=meteo" class="{{ _self.nav_link_class('raid-meteo') }}">
+                        <a href="{{ url_for('raid-meteo') }}" class="{{ _self.nav_link_class('raid-meteo') }}">
                             <i class="nav-icon fas fa-cloud-sun-rain text-red"></i>
                             <p>Météo</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=followup" class="{{ _self.nav_link_class('raid-followup') }}">
+                        <a href="{{ url_for('raid-followup') }}" class="{{ _self.nav_link_class('raid-followup') }}">
                             <i class="nav-icon fas fa-list-ol text-red"></i>
                             <p>Tableau de Suivi</p>
                         </a>

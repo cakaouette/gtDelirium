@@ -18,8 +18,8 @@ require_once('model/Manager/AilmentManager.php');
 use AilmentManager;
 require_once('model/Manager/WeaponManager.php');
 use WeaponManager;
-/*require_once('model/Manager/CharacterManager.php');
-use CharacterManager;*/
+require_once('model/Manager/MemberManager.php');
+use MemberManager;
 
 final class RaidController extends BaseController
 {
@@ -222,6 +222,175 @@ final class RaidController extends BaseController
             $j++;
         }
         return $this->view->render($response, 'raid/rank.twig', ['fights' => $v_fights, 'bosses' => $v_bosses]);
+    }
+
+    public function meteo(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
+        $info = $this->session->get('raidInfo');
+        $dateRaid = $info["dateRaid"];
+        $plusDays = $info["dateNumber"] + ($info["isFinished"] ? 0 : -1);
+        $date = date("Y-m-d", strtotime("$dateRaid +".max($plusDays,0)." day"));
+        $v_meteo = Array();
+        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+
+        if ($plusDays >= 0) {
+            try {
+                $counts = $this->_fightManager->getCountByGuildIdDate($guildId, $date);
+            } catch (Exception $e) {
+                $this->addMsg("danger", $e->getMessage());
+            }
+            $members = MemberManager::getAllByGuildIdInRawData($guildId, $date, false);
+            $i = 0;
+            foreach ($members as $memberId => $memberName) {
+                if (array_key_exists($memberId, $counts)) {
+                    $c = $counts[$memberId]["counter"];
+                    $d = $counts[$memberId]["damages"];
+                } else {
+                    $c = 0;
+                    $d = 0;
+                }
+                $v_meteo[$i++] = Array("memberId" => $memberId,
+                                    "memberName" => $memberName,
+                                    "count" => $c,
+                                    "dailyDamage" => $d
+                );
+            }
+        }
+
+        return $this->view->render($response, 'raid/meteo.twig', ['title' => "Météo du ".$date, 'meteo' => $v_meteo]);
+    }
+
+
+    public function followup(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
+        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+        $raidInfo = $this->session->get('raidInfo');
+
+        if (is_null($raidInfo["dateRaid"])) {
+            try {
+                $dateRaid = $this->_raidManager->getLastByDate()->getDate();
+            } catch (Exception $e) {
+                $this->addMsg("danger", $e->getMessage());
+            }
+            $yesterday = date("Y-m-d", strtotime(date("Y-m-d")." -1 day"));
+            $dayNumber = (DateTime::createFromFormat("Y-m-d", $yesterday)->diff(DateTime::createFromFormat("Y-m-d", $dateRaid)))->d;
+        } else {
+            $dateRaid = $raidInfo["dateRaid"];
+            $dayNumber = $raidInfo["dateNumber"];
+        }
+        $v_damagesByMemberByDay = Array();
+        if ($dayNumber >= 0) {
+            try {
+                $datePrevRaid = $this->_raidManager->getLastByDate(date("Y-m-d", strtotime("$dateRaid -1 day")))->getDate();
+                $noPrev = false;
+            } catch (Exception $e) {
+                $noPrev = true;
+                $datePrevRaid = date("Y-m-d", strtotime("$dateRaid -1 day"));
+                $this->addMsg("info", "pas de résultat pour le raid précédent");
+            }
+            try {
+                $fightsByMemberByDay = $this->_fightManager->getAllByGuildIdDateGroupByPseudoIdDate($guildId, $dateRaid);
+                $prevFightsByMemberByDay = $this->_fightManager->getAllByGuildIdDateGroupByPseudoIdDate($guildId, $datePrevRaid);
+            } catch (Exception $e) {
+                $this->addMsg("danger", $e->getMessage());
+            }
+            if ($noPrev) {
+                $prevFightsByMemberByDay = [];
+            }
+
+            // traitement de la requête et reconstruction du tableau
+            $v_damagesByMemberByDay = Array();
+            $members = MemberManager::getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
+            $i = -1;
+            $v_globalSum = 0;
+            $d = date("Y-m-d", strtotime("$dateRaid +$dayNumber day"));
+            $prevDay = $raidInfo["isFinished"] ? 13 : max($dayNumber -1, 0);
+            foreach ($members as $memberId => $memberInfo) {
+                $memberName = $memberInfo["name"];
+                $memberDateStart = $memberInfo["dateStart"];
+                ++$i;
+                if (array_key_exists($memberId, $fightsByMemberByDay)) {
+                    $v_damagesByMemberByDay[$i] = Array("memberId" => $memberId, "memberName" => $memberName);
+                    $sum = 0;
+                    $sumPrev = 0;
+                    $date1 = array_key_first($fightsByMemberByDay[$memberId]);
+                    if (!is_null($date1)) {
+                        $date1 = strtotime($date1);
+                        $date2 = strtotime($dateRaid);
+                        $diff = max(($date1 - $date2), 0);
+                        $endFor = floor((($diff / 60) / 60 ) / 24);
+                    } else {
+                        $endFor = -1;
+                    }
+                    for ($j = 0; $j <= $endFor; $j++) {
+                        $d = date("Y-m-d", strtotime("$dateRaid +$j day"));
+                        $dPrev = date("Y-m-d", strtotime("$datePrevRaid +$j day"));
+                        if (array_key_exists($d, $fightsByMemberByDay[$memberId]) and ($memberDateStart <= $d)) {
+                            $dailySum = $fightsByMemberByDay[$memberId][$d];
+                            $sum += $dailySum;
+                        } elseif ($memberDateStart > $d) {
+                            $dailySum = NULL;
+                        } else {
+                            $dailySum = 0;
+                        }
+                        $v_damagesByMemberByDay[$i]["day$j"] = $dailySum;
+                        if (array_key_exists($memberId, $prevFightsByMemberByDay) and ($memberDateStart <= $dPrev)) {
+                            if (array_key_exists($dPrev, $prevFightsByMemberByDay[$memberId])) {
+                                $dailySumPrev = $prevFightsByMemberByDay[$memberId][$dPrev];
+                            } else {
+                                $dailySumPrev = 0;
+                            }
+                            $sumPrev += $dailySumPrev;
+                        } else {
+                            $dailySumPrev = NULL;
+                            $sumPrev = 0;
+                        }
+                        if ($j == $prevDay) {
+                            $v_damagesByMemberByDay[$i]["yesterdaySum"] = $sum;
+                            $v_damagesByMemberByDay[$i]["yesterdaySumPrev"] = ($sumPrev == 0 ? NULL : $sumPrev);
+                        }
+                        $v_damagesByMemberByDay[$i]["day$j"."Prev"] = $dailySumPrev;
+                    }
+                    for (; $j < 14; $j++) {
+                        $v_damagesByMemberByDay[$i]["day$j"] = 0;
+                        $v_damagesByMemberByDay[$i]["day$j"."Prev"] = 0;
+                        if ($j == $prevDay) {
+                            $v_damagesByMemberByDay[$i]["yesterdaySum"] = $sum;
+                            $v_damagesByMemberByDay[$i]["yesterdaySumPrev"] = ($sumPrev == 0 ? NULL : $sumPrev);
+                        }
+                    }
+                    $v_globalSum += $sum;
+                    $v_damagesByMemberByDay[$i]["daysSum"] = $sum;
+                    $v_damagesByMemberByDay[$i]["daysSumPrev"] = ($sumPrev == 0 ? NULL : $sumPrev);
+                } else {
+                    $v_damagesByMemberByDay[$i] = Array("memberId" => $memberId, "memberName" => $memberName,
+                        "day0" => NULL, "day1" => NULL, "day2" => NULL, "day3" => NULL, "day4" => NULL,
+                        "day5" => NULL, "day6" => NULL, "day7" => NULL, "day8" => NULL, "day9" => NULL,
+                        "day10" => NULL, "day11" => NULL, "day12" => NULL, "day13" => NULL,
+                        "daysSum" => NULL, "yesterdaySum" => 0,
+                        "day0Prev" => NULL, "day1Prev" => NULL, "day2Prev" => NULL, "day3Prev" => NULL, "day4Prev" => NULL,
+                        "day5Prev" => NULL, "day6Prev" => NULL, "day7Prev" => NULL, "day8Prev" => NULL, "day9Prev" => NULL,
+                        "day10Prev" => NULL, "day11Prev" => NULL, "day12Prev" => NULL, "day13Prev" => NULL,
+                        "daysSumPrev" => NULL, "yesterdaySumPrev" => NULL
+                        );
+                }
+            }
+        }
+        $toSort = Array();
+        foreach ($v_damagesByMemberByDay as $key => $damagesByDay) {
+            $toSort[$key] = $damagesByDay["yesterdaySum"];
+        }
+        arsort ($toSort, SORT_NUMERIC );
+        $temp = Array();
+        foreach ($toSort as $key => $unused) {
+            $temp[] = $v_damagesByMemberByDay[$key];
+        }
+        $v_damagesByMemberByDay = $temp;
+        $v_prevDayNumber = $prevDay+1;
+
+        return $this->view->render($response, 'raid/followup.twig', [
+            'title' => "Suivi du raid, score actuel= ".number_format($v_globalSum, 0, ',', ' '),
+            'damages' => $v_damagesByMemberByDay,
+            'prevDay' => $v_prevDayNumber
+        ]);
     }
 
     private function isInRange($value, $min, $max) {
