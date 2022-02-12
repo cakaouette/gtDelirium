@@ -57,5 +57,15 @@ return function (App $app) {
             $members->get('/{id}/crew', [C\MemberController::class, 'crew'])->setName('member-crew');
             $members->map(['GET', 'POST'], '/{id}/crew/edit', [C\MemberController::class, 'crewedit'])->setName('member-crew-edit');
         });
+        $group->group('/raid', function ($raid) {
+            $raid->get('/info', [C\RaidController::class, 'info'])->setName('raid-info')->setArgument('content-title', 'Informations raid');
+            $raid->get('/rank', [C\RaidController::class, 'rank'])->setName('raid-rank')->setArgument('content-title', 'Classement dans l\'alliance');
+            $raid->map(['GET', 'POST'], '/fights/old', [C\RaidController::class, 'oldfights'])->setName('raid-old-fights')->setArgument('content-title', 'X');
+            $raid->map(['GET', 'POST'], '/fights', [C\RaidController::class, 'fights'])->setName('raid-fights')->setArgument('content-title', 'X');
+            $raid->map(['GET', 'POST'], '/summary', [C\RaidController::class, 'summary'])->setName('raid-summary')->setArgument('content-title', 'X');
+            $raid->map(['GET', 'POST'], '/meteo', [C\RaidController::class, 'meteo'])->setName('raid-meteo')->setArgument('content-title', 'X');
+            $raid->map(['GET', 'POST'], '/followup', [C\RaidController::class, 'followup'])->setName('raid-followup')->setArgument('content-title', 'X');
+            $raid->map(['GET', 'POST'], '/miss', [C\RaidController::class, 'miss'])->setName('raid-miss')->setArgument('content-title', 'X');
+        })->add(Auth::class);
     });
 };

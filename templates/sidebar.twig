@@ -95,13 +95,13 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=info" class="{{ _self.nav_link_class('raid-info') }}">
+                        <a href="{{ url_for('raid-info') }}" class="{{ _self.nav_link_class('raid-info') }}">
                             <i class="nav-icon fas fa-info text-red"></i>
                             <p>Informations</p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=rank" class="{{ _self.nav_link_class('raid-rank') }}">
+                        <a href="{{ url_for('raid-rank') }}" class="{{ _self.nav_link_class('raid-rank') }}">
                             <i class="nav-icon fas fa-medal text-red"></i>
                             <p>Classement</p>
                         </a>

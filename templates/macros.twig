@@ -1,0 +1,15 @@
+{% macro boss_break_color(damage) %}
+{% apply spaceless %}
+    {% if damage is null %}
+        {{ 'default' }}
+    {% elseif damage >= 50 %}
+        {{ 'green' }}
+    {% elseif damage > 33.33 %}
+        {{ 'yellow' }}
+    {% elseif damage >= 25 %}
+        {{ 'pink' }}
+    {% else %}
+        {{ 'dark' }}
+    {% endif %}
+{% endapply %}
+{% endmacro %}

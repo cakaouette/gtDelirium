@@ -1,0 +1,112 @@
+{% extends "layout.twig" %}
+
+{% from 'macros.twig' import boss_break_color %}
+
+{% block title %}Raid{% endblock %}
+
+{% block content %}
+<form action="{{ url_for('raid-info') }}" id="raid-select" method="get" class="form-horizontal">
+  <div class="col-md-6">
+    <div class="form-group row">
+      <label for="raidFormId" class="col-sm-2 col-form-label">Date de raid</label>
+      <div class="col-sm-3">
+        <select name="id"
+                id="id"
+                class="custom-select form-control-border border-width-2">
+            {% for raid, date in raids %}
+                <option value="{{ raid }}"{{ id == raid ? 'selected' : ''}}>{{ date }}</option>
+            {% endfor %}
+        </select>
+      </div>
+      <div class="col-sm-2">
+        <button type="submit" class="btn btn-info">Selectionner</button>
+      </div>
+    </div>
+  </div>
+</form>
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card-body table-responsive p-0">
+    <table class="table table-head-fixed table-hover">
+      <tr>
+        <th>Nom</th>
+        <th>Type</th>
+      </tr>
+      {% for boss in bosses %}
+      <tr>
+        <td>{{ boss.name }}</td>
+        <td>{{ boss.element }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+  </div>
+  {% for ailmentId, info in ailments %}
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">
+          <img src="/dist/image/resources/ailment_{{ ailmentId }}.png"
+               class="img-fluid img-thumbnail"
+               style="padding: 0"
+               width="25" height="25"
+               alt="{{ info.name }}">
+          {{ info.name }}
+        </h3>
+      </div>
+      <!-- /.card-header -->
+      <div class="card-body">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Arme</th>
+              {% for boss in bosses %}
+              <th>
+                <img src="/dist/image/bosses/{{ boss.id }}.png"
+                     class="img-fluid img-thumbnail"
+                     style="padding: 0"
+                     width="75" height="75"
+                     alt="{{ boss.name }}">
+              </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for weapon in info.weapons %}
+            <tr>
+              <td>
+                <img src="/dist/image/heros/{{ weapon.charac.id }}_weapon.png"
+                  class="img-fluid img-thumbnail"
+                  data-toggle="tooltip" title="{{ weapon.charac.name }}"
+                  style="padding: 0"
+                  width="50" height="50"
+                  alt="{{ weapon.name }}">
+              </td>
+              <td>
+                {{ weapon.name }}
+              </td>
+              <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate1) }}">{{ weapon.rate1 ?? '- '}}%</span></td>
+              <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate2) }}">{{ weapon.rate2 ?? '- '}}%</span></td>
+              <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate3) }}">{{ weapon.rate3 ?? '- '}}%</span></td>
+              <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate4) }}">{{ weapon.rate4 ?? '- '}}%</span></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- /.card-body -->
+    </div>
+    <!-- /.card -->
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

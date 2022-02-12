@@ -66,7 +66,6 @@ final class BossController extends BaseController
                         $weapons[$wId]['AeId'] = $weapon->getAeId();
                         $weapons[$wId]['bossId'] = $weapon->getBossInfo()["id"];
                         $weapons[$wId]['rate'] = $weapon->getRate();
-                        $weapons[$wId]['color'] = $this->printColor($weapon->getRate());
                     }
                 }
                 $data['ailments'][$aId] = [
@@ -134,18 +133,5 @@ final class BossController extends BaseController
         } catch (Exception $e) {
             $this->addMsg("danger", "Erreur pendant la mise à jour des informations");
         }
-    }
-
-    //TODO move into twig
-    function printColor($poucent) {
-        if (is_null($poucent))
-          return "default";
-        elseif ($poucent >= 50.0)
-          return "green";
-        elseif ($poucent > 33.33)
-          return "yellow";
-        elseif ($poucent >= 25)
-          return "pink";
-        return "dark";
     }
 }

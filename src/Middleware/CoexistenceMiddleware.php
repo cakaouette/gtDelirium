@@ -55,8 +55,6 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 try {
                     RaidControler::setGuildRaidInfo(NULL, NULL);
                 } catch (Exception $e) {
-                    $this->session->set("raidPreview", Array("id" => NULL,
-                                                "dateRaid" => NULL));
                     $this->session->set("raidInfo", Array("id" => NULL,
                                                 "dateRaid" => NULL,
                                                 "dateNumber" => NULL,
@@ -80,27 +78,29 @@ final class CoexistenceMiddleware implements MiddlewareInterface
             switch ($_GET['page']) {
                 case 'connect':
                     return $this->router->urlFor('connect');
-                    break;
                 case 'profile':
                     return $this->router->urlFor('my-profile');
-                    break;
                 case 'boss':
                     return $this->router->urlFor('bosses');
-                    break;
                 case 'tip':
                     return $this->router->urlFor('tip');
-                    break;
                 case 'conquest':
                     return $this->router->urlFor('conquest-' . $_GET['subpage']);
-                    break;
                 case 'alliance':
                     return $this->router->urlFor('alliance');
-                    break;
                 case 'admin':
                     return $this->router->urlFor('admin-dashboard');
-                    break;
                 case 'member':
                     return $this->router->urlFor('member-alliance');
+                case 'raid':
+                    switch ($_GET['subpage']) {
+                        case 'info':
+                            return $this->router->urlFor('raid-info');
+                        case 'rank':
+                            return $this->router->urlFor('raid-rank');
+                    }
+                    break;
+                default:
                     break;
             }
             return false;

@@ -1,5 +1,7 @@
 {% extends "layout.twig" %}
 
+{% from 'macros.twig' import boss_break_color %}
+
 {% block title %}Bosses{% endblock %}
 
 {% block content %}
@@ -62,7 +64,7 @@
                 {% endif %}
             </td>
             <td>{{ weapon.name }}</td>
-            <td><span style="font-size:1.1rem;" class="badge bg-{{ weapon.color }}">{{ weapon.rate ?: '- ' }}%</span></td>
+            <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate) }}">{{ weapon.rate ?: '- ' }}%</span></td>
           </tr>
         {% endfor %}
         </tbody>
