@@ -1,0 +1,24 @@
+{% extends "layout.twig" %}
+
+{% block title %}Raid{% endblock %}
+
+{% block content %}
+<div class="card-body table-responsive p-0">
+<table class="table table-head-fixed table-hover">
+    <tr>
+        <th>Pseudo</th>
+        {% for i in 1..14 %}
+            <th>{{ i }}</th>
+        {% endfor %}
+    </tr>
+    {% for day, miss in misses | filter(m => not m.noMiss) %}
+    <tr>
+        <td>{{ day }}</td>
+        {% for i in 0..13 %}
+        <td {{ attribute(miss, "color#{i}") is defined ? 'bgcolor="gray"' : '' }}>{{ attribute(miss, "day#{i}") }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</div>
+{% endblock %}

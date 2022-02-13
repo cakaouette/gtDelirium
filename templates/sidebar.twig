@@ -119,20 +119,20 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=miss" class="{{ _self.nav_link_class('raid-miss') }}">
+                        <a href="{{ url_for('raid-miss') }}" class="{{ _self.nav_link_class('raid-miss') }}">
                             <i class="nav-icon fas fa-user-slash text-red"></i>
                             <p>Les loupés <i class="fas fa-sad-cry"></i></p>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=summary" class="{{ _self.nav_link_class('raid-summary') }}">
+                        <a href="{{ url_for('raid-summary') }}" class="{{ _self.nav_link_class('raid-summary') }}">
                             <i class="nav-icon fas fa-th-list text-red"></i>
                             <p>Résumé des attaques</p>
                         </a>
                     </li>
                     {% if user.isJoueur %}
                     <li class="nav-item">
-                        <a href="/?page=raid&subpage=fightByGuild" class="{{ _self.nav_link_class('raid-fight') }}">
+                        <a href="{{ url_for('raid-fights') }}" class="{{ _self.nav_link_class('raid-fight') }}">
                             <i class="nav-icon fas fa-crosshairs text-red"></i>
                             <p>Attaques</p>
                         </a>

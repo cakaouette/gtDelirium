@@ -1,0 +1,34 @@
+{% extends "layout.twig" %}
+
+{% block title %}Raid{% endblock %}
+
+{% block content %}
+<table>
+    <tr>
+        <th>Pseudo</th>
+        <th>Guilde</th>
+        <th>Date</th>
+        <th>Team</th>
+        <th>Boss</th>
+        <th>Dégâts</th>
+        <th>Hero1</th>
+        <th>Hero2</th>
+        <th>Hero3</th>
+        <th>Hero4</th>
+    </tr>
+    {% for fight in fights %}
+    <tr>
+        <td>{{ fight.pseudo }}</td>
+        <td>{{ fight.guild }}</td>
+        <td>{{ fight.date }}</td>
+        <td>{{ fight.team }}</td>
+        <td>{{ fight.boss }}</td>
+        <td>{{ fight.damage }}</td>
+        <td>{{ fight.hero1 }}</td>
+        <td>{{ fight.hero2 }}</td>
+        <td>{{ fight.hero3 }}</td>
+        <td>{{ fight.hero4 }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

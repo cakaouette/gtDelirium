@@ -20,16 +20,22 @@ require_once('model/Manager/WeaponManager.php');
 use WeaponManager;
 require_once('model/Manager/MemberManager.php');
 use MemberManager;
+require_once('model/Manager/TeamManager.php');
+use TeamManager;
+require_once('model/Manager/CharacterManager.php');
+use CharacterManager;
 
 final class RaidController extends BaseController
 {
     private RaidManager $_raidManager;
     private FightManager $_fightManager;
+    private TeamManager $_teamManager;
     
     protected function __init() {
         //TODO inject instead
         $this->_raidManager = new RaidManager();
         $this->_fightManager = new FightManager();
+        $this->_teamManager = new TeamManager();
     }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -259,7 +265,6 @@ final class RaidController extends BaseController
         return $this->view->render($response, 'raid/meteo.twig', ['title' => "Météo du ".$date, 'meteo' => $v_meteo]);
     }
 
-
     public function followup(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
         if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
         $raidInfo = $this->session->get('raidInfo');
@@ -393,6 +398,268 @@ final class RaidController extends BaseController
         ]);
     }
 
+    public function miss(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
+        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+        $info = $this->session->get('raidInfo');
+
+        if (is_null($info["dateRaid"])) {
+            try {
+                $dateRaid = $this->_raidManager->getLastByDate()->getDate();
+            } catch (Exception $e) {
+                $this->addMsg("danger", $e->getMessage());
+            }
+            $yesterday = date("Y-m-d", strtotime(date("Y-m-d")." -1 day"));
+            $dayNumber = (DateTime::createFromFormat("Y-m-d", $yesterday)->diff(DateTime::createFromFormat("Y-m-d", $dateRaid)))->d;
+        } else {
+            $dateRaid = $info["dateRaid"];
+            $dayNumber = $info["dateNumber"] + ($info["isFinished"] ? 0 : -1);
+        }
+        $v_missedByMemberByDay = Array();
+        if ($dayNumber >= 0) {
+            try {
+                $missByMemberByDay = $this->_fightManager->getAllByGuildIdDateGroupByTeamNumberDate($guildId, $dateRaid);
+            } catch (Exception $e) {
+                $v_error = $e->getMessage();
+            }
+            $guildManager = new GuildManager();
+            $v_guilds = $guildManager->getAll();
+            $f_guildId = $guildId;
+
+            $members = MemberManager::getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
+            foreach ($missByMemberByDay as $memberId => $missedByDate) {
+                if (!isset($members[$memberId]) or !isset($members[$memberId]["name"])) { continue;}
+                $member = $members[$memberId]["name"];
+                $v_missedByMemberByDay[$member] = Array();
+                $memberDateStart = $members[$memberId]["dateStart"];
+                $noMiss = true;
+                for ($j = 0; $j <= $dayNumber; $j++) {
+                    $d = date("Y-m-d", strtotime("$dateRaid +$j day"));
+                    if (array_key_exists($d, $missedByDate) and ($memberDateStart <= $d)) {
+                        $miss = $missedByDate[$d];
+                    } elseif ($memberDateStart > $d) {
+                        $v_missedByMemberByDay[$member]["color$j"] = true;
+                        $miss = NULL;
+                    } else {
+                        $miss = 0;
+                    }
+                    if (($miss == 3) or is_null($miss)) {
+                        $miss = NULL;
+                    } else {
+                        $miss = "$miss /3";
+                        $noMiss = false;
+                    }
+                    $v_missedByMemberByDay[$member]["day$j"] = $miss;
+                }
+                $v_missedByMemberByDay[$member]["noMiss"] = $noMiss;
+                for (; $j < 14; $j++) {
+                    $v_missedByMemberByDay[$member]["day$j"] = NULL;
+                }
+            }
+            ksort($v_missedByMemberByDay);
+        }
+        return $this->view->render($response, 'raid/miss.twig', ['title' => "Les absences", 'misses' => $v_missedByMemberByDay]);
+    }
+
+    public function summary(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        try {
+            $fights = [];
+            foreach ($this->_fightManager->getAll() as $fight) {
+                $fights[] = [
+                    'pseudo' => $fight->getPseudoInfo()["name"],
+                    'guild' => $fight->getGuildInfo()["name"],
+                    'date' => $fight->getDate(),
+                    'team' => $fight->getTeamNumber(),
+                    'boss' => $fight->getBossInfo()["name"],
+                    'damage' => $fight->getDamage(),
+                    'hero1' => $fight->getHero1Info()["name"],
+                    'hero2' => $fight->getHero2Info()["name"],
+                    'hero3' => $fight->getHero3Info()["name"],
+                    'hero4' => $fight->getHero4Info()["name"]
+                ];
+            }
+        } catch (Exception $e) {
+            $this->addMsg("danger", $e->getMessage());
+        }
+        return $this->view->render($response, 'raid/summary.twig', ['fights' => $fights]);
+    }
+
+    public function fights(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
+        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+        $raidInfo = $this->session->get('raidInfo');
+        $date = date("Y-m-d");
+        $params = $request->getQueryParams();
+        if (isset($params['date'])) {
+            $date = $params['date'];
+            if (!$this->checkDate($date)) {
+                $date = date("Y-m-d");
+            }
+        }
+        $isJoueur = $this->session->get('grade') == $this->session->get('Joueur');
+    
+        if ($request->getMethod() === 'POST') {
+            $form = $request->getParsedBody();
+            $isInsert  = isset($form["teamAddForm"]);
+            $isUpdate  = isset($form["teamUpdateForm"]);
+            $isDeleted  = isset($form["teamDeleteForm"]);
+            $isTeamSaved = $form["saveTeamForm"];
+        
+            if ($isInsert or $isUpdate) {
+                if (!$this->checkFight($form["bossForm"], $form["damageForm"])) {
+                    $isInsert = false;
+                    $isUpdate = false;
+                }
+            }
+            $hasError = false;
+            if ($isJoueur
+                    and ($isInsert or $isUpdate or $isDeleted)
+                    and ($this->session->get('id') != $form["recorderIdForm"])) {
+                $hasError = true;
+            } elseif (($isInsert or $isUpdate or $isDeleted)
+                    and (strtotime($date) < strtotime($raidInfo["dateRaid"]))) {
+                $hasError = true;
+            } else {
+                // Ok on pas faire les mise à jour bdd
+                if ($isInsert) {
+                    $boss = $form["bossForm"];
+                    $hero1 = $form["hero1Form"];
+                    $hero2 = $form["hero2Form"];
+                    $hero3 = $form["hero3Form"];
+                    $hero4 = $form["hero4Form"];
+                    $this->submitFight(
+                        $form["recorderIdForm"],
+                        $form["guildForm"],
+                        $form["memberForm"],
+                        $form["raidIdForm"],
+                        $form["dateForm"],
+                        $form["teamForm"],
+                        $boss == 0 ? NULL : $boss,
+                        $form["damageForm"],
+                        $hero1 == 0 ? NULL : $hero1,
+                        $hero2 == 0 ? NULL : $hero2,
+                        $hero3 == 0 ? NULL : $hero3,
+                        $hero4 == 0 ? NULL : $hero4
+                    );
+                } elseif ($isUpdate or $isDeleted) {
+                        $boss = $isUpdate ? $form["bossForm"] : 0;
+                    $damage = $isUpdate ? $form["damageForm"] : NULL;
+                    $hero1 = $form["hero1Form"];
+                    $hero2 = $form["hero2Form"];
+                    $hero3 = $form["hero3Form"];
+                    $hero4 = $form["hero4Form"];
+                    $deleted = $isDeleted ? 1 : 0;
+                    $this->saveFight(
+                        $form["recorderIdForm"],
+                        $form["idForm"],
+                        $form["guildForm"],
+                        $form["memberForm"],
+                        $form["raidIdForm"],
+                        $form["dateForm"],
+                        $form["teamForm"],
+                        $boss == 0 ? NULL : $boss,
+                        $damage,
+                        $hero1 == 0 ? NULL : $hero1,
+                        $hero2 == 0 ? NULL : $hero2,
+                        $hero3 == 0 ? NULL : $hero3,
+                        $hero4 == 0 ? NULL : $hero4,
+                        $deleted
+                    );
+                }
+                if ($isTeamSaved == "on") {
+                    $this->addOrUpdateTeam(
+                        $form["memberForm"],
+                        $form["teamNbUsedForm"],
+                        $form["hero1Form"],
+                        $form["hero2Form"],
+                        $form["hero3Form"],
+                        $form["hero4Form"]
+                    );
+                }
+            }
+        }
+
+        $filter = NULL;
+        if ($isJoueur) {
+          $filter = $this->session->get('id');
+        }
+    
+        $f_date = $date;
+        $f_raid = $this->_raidManager->getById($raidInfo["id"]);
+        if ($hasError) {
+            $this->addMsg("warning", "Il y a eu un problème pendant le traitement de votre requête");
+        }
+
+        $members = (new MemberManager)->getAllByGuildId($guildId, $filter);
+        $teams = (new MemberManager())->getTeamsByGuild($guildId, $filter);
+        $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, $filter);
+
+        $v_fights = [];
+        foreach($members as $memId => $member) {
+            $v_fights[$memId] = ["member" => $member->getName(), "guildId" => $guildId, "savedTeams" => [], "fights" => []];
+            if (!array_key_exists($memId, $teams)) {
+                $v_fights[$memId]["teamIds"] = '';
+                $v_fights[$memId]["savedTeams"] = [];
+            } else {
+                $teamsByMember = $teams[$memId]["teams"];
+                $v_fights[$memId]["teamIds"] = implode("-", array_keys($teamsByMember));
+                foreach ($teamsByMember as $teamNb => $team) {
+                    $v_fights[$memId]["savedTeams"][$teamNb] = 
+                        ["id" => $team->getId(),
+                        "teamNumber" => $team->getTeamNumber(),
+                        "heros" => $team->getHero1Id()."-"
+                                    .$team->getHero2Id()."-"
+                                    .$team->getHero3Id()."-"
+                                    .$team->getHero4Id()];
+                }
+            }
+            if (!array_key_exists($memId, $fights)) {
+                $v_fights[$memId]["fights"] = [];
+            } else {
+                $fightsByMember = $fights[$memId]["fights"];
+                foreach ($fightsByMember as $fightNb => $fight) {
+                    $v_fights[$memId]["fights"][$fightNb] = [
+                        'id' => $fight->getId(),
+                        'guild' => $fight->getGuildInfo()["id"],
+                        'raid' => $fight->getRaidId(),
+                        'date' => $fight->getDate(),
+                        'boss' => $fight->getBossInfo()["id"],
+                        'damage' => $fight->getDamage(),
+                        'hero1' => $fight->getHero1Info()["id"],
+                        'hero2' => $fight->getHero2Info()["id"],
+                        'hero3' => $fight->getHero3Info()["id"],
+                        'hero4' => $fight->getHero4Info()["id"]
+                    ];
+                }
+            }
+        }
+
+        $v_characters = (new CharacterManager())->getAllOrderByGradeElementName();
+        $characters = [];
+        foreach ($v_characters as $character) {
+            $g = $character->getGrade();
+            if (!isset($characters[$g])) $characters[$g] = ['name' => $g, 'elements' => []];
+            $e = $character->getElementInfo();
+            if (!isset($characters[$g]['elements'][$e['id']])) $characters[$g]['elements'][$e['id']] = ['name' => $e['name'], 'characters' => []];
+            $characters[$g]['elements'][$e['id']]['characters'][$character->getId()] = $character->getName();
+        }
+
+        return $this->view->render($response, 'raid/fights.twig', [
+            'title' => "Enregistrement des attaques",
+            'filter' => $filter,
+            'members' => $v_fights,
+            'date' => $f_date,
+            'raid' => [
+                'id' => $f_raid->getId(),
+                'bosses' => [
+                    $f_raid->getBoss1Info()["id"] => $f_raid->getBoss1Info()["name"],
+                    $f_raid->getBoss2Info()["id"] => $f_raid->getBoss2Info()["name"],
+                    $f_raid->getBoss3Info()["id"] => $f_raid->getBoss3Info()["name"],
+                    $f_raid->getBoss4Info()["id"] => $f_raid->getBoss4Info()["name"]                    
+                ]
+                ],
+                'characters' => $characters
+        ]);
+    }
+
     private function isInRange($value, $min, $max) {
         if ($value < $min) {
           return false;
@@ -402,15 +669,73 @@ final class RaidController extends BaseController
         return true;
       }
       
-      private function getColor($guildColor) {
+    private function getColor($guildColor) {
         if ($guildColor == "warning") {
-          return "#ffc107aa";
+            return "#ffc107aa";
         } elseif ($guildColor == "lightblue") {
-          return "#3c8dbc66";
+            return "#3c8dbc66";
         } elseif ($guildColor == "lime") {
-          return "#01ff7099";
+            return "#01ff7099";
         }
         return "#ffffff";
-      }
+    }
       
-  }
+    private function checkDate($date) {
+        if ($date > date("Y-m-d")) {
+            $this->addMsg("warning", "Vous ne pouvez pas anticiper une attaque");
+            return false;
+        }
+        return true;
+    }
+
+    private function checkFight($bossId, $damage) {
+        if(!is_numeric($damage) or is_null($damage) or (intval($damage) < 0)) {
+            $this->addMsg("warning", "Les dégâts doivent être positif");
+            return false;
+        }
+        return true;
+    }
+
+    private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
+        if ($bossId == 0 or is_null($damage)) {
+            $this->addMsg("warning", "Selectionner un boss et définisser des dommages");
+            return;
+        }
+        try {
+            if (!$this->_fightManager->isExist($memberId, $date, $teamNumber)) {
+                try {
+                    $this->_fightManager->addFight($memberId, $guildId, $raidId, $date,
+                                                  $teamNumber, $bossId, $damage,
+                                                  $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId);
+                    $this->addMsg("success", "Attaque enregistrée");
+                } catch (Exception $e) {
+                    $this->addMsg("danger", $e->getMessage());
+                }
+            }
+        } catch (Exception $e) {
+            $this->addMsg("danger", $e->getMessage());
+        }
+
+    }
+
+    private function saveFight($recorderId, $id, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $deleted) {
+        if ($this->_fightManager->checkFight($id, $guildId, $memberId, $date, $teamNumber)) {
+            if($this->_fightManager->updateFight($id, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted)){
+                    $this->addMsg("success", "Attaque modifiée");
+            }
+        }
+    }
+
+    private function addOrUpdateTeam($memberId, $teamNumber, $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
+        $id = $this->_teamManager->getTeamId($memberId, $teamNumber);
+        if ($id != 0) {
+            $editParams = Array("hero1Id" => $hero1Id,
+                "hero2Id" => $hero2Id,
+                "hero3Id" => $hero3Id,
+                "hero4Id" => $hero4Id);
+            $this->_teamManager->updateTeamNyMemberAndTeam($id, $editParams);
+        } else {
+            $this->_teamManager->addTeam($memberId, $teamNumber, $hero1Id, $hero2Id, $hero3Id, $hero4Id);
+        }
+    }
+}

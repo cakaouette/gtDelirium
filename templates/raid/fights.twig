@@ -1,0 +1,287 @@
+{% extends "layout.twig" %}
+
+{% macro print_select_hero(position, charactersByGradeAndElement) %}
+<select name="hero{{ position }}Form" id="hero{{ position }}FormId" class="custom-select form-control">
+    <option value="0"></option>
+    {% for grade in charactersByGradeAndElement %}
+        <optgroup label="Level {{ grade.name }}*">
+        {% for element in grade.elements %}
+            <optgroup label=".{{element.name}}.">
+            {% for id, name in element.characters %}
+                <option value="{{id}}">{{name}}</option>
+            {% endfor %}
+            </optgroup>
+        {% endfor %}
+        </optgroup>
+    {% endfor %}
+</select>
+{% endmacro %}
+
+{% block title %}Raid{% endblock %}
+
+{% block content %}
+<div class="row justify-content-between">
+<div class="col-md-7">
+<form method="get" class="form-horizontal">
+  <div class="form-group row align-items-center">
+    <label for="dateFormId" class="col-sm-1 col-form-label">Date: </label>
+    <div class="col-sm-3">
+      <input type="date"
+             name="date"
+             id="dateFormId"
+             value="{{ date }}"/>
+    </div>
+    <div class="col-sm-2">
+      <button type="submit" class="btn btn-primary">Selectionner</button>
+    </div>
+  </div>
+</form>
+</div>
+</div>
+<div class="row">
+{% for memberId, info in members %}
+  <div class="col-lg-4 col-sm-6 col-12">
+    <div class="info-box">
+      <div class="info-box-content col-6">
+        <span class="info-box-text">{{ info.member }}</span>
+        <div team_nb="{{ info.teamIds }}"
+            {% for nb, team in info.savedTeams %}
+            team_{{ nb }}="{{ team.id }}:{{team.number}}:{{team.heros}}"
+            {% endfor %}
+            >
+        </div>
+      </div>
+      {% for i in 1..3 %}
+      {% set isEdit = info.fights[i] is defined %}
+      <div class="info-box-content col-2">
+        <button type="button" class="btn btn-{{ isEdit ? 'default' : 'primary' }}";
+                data-toggle="modal" 
+                data-target="#modalAll" 
+                data-is_edit="{{ isEdit ? 'true' : 'false' }}"
+                data-id="{{ isEdit ? info.fights[i].id : '' }}"
+                data-guild_id="{{ isEdit ? info.fights[i].guild : info.guildId }}"
+                data-raid_id="{{ isEdit ? info.fights[i].raid : raid.id }}"
+                data-member_id="{{ memberId }}"
+                data-member_name="{{ info.member }}"
+                data-date="{{ isEdit ? info.fights[i].date : date }}"
+                data-team_number="{{ i }}"
+                
+                data-boss_id="{{ isEdit ? info.fights[i].boss : 0 }}"
+                data-damage="{{ isEdit ? info.fights[i].damage : '' }}"
+                data-team_hero1="{{ isEdit ? info.fights[i].hero1 : 0 }}"
+                data-team_hero2="{{ isEdit ? info.fights[i].hero2 : 0 }}"
+                data-team_hero3="{{ isEdit ? info.fights[i].hero3 : 0 }}"
+                data-team_hero4="{{ isEdit ? info.fights[i].hero4 : 0 }}"
+                {{ isEdit ? 'style="padding: 0"' : '' }}
+        >
+            {% if isEdit %}
+            <img src="/dist/image/bosses/{{ info.fights[i].boss }}.png"
+                class="img-fluid img-thumbnail"
+                data-toggle="tooltip" title="{{ info.fights[i].damage|number_format(0, ',', ' ') }}"
+                style="padding: 0"
+                alt="{{ info.fights[i].boss }}">
+            {% else %}
+            <i class="right fas fa-plus"></i>
+            {% endif %}
+        </button>
+      </div>
+    {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalAll">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content bg-default">
+      <div class="modal-header bg-{{ guild.color }}">
+        <h4 class="modal-title">memberName:</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form class="form" role="form" method="post">
+        {% include 'csrf.twig' %}
+        <div class="modal-body">
+          <input type="hidden" id="recorderIdFormId" name="recorderIdForm" value="{{ user.id }}"/>
+          <input type="hidden" id="idFormId" name="idForm" value=""/>
+          <input type="hidden" id="guildFormId" name="guildForm" value=""/>
+          <input type="hidden" id="memberFormId" name="memberForm" value=""/>
+          <input type="hidden" id="raidIdFormId" name="raidIdForm" value=""/>
+          <input type="hidden" id="dateFormId" name="dateForm" value=""/>
+          <input type="hidden" id="teamFormId" name="teamForm" value=""/>
+          <input type="hidden" id="teamNbUsedFormId" name="teamNbUsedForm" value=""/>
+          <div class="form-group row">
+            <label for="bossFormId" class="col-sm-1 col-form-label">Boss: </label>
+            <div class="col-sm-3">
+              <select name="bossForm"
+                      id="bossFormId"
+                      class="custom-select form-control">
+                <option value="0"></option>
+                {% for id, name in raid.bosses %}
+                <option value="{{ id }}">{{ name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-sm-2">
+              <input type="number"
+                     class="form-control" 
+                     id="damageFormId"
+                     name="damageForm"
+                     placeholder="Dégâts">
+            </div>
+            <button type="submit" class="btn btn-primary col-sm-2 buttonSubmit"></button>
+          </div>
+          <div class="form-group row align-items-center">
+            <label for="hero1FormId" class="col-sm-1 col-form-label">Team: </label>
+            <div class="col-sm-2">
+                {{ _self.print_select_hero(1, characters) }}
+            </div>
+            <div class="col-sm-2">
+                {{ _self.print_select_hero(2, characters) }}
+            </div>
+            <div class="col-sm-2">
+                {{ _self.print_select_hero(3, characters) }}
+            </div>
+            <div class="col-sm-2">
+                {{ _self.print_select_hero(4, characters) }}
+            </div>
+            <div class="col-sm-2">
+              <div class="custom-control custom-switch" added="false">
+                <!-- input checkbox -->
+              </div>
+            </div>
+            <div class="col-sm-1">
+              <button type="button"
+                      class="btn btn-outline-secondary clean-team">
+                <i class="right fas fa-brush"></i>
+              </button>
+            </div>
+          </div>
+          <div class="row">
+          {% for i in 0..1 %}
+            <div class="col-sm-6">
+            {% for j in 1..3 %}
+                {% set index = j + (i * 3) %}
+                <div class="form-group row align-items-center">
+                    <div class="col-sm-1">
+                        <i class="far fa-dot-circle "></i>
+                    </div>
+                    <div class="col-sm-11 select-team" id="select-team{{ index }}">
+                    {% for k in 1..4 %}
+                        <img src="/dist/image/heros/0_icon.png" hero="{{ k }}"
+                            class="img-fluid img-thumbnail hero team{{ index }}"
+                            width="100" height="100" alt="0">
+                    {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+          {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between bg-default">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="submit"
+                  class="btn btn-primary buttonSubmit"
+                  name="updateForm"></button>
+          <button type="submit" class="btn btn-outline-danger float-right" name="teamDeleteForm" >Supprimer</button>
+        </div>
+      </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+$(function () {
+    $('#modalAll').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget); // Button that triggered the modal
+      var modal = $(this);
+      var memberName = button.data('member_name'); // Extract info from data-* attributes
+      var teamNumber = button.data('team_number');
+      modal.find('.modal-title').text(memberName + ' - Attaque ' + teamNumber);
+      
+      modal.find('#idFormId').val(button.data('id'));
+      modal.find('#guildFormId').val(button.data('guild_id'));
+      modal.find('#memberFormId').val(button.data('member_id'));
+      modal.find('#raidIdFormId').val(button.data('raid_id'));
+      modal.find('#dateFormId').val(button.data('date'));
+      modal.find('#teamFormId').val(teamNumber);
+      modal.find('#bossFormId').val(button.data('boss_id'));
+      modal.find('#damageFormId').val(button.data('damage'));
+      // 
+      var valueHero1 = '#hero1FormId option[value="' + button.data('team_hero1') + '"]';
+      $(valueHero1).prop('selected', true);
+      var valueHero2 = '#hero2FormId option[value="' + button.data('team_hero2') + '"]';
+      $(valueHero2).prop('selected', true);
+      var valueHero3 = '#hero3FormId option[value="' + button.data('team_hero3') + '"]';
+      $(valueHero3).prop('selected', true);
+      var valueHero4 = '#hero4FormId option[value="' + button.data('team_hero4') + '"]';
+      $(valueHero4).prop('selected', true);
+      if (button.data('is_edit')) {
+        modal.find('.buttonSubmit').attr("name" , 'teamUpdateForm');
+        modal.find('.buttonSubmit').text('Modifier');
+      } else {
+        modal.find('.buttonSubmit').attr("name" , 'teamAddForm');
+        modal.find('.buttonSubmit').text('Sauvegarder');
+      }
+      
+      // set team saved
+      var teamSaved = button.parent().parent().children("div").first().children("div");
+      var teamSavedInfo = teamSaved.attr('team_nb');
+      if (teamSavedInfo !== "") {
+        $.each(teamSavedInfo.split('-'), function(index, value) {
+          var teamInfo = teamSaved.attr('team_'+value).split(':');
+          var heroId = teamInfo['2'].split('-');
+          $('.hero.team'+value).each(function(index) {
+            $( this ).attr("alt", heroId[index]);
+            $( this ).attr("src", '/dist/image/heros/'+heroId[index]+'_icon.png');
+          });
+        });
+      }
+    });
+    
+    $('.select-team').click(function () {
+      var teamNb = $(this).get(0).id.split("team")[1];
+      var savedHeros = $(this).find('.hero');
+      var switchButton = $('.custom-control.custom-switch');
+      if (switchButton.attr('added') == 'false') {
+        var input = '<input type="checkbox"'
+                    +'class="custom-control-input"'
+                    +'name="saveTeamForm"'
+                    +'id="saveTeamFormId">';
+        var label = '<label class="custom-control-label" for="saveTeamFormId">Save team ?</label>';
+        switchButton.append(input);
+        switchButton.append(label);
+        switchButton.attr('added', 'true');
+      }
+      
+      $('#teamNbUsedFormId').val(teamNb);
+      savedHeros.each(function( index ) {
+        var valueHero = '#hero'+(index+1)+'FormId option[value="' + $( this ).attr("alt") + '"]';
+        $(valueHero).prop('selected', true);
+      });
+    });
+    
+    $('.clean-team').click(function () {
+      var switchButton = $('.custom-control.custom-switch');
+      switchButton.attr('added', false);
+      switchButton.empty();
+      
+      $.each( [1,2,3,4], function( i, v ){
+        var valueHero = '#hero'+v+'FormId option[value="0"]';
+        $(valueHero).prop('selected', true);
+      });
+    });
+});
+</script>
+{% endblock %}
