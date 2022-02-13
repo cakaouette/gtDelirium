@@ -3,26 +3,25 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\BossManager;
+use App\Manager\WeaponManager;
+use App\Manager\AilmentManager;
+use App\Manager\AilmentEnduranceManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
-//TODO use namespace and use instead of require once migration is over
-require_once('model/Manager/BossManager.php');
-use BossManager;
-require_once('model/Manager/AilmentManager.php');
-use AilmentManager;
-require_once('model/Manager/AilmentEnduranceManager.php');
-use AilmentEnduranceManager;
-require_once('model/Manager/WeaponManager.php');
-use WeaponManager;
 
 final class BossController extends BaseController
 {
     private BossManager $_bossManager;
+    private WeaponManager $_weaponManager;
+    private AilmentManager $_ailmentManager;
+    private AilmentEnduranceManager $_ailmentEnduranceManager;
     
-    protected function __init() {
-        //TODO inject instead
-        $this->_bossManager = new BossManager();
+    protected function __init($bag) {
+        $this->_bossManager = $bag->get(BossManager::class);
+        $this->_weaponManager = $bag->get(WeaponManager::class);
+        $this->_ailmentManager = $bag->get(AilmentManager::class);
+        $this->_ailmentEnduranceManager = $bag->get(AilmentEnduranceManager::class);
     }
 
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -48,11 +47,11 @@ final class BossController extends BaseController
                 'name' => $v_boss->getName(),
                 'ailments' => []
             ];
-            $_ailments = (new AilmentManager)->getAll();
+            $_ailments = $this->_ailmentManager->getAll();
             $v_ailments = Array();
             foreach ($_ailments as $aId => $ailment) {
                 $weapons = [];
-                foreach ((new WeaponManager())->getByAilmentBoss($aId, $id) as $wId => $weapon) {
+                foreach ($this->_weaponManager->getByAilmentBoss($aId, $id) as $wId => $weapon) {
                     $charac = $weapon->getCharacInfo();
                     $weapons[$wId] = [
                         'name' => $weapon->getName(),
@@ -114,7 +113,7 @@ final class BossController extends BaseController
 
     private function addAe($weaponId, $bossId, $rate) {
         try {
-            if ((new AilmentEnduranceManager())->add($weaponId, $bossId, $rate)) {
+            if ($this->_ailmentEnduranceManager->add($weaponId, $bossId, $rate)) {
                 $this->addMsg("success", "info ajoutée");
             }
         } catch (Exception $e) {
@@ -129,7 +128,7 @@ final class BossController extends BaseController
         }
         $editParams = Array("weaponId" => $weaponId, "bossId" => $bossId, "rate" => $rate);
         try {
-            return (new AilmentEnduranceManager())->updateAe($id, $editParams);
+            return $this->_ailmentEnduranceManager->updateAe($id, $editParams);
         } catch (Exception $e) {
             $this->addMsg("danger", "Erreur pendant la mise à jour des informations");
         }

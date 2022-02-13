@@ -1,14 +1,15 @@
 <?php
-include_once("AbstractManager.php");
+
+namespace App\Manager;
+
+use Exception;
 
 class CrewManager extends AbstractManager
 {
     const DB_NAME = 'crew';
     const DB_PREFIX = 'crw';
 
-    public function __construct() {
-        parent::__construct(CrewManager::DB_NAME, CrewManager::DB_PREFIX);
-    }
+    protected function getTable() { return [CrewManager::DB_PREFIX, CrewManager::DB_NAME]; }
 
     public function addCrew($memberId, $charactId, $level, $evolveld, $nbBreak, $hasWeapon, $nbWeaponBreak) {
         $this->reset();

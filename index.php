@@ -1,6 +1,6 @@
 <?php
 session_start();
-require('private/indexPrivate.php');
+//require('private/indexPrivate.php');
 
 include_once('tools/utils.php');
 

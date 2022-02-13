@@ -3,6 +3,8 @@
 namespace App\Middleware;
 
 use Exception;
+use App\Manager\RaidManager;
+use App\Manager\PermissionManager;
 use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -11,22 +13,21 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Interfaces\RouteParserInterface;
 
-require_once('controller/Raid/RaidControler.php');
-use RaidControler;
-require_once('model/Manager/PermissionManager.php');
-use PermissionManager;
-
-//To add to routes that need auth
 final class CoexistenceMiddleware implements MiddlewareInterface
 {
     private ResponseFactoryInterface $responseFactory;
     private SessionInterface $session;
     private RouteParserInterface $router;
+    private RaidManager $raids;
+    private PermissionManager $permissions;
 
-    public function __construct(ResponseFactoryInterface $responseFactory, SessionInterface $session, RouteParserInterface $router) {
+    public function __construct(ResponseFactoryInterface $responseFactory, SessionInterface $session,
+        RouteParserInterface $router, PermissionManager $permissions, RaidManager $raids) {
         $this->responseFactory = $responseFactory;
         $this->session = $session;
         $this->router = $router;
+        $this->permissions = $permissions;
+        $this->raids = $raids;
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface{
@@ -45,15 +46,14 @@ final class CoexistenceMiddleware implements MiddlewareInterface
         if (!$this->session->isStarted()) {
             $this->session->start();
             if (!$this->session->has('login')) {
-                $permissionManager = new PermissionManager();
                 $this->session->set("login", NULL);
                 $this->session->set("id", NULL);
                 $this->session->set("redirectUrl", NULL);
-                $this->session->set("grade", $permissionManager->getGradeByName("Visiteur"));
+                $this->session->set("grade", $this->permissions->getGradeByName("Visiteur"));
                 $this->session->set("guild", Array("id" => NULL, "name" => NULL));
                 $this->session->set("nbPending", NULL);
                 try {
-                    RaidControler::setGuildRaidInfo(NULL, NULL);
+                    $this->setGuildRaidInfo();
                 } catch (Exception $e) {
                     $this->session->set("raidInfo", Array("id" => NULL,
                                                 "dateRaid" => NULL,
@@ -61,7 +61,7 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                                                 "isFinished" => NULL));
                 }
 
-                foreach ($permissionManager->getAllInRawData() as $permId =>$permInfo) {
+                foreach ($this->permissions->getAllInRawData() as $permId =>$permInfo) {
                     $this->session->set($permInfo["name"], $permInfo["grade"]);
                 }
             }
@@ -75,6 +75,7 @@ final class CoexistenceMiddleware implements MiddlewareInterface
         $path = $uri->getPath();
         $query = $uri->getQuery();
         if ($path == "/" || $path == "/index.php") {
+            if (!isset($_GET['page'])) return $this->route->urlFor('home');
             switch ($_GET['page']) {
                 case 'connect':
                     return $this->router->urlFor('connect');
@@ -100,5 +101,33 @@ final class CoexistenceMiddleware implements MiddlewareInterface
             return false;
         }
         return true;
+    }
+
+    private function setGuildRaidInfo()
+    {
+        $now = time();
+        if (is_null($raidId)) {
+            $raid = $this->raids->getLastByDate();
+            $raidId = $raid->getId();
+            $raidDate = $raid->getDate();
+        }
+        $dPreview = $this->raids->getPreviewDate();
+        if (!is_null($dPreview)) {
+            $this->session->set('raidPreview', [
+                'id' => $dPreview->getId(),
+                'dateRaid' => $dPreview->getDate()
+            ]);
+        } else {
+            $this->sessions->set('raidPreview', ['id' => NULL, 'dateRaid' => NULL]);
+        }
+        $date2 = strtotime($raidDate);
+        $diff = max(($now - $date2), 0);
+        $dayNumber = floor((($diff / 60) / 60 ) / 24);
+        $this->session->set('raidInfo', [
+            'id' => $raidId,
+            'dateRaid' => $raidDate,
+            'dateNumber' => min($dayNumber, 13),
+            'isFinished' => $dayNumber > 13
+        ]);
     }
 }

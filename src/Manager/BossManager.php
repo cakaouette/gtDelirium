@@ -1,15 +1,16 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Boss.php");
+
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Boss;
 
 class BossManager extends AbstractManager
 {
     const DB_NAME = 'boss';
     const DB_PREFIX = 'bos';
 
-    public function __construct() {
-        parent::__construct(BossManager::DB_NAME, BossManager::DB_PREFIX);
-    }
+    protected function getTable() { return [BossManager::DB_PREFIX, BossManager::DB_NAME]; }
 
     public function getBossById($id) {
         $this->reset();

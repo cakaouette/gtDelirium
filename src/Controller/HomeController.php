@@ -3,24 +3,28 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\GuildManager;
+use App\Manager\MemberManager;
+use App\Manager\PendingManager;
+use App\Manager\PermissionManager;
 use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-//TODO use namespace and use instead of require once migration is over
-require_once('model/Manager/MemberManager.php');
-use MemberManager;
-require_once('model/Manager/GuildManager.php');
-use GuildManager;
-require_once('model/Manager/PendingManager.php');
-use PendingManager;
-require_once('model/Manager/RaidManager.php');
-use RaidManager;
-require_once('model/Manager/PermissionManager.php');
-use PermissionManager;
-
 final class HomeController extends BaseController
 {
+    private GuildManager $_guildManager;
+    private MemberManager $_memberManager;
+    private PendingManager $_pendingManager;
+    private PermissionManager $_permissionManager;
+
+    protected function __init($bag) {
+        $this->_guildManager = $bag->get(GuildManager::class);
+        $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_pendingManager = $bag->get(PendingManager::class);
+        $this->_permissionManager = $bag->get(PermissionManager::class);
+    }
+
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         return $this->view->render($response, 'home/index.twig');
     }
@@ -31,9 +35,7 @@ final class HomeController extends BaseController
             $form = $request->getParsedBody();
             $login = $form['loginForm'];
             $passwd = $form['passwdForm'];
-            //TODO get it from settings
-            require('private/indexPrivate.php');
-            $redirect = $this->connectWith($login, md5($passwd.$_SALT.$login));
+            $redirect = $this->connectWith($login, $passwd));
             if ($redirect !== false) {
                 return $this->redirect($response, $redirect);
             }
@@ -53,9 +55,7 @@ final class HomeController extends BaseController
             $checkPwd = (new PasswordValidator())->validate($passwd);;
             $errorPasswd = $checkPwd['msg'];
             if (!is_null($pseudo) and !is_null($login) and ($checkPwd['accept'] === true)) {
-                //TODO get it from settings
-                require('private/indexPrivate.php');
-                if ($this->addPending($pseudo, $login, md5($passwd.$_SALT.$login))) {
+                if ($this->addPending($pseudo, $login, $this->_memberManager->cryptPassword($passwd, $login))) {
                     return $this->redirect($response, ['home']);
                 }
             }
@@ -77,15 +77,13 @@ final class HomeController extends BaseController
     {
         if (!(is_null($login) or $login == "") and !is_null($passwd)) {
             try {
-                //TODO inject in the constructor
-                $memberManager = new MemberManager();
-                $member = $memberManager->getByLogin($login);
+                $member = $this->_memberManager->getByLogin($login);
             } catch (Exception $ex) {
                 $member = NULL;
                 $this->addMsg("danger", "Login ou mdp incorrect");
             }
             
-            if (!is_null($member) and ($member->getPasswd() == $passwd)) {
+            if (!is_null($member) and $this->_memberManager->isPasswdCorrect($member, $passwd))) {
                 $redirectUrl = $this->session->get("redirectUrl");
 
                 //TODO uncomment when grades are out of the session (security risk)
@@ -93,22 +91,18 @@ final class HomeController extends BaseController
                 //$this->session->start();
                 //$this->session->regenerateId();
 
-                $permissionManager = new PermissionManager();
-                $guild = (new GuildManager())->getById($member->getGuildInfo()["id"]);
+                $guild = $this->_guildManager->getById($member->getGuildInfo()["id"]);
 
                 $this->session->set("id", $member->getId());
                 $this->session->set("login", $login);
-                $this->session->set("grade", $permissionManager->getGradeById($member->getPermInfo()["id"]));
+                $this->session->set("grade", $this->_permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
-                //TODO replace url when the page is finished
-                $defaultPage = '/index.php?page=raid&subpage=info';
-                //$defaultPage = $this->router->urlFor('raid-info');
+                $defaultPage = ['raid-info'];
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
                 {
-                    $defaultPage = '/?page=admin&subpage=dashboard';
-                    //$defaultPage = $this->router->urlFor('admin-dashboard');
+                    $defaultPage = ['admin-dashboard'];
                     try {
-                        $nb = count((new PendingManager())->getAll());
+                        $nb = count($this->_pendingManager->getAll());
                         $this->session->set("nbPending", $nb);
                     } catch (Exception $ex) {
                     }
@@ -125,14 +119,13 @@ final class HomeController extends BaseController
     private function addPending($pseudo, $login, $passwd)
     {
         //TODO inject in the constructor
-        $pendingManager = new PendingManager();
-        if(!is_null($pendingManager->getPendingByPseudo($pseudo))) {
+        if(!is_null($this->_pendingManager->getPendingByPseudo($pseudo))) {
             $this->addMsg("warning", "Vous êtes toujours en attente de validation, "
             . "Si c'est urgent, vous pouvez contacter un admin/chef sur le channel \"Site\" du discord");
             return false;
         }
         try {
-            if ($pendingManager->addPending($pseudo, $login, $passwd)) {
+            if ($this->_pendingManager->addPending($pseudo, $login, $passwd)) {
                 $this->addMsg("success", "Pré-inscription réussite");
                 $this->addMsg("info", "Patientez le temps qu'un admin valide le compte"
                         . " (ou contacter un admin/chef sur le channel \"Site\" du discord)");
@@ -143,6 +136,4 @@ final class HomeController extends BaseController
         }
         return true;
     }
-
-
 }

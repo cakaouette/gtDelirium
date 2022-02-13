@@ -5,6 +5,7 @@ use Monolog\Logger;
 use Slim\Csrf\Guard;
 use Slim\Views\Twig;
 use Monolog\ErrorHandler;
+use Laminas\Config\Config;
 use Slim\Factory\AppFactory;
 use Odan\Session\PhpSession;
 use Twig\Extra\Html\HtmlExtension;
@@ -19,8 +20,8 @@ use Odan\Session\Middleware\SessionMiddleware;
 use Slim\Handlers\Strategies\RequestResponseArgs;
 
 return [
-    'settings' => function () {
-        return require __DIR__ . '/settings.php';
+    Config::class => function () {
+        return new Config(require __DIR__ . '/settings.php');
     },
 
     App::class => function (ContainerInterface $container) {
@@ -37,7 +38,7 @@ return [
     ErrorMiddleware::class => function (ContainerInterface $container) {
         $app = $container->get(App::class);
         $logger = $container->get(Logger::class);
-        $settings = $container->get('settings')['error'];
+        $settings = $container->get(Config::class)->get('error');
 
         return new ErrorMiddleware(
             $app->getCallableResolver(),
@@ -71,7 +72,7 @@ return [
     },
 
     Logger::class => function (ContainerInterface $container) {
-        $settings = $container->get('settings')['logger'];
+        $settings = $container->get(Config::class)->get('logger');
         $logger = new Logger($settings['name']);
         ErrorHandler::register($logger);
         $logger->pushHandler(new RotatingFileHandler($settings['file'], 0, $settings['level'], true, $settings['file_permission']));
@@ -79,9 +80,9 @@ return [
     },
 
     SessionInterface::class => function (ContainerInterface $container) {
-        $settings = $container->get('settings');
+        $settings = $container->get(Config::class)->get('session');
         $session = new PhpSession();
-        $session->setOptions((array)$settings['session']);
+        $session->setOptions($settings->toArray());
 
         return $session;
     },

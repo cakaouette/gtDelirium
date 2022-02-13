@@ -3,20 +3,25 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\MemberManager;
+use App\Manager\ElementManager;
+use App\Manager\CharacterManager;
 use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-//TODO use namespace and use instead of require once migration is over
-require_once('model/Manager/ElementManager.php');
-use ElementManager;
-require_once('model/Manager/CharacterManager.php');
-use CharacterManager;
-require_once('model/Manager/MemberManager.php');
-use MemberManager;
-
 final class ProfileController extends BaseController
 {
+    private MemberManager $_memberManager;
+    private ElementManager $_elementManager;
+    private CharacterManager $_characterManager;
+    
+    protected function __init($bag) {
+        $this->_characterManager = $bag->get(CharacterManager::class);
+        $this->_elementManager = $bag->get(ElementManager::class);
+        $this->_memberManager = $bag->get(MemberManager::class);
+    }
+
     public function me(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         return $this->index($request, $response, $this->session->get('id'));
     }
@@ -33,9 +38,9 @@ final class ProfileController extends BaseController
         $frame3 = "#ffd626";
         $frame2 = "#26dbff";
 
-        $elements = ElementManager::getAllInRawData();
+        $elements = $this->_elementManager->getAllInRawData();
         try {
-            $_characts = (new CharacterManager)->getAllForMember($id);
+            $_characts = $this->_characterManager->getAllForMember($id);
         } catch (Exception $e){
             $this->session->getFlash()->add("danger", $e->getMessage());
         }
@@ -58,7 +63,7 @@ final class ProfileController extends BaseController
                 ];
         }
 
-        $v_member = (new MemberManager())->getDetailById($id);
+        $v_member = $this->_memberManager->getDetailById($id);
         $v_guild = $v_member->getGuildInfo();
               
         return $this->view->render($response, 'profile/index.twig', [
@@ -85,15 +90,13 @@ final class ProfileController extends BaseController
         if ($update) {
             $id = $form["idForm"];
             $passwd = $form["oldPasswdForm"];
-            //TODO get it from settings
-            require('private/indexPrivate.php');
-            if ($id == $this->session->get('id') and $this->passwdUpdateGrated($id, $passwd.$_SALT)) {
+            if ($id == $this->session->get('id') and $this->passwdUpdateGrated($id, $passwd)) {
                 $newPasswd = $form["newPasswdForm"];
                 $newPasswd = !empty($newPasswd) ? $newPasswd : $passwd;
                 $result = (new PasswordValidator())->validate($newPasswd);
                 $login = $form["loginForm"];
                 if ($result["accept"]) {
-                    $this->updateMember($id, $login, md5($newPasswd.$_SALT.$login));
+                    $this->updateMember($id, $login, $newPasswd));
                 } else {
                     $this->addMsg("warning", $result["msg"]);
                 }
@@ -116,8 +119,8 @@ final class ProfileController extends BaseController
 
     //TODO move out of the controller
     private function passwdUpdateGrated($id, $passwd) {
-        $v_member = (new MemberManager())->getDetailById($id);
-        return $v_member->getPasswd() == md5($passwd.$v_member->getLogin());
+        $v_member = $this->_memberManager->getDetailById($id);
+        return $this->_memberManager->isPasswdCorrect($v_member, $passwd);
     }
   
     //TODO move out of the controller
@@ -127,7 +130,7 @@ final class ProfileController extends BaseController
           return;
         }
         
-        if((new MemberManager())->updateLoginPasswd($id, $login, $passwd)){
+        if($this->_memberManager->updateLoginPasswd($id, $login, $passwd)){
             $this->addMsg("success", "Login et/ou mot de passe sauvegardé");
         }
       }

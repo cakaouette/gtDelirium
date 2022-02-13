@@ -3,37 +3,38 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\RankManager;
+use App\Manager\RaidManager;
+use App\Manager\GuildManager;
+use App\Manager\MemberManager;
+use App\Manager\RankGoalManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-//TODO use namespace and use instead of require once migration is over
-require_once('model/Manager/GuildManager.php');
-use GuildManager;
-require_once('model/Manager/MemberManager.php');
-use MemberManager;
-require_once('model/Manager/RankManager.php');
-use RankManager;
-require_once('model/Manager/RankGoalManager.php');
-use RankGoalManager;
-require_once('model/Manager/RaidManager.php');
-use RaidManager;
-
 final class AllianceController extends BaseController
 {
+    private RankManager $_rankManager;
+    private RaidManager $_raidManager;
     private GuildManager $_guildManager;
+    private MemberManager $_memberManager;
+    private RankGoalManager $_rankGoalManager;
 
-    protected function __init() {
-        $this->_guildManager = new GuildManager();
+    protected function __init($bag) {
+        $this->_rankManager = $bag->get(RankManager::class);
+        $this->_raidManager = $bag->get(RaidManager::class);
+        $this->_guildManager = $bag->get(GuildManager::class);
+        $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_rankGoalManager = $bag->get(RankGoalManager::class);
     }
 
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $guilds = $this->_guildManager->getAll();
         $v_info = Array();
         try {
-            $counts = (new MemberManager())->countMemberByGuildId();
-            $ranks = (new RankManager())->getAll();
-            $objectives = (new RankGoalManager())->getAll();
-            $raids = (new RaidManager())->getDates();
+            $counts = $this->_memberManager->countMemberByGuildId();
+            $ranks = $this->_rankManager->getAll();
+            $objectives = $this->_rankGoalManager->getAll();
+            $raids = $this->_raidManager->getDates();
         } catch (Exception $e) {
             $guilds = [];
             $this->addMsg("warning", $e->getMessage());

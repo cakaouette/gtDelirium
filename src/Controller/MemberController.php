@@ -3,33 +3,34 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\TeamManager;
+use App\Manager\CrewManager;
+use App\Manager\GuildManager;
+use App\Manager\MemberManager;
+use App\Manager\ElementManager;
+use App\Manager\PendingManager;
+use App\Manager\CharacterManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-require_once('model/Manager/MemberManager.php');
-use MemberManager;
-require_once('model/Manager/TeamManager.php');
-use TeamManager;
-require_once('model/Manager/GuildManager.php');
-use GuildManager;
-require_once('model/Manager/PendingManager.php');
-use PendingManager;
-require_once('model/Manager/CrewManager.php');
-use CrewManager;
-require_once('model/Manager/ElementManager.php');
-use ElementManager;
-require_once('model/Manager/CharacterManager.php');
-use CharacterManager;
-
 final class MemberController extends BaseController
 {
+    private CharacterManager $_characterManager;
+    private ElementManager $_elementManager;
+    private PendingManager $_pendingManager;
     private MemberManager $_memberManager;
+    private GuildManager $_guildManager;
     private TeamManager $_teamManager;
+    private CrewManager $_crewManager;
     
-    protected function __init() {
-        //TODO inject instead
-        $this->_memberManager = new MemberManager();
-        $this->_teamManager = new TeamManager();
+    protected function __init($bag) {
+        $this->_characterManager = $bag->get(CharacterManager::class);
+        $this->_elementManager = $bag->get(ElementManager::class);
+        $this->_pendingManager = $bag->get(PendingManager::class);
+        $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_guildManager = $bag->get(GuildManager::class);
+        $this->_teamManager = $bag->get(TeamManager::class);
+        $this->_crewManager = $bag->get(CrewManager::class);
     }
 
     public function new(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -44,7 +45,7 @@ final class MemberController extends BaseController
         }
         try {
             $v_guilds = [];
-            foreach ((new GuildManager())->getAll() as $guild) {
+            foreach ($this->_guildManager->getAll() as $guild) {
               $v_guilds[] = ['id' => $guild->getId(), 'name' => $guild->getName()];
             }
         } catch (Exception $e){
@@ -73,7 +74,7 @@ final class MemberController extends BaseController
         }
         try {
             $v_guilds = [];
-            foreach ((new GuildManager())->getAll() as $guild) {
+            foreach ($this->__guildManager->getAll() as $guild) {
               $v_guilds[] = ['id' => $guild->getId(), 'name' => $guild->getName()];
             }
         } catch (Exception $e){
@@ -123,7 +124,7 @@ final class MemberController extends BaseController
                 );
             }
         }
-        $v_characters = (new CharacterManager())->getAllOrderByGradeElementName();
+        $v_characters = $this->_characterManager->getAllOrderByGradeElementName();
         $characters = [];
         foreach ($v_characters as $character) {
             $g = $character->getGrade();
@@ -157,7 +158,6 @@ final class MemberController extends BaseController
     public function pending(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         if ($this->session->get("grade") > $this->session->get("Officier")) return $this->redirect($response, ['403']);
 
-        $pendingManager = new PendingManager();
         if ($request->getMethod() === 'POST') {
             $form = $request->getParsedBody();
             $isSubmit = isset($form["linkAccount"]);
@@ -165,12 +165,12 @@ final class MemberController extends BaseController
             $pendingId = $form["pendingForm"];
             if ($isSubmit and !is_null($memberId) and $memberId != 0 and !is_null($pendingId)) {
                 try {
-                    $pending = $pendingManager->getPendingById($pendingId);
+                    $pending = $this->_pendingManager->getPendingById($pendingId);
                     $res = $this->_memberManager->updateMember($memberId,
                         Array("login" => $pending->getLogin(), "passwd" => $pending->getPasswd()));
                     if ($res) {
                         $this->addMsg("success", "Membre linké");
-                        if ($pendingManager->deletePending($pendingId)) {
+                        if ($this->_pendingManager->deletePending($pendingId)) {
                             $pendingCount = $this->session->get('nbPending') - 1;
                             if ($pendingCount <= 0) $this->session->set('nbPending', NULL);
                             else $this->session->set('nbPending', $pendingCount);
@@ -192,7 +192,7 @@ final class MemberController extends BaseController
         }
         try {
             $v_pendings = [];
-            foreach ($pendingManager->getAll() as $pending) {
+            foreach ($this->_pendingManager->getAll() as $pending) {
                 $v_pendings[$pending->getId()] = $pending->getPseudo();
             }
         } catch (Exception $e){
@@ -204,7 +204,7 @@ final class MemberController extends BaseController
 
     public function alliance(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         try {
-            $guilds = (new GuildManager())->getAll();
+            $guilds = $this->_guildManager->getAll();
         } catch (Exception $e){
             $guilds = [];
             $this->addMsg("warning", $e->getMessage());
@@ -283,14 +283,14 @@ final class MemberController extends BaseController
         $frame3 = "#ffd626";
         $frame2 = "#26dbff";
 
-        $elements = ElementManager::getAllInRawData();
+        $elements = $this->_elementManager->getAllInRawData();
         try {
             $f_member = $this->_memberManager->getById($id);
         } catch (Exception $e){
             $this->addMsg("danger", $e->getMessage());
         }
         try {
-            $_characts = (new CharacterManager)->getAllForMember($id);
+            $_characts = $this->_characterManager->getAllForMember($id);
         } catch (Exception $e){
             $this->addMsg("danger", $e->getMessage());
         }
@@ -383,7 +383,7 @@ final class MemberController extends BaseController
         $nbBreak = empty($nbBreak) ? 0 : $nbBreak;
         $nbWeaponBreak = $hasWeapon ? (empty($nbWeaponBreak) ? 0 : $nbWeaponBreak) : 0;
         $hasWeapon = $hasWeapon ? 1 : 0;    
-        (new CrewManager())->addCrew($memberId, $charactId, $level, $evolveld, $nbBreak, $hasWeapon, $nbWeaponBreak);
+        $this->_crewManager->addCrew($memberId, $charactId, $level, $evolveld, $nbBreak, $hasWeapon, $nbWeaponBreak);
     }
     
     private function saveCrew($id, $memberId, $charactId, $level, $evolveld, $nbBreak, bool $hasWeapon, $nbWeaponBreak) {
@@ -404,7 +404,7 @@ final class MemberController extends BaseController
         $editParams = Array("level" => $level, "evolvedGrade" => $evolveld, "nbBreak" => $nbBreak,
                             "hasWeapon" => $hasWeapon, "nbWeaponBreak" => $nbWeaponBreak);
         try {
-            return (new CrewManager())->updateCrew($id, $editParams);
+            return $this->_crewManager->updateCrew($id, $editParams);
         } catch (Exception $e) {
             $this->addMsg("danger", "Erreur pendant la mise à jour des informations du Héro $e->getMessage()");
         }

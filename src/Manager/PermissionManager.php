@@ -1,14 +1,15 @@
 <?php
-include_once("AbstractManager.php");
+
+namespace App\Manager;
+
+use Exception;
 
 class PermissionManager extends  AbstractManager
 {
     const DB_NAME = 'permission';
     const DB_PREFIX = 'prm';
 
-    public function __construct() {
-        parent::__construct(PermissionManager::DB_NAME, PermissionManager::DB_PREFIX);
-    }
+    protected function getTable() { return [PermissionManager::DB_PREFIX, PermissionManager::DB_NAME]; }
 
     /**
      * @throws Exception

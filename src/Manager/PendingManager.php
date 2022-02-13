@@ -1,17 +1,16 @@
 <?php
-include_once("AbstractManager.php");
 
-include_once("model/Entity/Pending.php");
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Pending;
 
 class PendingManager extends AbstractManager
 {
     const DB_NAME = 'pending';
     const DB_PREFIX = 'pdg';
 
-    public function __construct() {
-        parent::__construct(PendingManager::DB_NAME, PendingManager::DB_PREFIX);
-    }
-
+    protected function getTable() { return [PendingManager::DB_PREFIX, PendingManager::DB_NAME]; }
 
     public function addPending($pseudo, $login, $passwd): bool {
         $this->reset();

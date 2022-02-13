@@ -3,16 +3,21 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\ElementManager;
+use App\Manager\CharacterManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-require_once('model/Manager/CharacterManager.php');
-use CharacterManager;
-require_once('model/Manager/ElementManager.php');
-use ElementManager;
-
 final class AdminController extends BaseController
 {
+    private CharacterManager $_characterManager;
+    private ElementManager $_elementManager;
+
+    protected function __init($bag) {
+        $this->_characterManager = $bag->get(CharacterManager::class);
+        $this->_elementManager = $bag->get(ElementManager::class);
+    }
+
     public function heroes(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
 
@@ -30,7 +35,7 @@ final class AdminController extends BaseController
         }
         try {
             $v_characts = [];
-            foreach ((new CharacterManager)->getAllOrderByGradeElementName() as $id => $charact) {
+            foreach ($this->_characterManager->getAllOrderByGradeElementName() as $id => $charact) {
                 $element = $charact->getElementInfo();
                 $v_characts[] = [
                     'id' => $charact->getId(),
@@ -46,12 +51,12 @@ final class AdminController extends BaseController
             $v_characts = [];
             $this->addMsg("danger", $e->getMessage());
         }
-        return $this->view->render($response, 'admin/heroes.twig', ['characs' => $v_characts, 'elements' => ElementManager::getAllInRawData()]);
+        return $this->view->render($response, 'admin/heroes.twig', ['characs' => $v_characts, 'elements' => $this->_elementManager->getAllInRawData()]);
     }
 
     public function delhero(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
         if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
-        if ((new CharacterManager())->deleteCharact($id)) {
+        if ($this->_characterManager->deleteCharact($id)) {
             $this->addMsg("info", "Héro supprimé");
         }
         return $this->redirect($response, ['admin-heroes']);
@@ -84,7 +89,7 @@ final class AdminController extends BaseController
     private function submitHero($name, $grade, $elementId) {
         if ($this->checkData($name, $grade, $elementId)) {
             try {
-                if ((new CharacterManager())->addHero($name, $grade, $elementId)) {
+                if ($this->_characterManager->addHero($name, $grade, $elementId)) {
                     $this->addMsg("success", "Héro ajouté");
                 }
             } catch (Exception $e) {
@@ -96,7 +101,7 @@ final class AdminController extends BaseController
     
     private function updateHero($id, $name, $grade, $elementId) {
         if ($this->checkData($name, $grade, $elementId)) {
-            if((new CharacterManager())->updateHero($id, $name, $grade, $elementId)){
+            if($this->_characterManager->updateHero($id, $name, $grade, $elementId)){
                 $this->addMsg("success", "Héro modifié");
             }
         }

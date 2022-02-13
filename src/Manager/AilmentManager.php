@@ -1,15 +1,16 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Ailment.php");
+
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Ailment;
 
 class AilmentManager extends AbstractManager
 {
     const DB_NAME = 'ailment';
     const DB_PREFIX = 'ait';
 
-    public function __construct() {
-        parent::__construct(AilmentManager::DB_NAME, AilmentManager::DB_PREFIX);
-    }
+    protected function getTable() { return [AilmentManager::DB_PREFIX, AilmentManager::DB_NAME]; }
     
     public function getAll() {
         $this->reset();

@@ -3,44 +3,40 @@
 namespace App\Controller;
 
 use Exception;
+use App\Manager\RaidManager;
+use App\Manager\TeamManager;
+use App\Manager\GuildManager;
+use App\Manager\FightManager;
+use App\Manager\MemberManager;
+use App\Manager\WeaponManager;
+use App\Manager\AilmentManager;
+use App\Manager\CharacterManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-
-require_once('model/Manager/RaidManager.php');
-use RaidManager;
-require_once('model/Manager/FightManager.php');
-use FightManager;
-require_once('model/Manager/GuildManager.php');
-use GuildManager;
-require_once('model/Manager/BossManager.php');
-use BossManager;
-require_once('model/Manager/AilmentManager.php');
-use AilmentManager;
-require_once('model/Manager/WeaponManager.php');
-use WeaponManager;
-require_once('model/Manager/MemberManager.php');
-use MemberManager;
-require_once('model/Manager/TeamManager.php');
-use TeamManager;
-require_once('model/Manager/CharacterManager.php');
-use CharacterManager;
 
 final class RaidController extends BaseController
 {
     private RaidManager $_raidManager;
-    private FightManager $_fightManager;
     private TeamManager $_teamManager;
+    private FightManager $_fightManager;
+    private GuildManager $_guildManager;
+    private MemberManager $_memberManager;
+    private WeaponManager $_weaponManager;
+    private AilmentManager $_ailmentManager;
+    private CharacterManager $_characterManager;
     
-    protected function __init() {
-        //TODO inject instead
-        $this->_raidManager = new RaidManager();
-        $this->_fightManager = new FightManager();
-        $this->_teamManager = new TeamManager();
+    protected function __init($bag) {
+        $this->_raidManager = $bag->get(RaidManager::class);
+        $this->_teamManager = $bag->get(TeamManager::class);
+        $this->_fightManager = $bag->get(FightManager::class);
+        $this->_guildManager = $bag->get(GuildManager::class);
+        $this->_weaponManager = $bag->get(WeaponManager::class);
+        $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_ailmentManager = $bag->get(AilmentManager::class);
+        $this->_characterManager = $bag->get(CharacterManager::class);
     }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $bossManager = new BossManager();
-
         try {
             $id = $request->getQueryParams()['id'];
             $now = time();
@@ -99,10 +95,10 @@ final class RaidController extends BaseController
 
         $v_ailments = [];
         try {
-            $_ailments = (new AilmentManager)->getAll();
+            $_ailments = $this->_ailmentManager->getAll();
             foreach ($_ailments as $id => $ailment) {
                 $weapons = [];
-                foreach ((new WeaponManager())->getByAilmentBossRaid($id, $b1["id"], $b2["id"], $b3["id"], $b4["id"]) as $wid => $weapon) {
+                foreach ($this->_weaponManager->getByAilmentBossRaid($id, $b1["id"], $b2["id"], $b3["id"], $b4["id"]) as $wid => $weapon) {
                     $rates = $weapon->getRates();
                     $charac = $weapon->getCharacInfo();
                     $weapons[$wid] = [
@@ -129,7 +125,7 @@ final class RaidController extends BaseController
 
     public function rank(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $id = $this->session->get('raidInfo')['id'];
-        $raid = (new RaidManager())->getById($id);
+        $raid = $this->_raidManager->getById($id);
         $v_fights = $this->_fightManager->getAllByRaid($raid->getDate());
         $v_bosses = [
             $raid->getBoss1Info()["id"] => $raid->getBoss1Info(),
@@ -187,7 +183,7 @@ final class RaidController extends BaseController
         $sort = Array();
         $guildSort = Array();
         $bossSort = Array();
-        foreach ((new GuildManager())->getAll() as $guildId => $guild) {
+        foreach ($this->_guildManager->getAll() as $guildId => $guild) {
             $guildSort[$guild->getName()] = Array();
         }
         for ($i = 1; $i <= 4; $i++) {
@@ -244,7 +240,7 @@ final class RaidController extends BaseController
             } catch (Exception $e) {
                 $this->addMsg("danger", $e->getMessage());
             }
-            $members = MemberManager::getAllByGuildIdInRawData($guildId, $date, false);
+            $members = $this->_memberManager->getAllByGuildIdInRawData($guildId, $date, false);
             $i = 0;
             foreach ($members as $memberId => $memberName) {
                 if (array_key_exists($memberId, $counts)) {
@@ -303,7 +299,7 @@ final class RaidController extends BaseController
 
             // traitement de la requête et reconstruction du tableau
             $v_damagesByMemberByDay = Array();
-            $members = MemberManager::getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
+            $members = $this->_memberManager->getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
             $i = -1;
             $v_globalSum = 0;
             $d = date("Y-m-d", strtotime("$dateRaid +$dayNumber day"));
@@ -421,11 +417,10 @@ final class RaidController extends BaseController
             } catch (Exception $e) {
                 $v_error = $e->getMessage();
             }
-            $guildManager = new GuildManager();
-            $v_guilds = $guildManager->getAll();
+            $v_guilds = $this->_guildManager->getAll();
             $f_guildId = $guildId;
 
-            $members = MemberManager::getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
+            $members = $this->_memberManager->getAllWithDateStartByGuildIdInRawData($guildId, date('Y-m-d'), false);// TODO get id, name et dateStart pour pas check la diff si arrivé en cours de raid
             foreach ($missByMemberByDay as $memberId => $missedByDate) {
                 if (!isset($members[$memberId]) or !isset($members[$memberId]["name"])) { continue;}
                 $member = $members[$memberId]["name"];
@@ -588,8 +583,8 @@ final class RaidController extends BaseController
             $this->addMsg("warning", "Il y a eu un problème pendant le traitement de votre requête");
         }
 
-        $members = (new MemberManager)->getAllByGuildId($guildId, $filter);
-        $teams = (new MemberManager())->getTeamsByGuild($guildId, $filter);
+        $members = $this->_memberManager->getAllByGuildId($guildId, $filter);
+        $teams = $this->_memberManager->getTeamsByGuild($guildId, $filter);
         $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, $filter);
 
         $v_fights = [];
@@ -632,7 +627,7 @@ final class RaidController extends BaseController
             }
         }
 
-        $v_characters = (new CharacterManager())->getAllOrderByGradeElementName();
+        $v_characters = $this->_characterManager->getAllOrderByGradeElementName();
         $characters = [];
         foreach ($v_characters as $character) {
             $g = $character->getGrade();

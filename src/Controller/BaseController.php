@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Slim\Views\Twig;
+use App\Manager\ManagerBag;
 use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Interfaces\RouteParserInterface;
@@ -18,14 +19,14 @@ class BaseController
      *
      * @param Twig $twig The twig template engine
      */
-    public function __construct(Twig $twig, SessionInterface $session, RouteParserInterface $router) {
+    public function __construct(Twig $twig, SessionInterface $session, RouteParserInterface $router, ManagerBag $bag) {
         $this->view = $twig;
         $this->session = $session;
         $this->router = $router;
-        $this->__init();
+        $this->__init($bag);
     }
 
-    protected function __init() {}
+    protected function __init($bag) {}
 
     protected function addMsg(string $type, string $message) {
         $this->session->getFlash()->add($type, $message);

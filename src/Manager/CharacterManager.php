@@ -1,19 +1,17 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Character.php");
-include_once("model/Entity/Crew.php");
 
-include_once("ElementManager.php");
-include_once("CrewManager.php");
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Crew;
+use App\Entity\Character;
 
 class CharacterManager extends AbstractManager
 {
     const DB_NAME = 'charact';
     const DB_PREFIX = 'chr';
 
-    public function __construct() {
-        parent::__construct(CharacterManager::DB_NAME, CharacterManager::DB_PREFIX);
-    }
+    protected function getTable() { return [CharacterManager::DB_PREFIX, CharacterManager::DB_NAME]; }
 
     public function getAllOrderByGradeElementName() {
         $this->reset();
@@ -42,8 +40,8 @@ class CharacterManager extends AbstractManager
         }
     }
     
-    public static function getAllInRawData(): Array {
-        $db = \Gt\DatabaseClass::getInstance()->getDb();
+    public function getAllInRawData(): Array {
+        $db = $this->_db;
         $stmt = $db->query('SELECT * FROM charact');
 
         $entities = array("0" => "");

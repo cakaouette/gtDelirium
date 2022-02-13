@@ -1,16 +1,17 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Guild.php");
+
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Guild;
 
 class GuildManager extends AbstractManager 
 {
     const DB_NAME = 'guild';
     const DB_PREFIX = 'gld';
 
-    public function __construct() {
-        parent::__construct(GuildManager::DB_NAME, GuildManager::DB_PREFIX);
-    }
-    
+    protected function getTable() { return [GuildManager::DB_PREFIX, GuildManager::DB_NAME]; }
+
     /**
      * @throws Exception
      */

@@ -1,13 +1,18 @@
 <?php
-include_once("model/DatabaseClass.php");
 
-class AbstractManager
+namespace App\Manager;
+
+use PDO;
+use PDOException;
+use Monolog\Logger;
+
+abstract class AbstractManager
 {
-    private PDO $_db;
+    protected PDO $_db;
     private string $_table;
     private string $_prefix;
 
-    private bool $_isDebug;
+    private Logger $_logger;
     private string $_error = "";
 
     private array $_columnsReturned = array();
@@ -22,13 +27,15 @@ class AbstractManager
     private int   $_limit = 0;
     private array $_result = array();
 
-
-    public function __construct(string $table, string $prefix) {
-        $this->_db = \Gt\DatabaseClass::getInstance()->getDb();
+    public function __construct(DatabaseClass $db, Logger $logger) {
+        $this->_db = $db->getDb();
+        $this->_logger = $logger;
+        [$prefix, $table] = $this->getTable();
         $this->_table = $table;
-        $this->_prefix = $prefix."_";
-        $this->_isDebug = $_SESSION["debug"] ?? false;
+        $this->_prefix = $prefix;
     }
+
+    abstract protected function getTable();
 
     public function reset() {
         $this->_columnsReturned = array();
@@ -64,11 +71,11 @@ class AbstractManager
             $this->_error = ""; //"PDO EXCEPTION '$this->_table': ".$e->getMessage();
             return false;
         }
-        if ($this->_isDebug) {
-            print("<br> DEBUG\ ");
-            $q->debugDumpParams();
-            if ($isExecOk) {print("<br>");}
-        }
+        ob_start();
+        $q->debugDumpParams();
+        $logs = ob_get_contents();
+        ob_end_clean();
+        $this->_logger->debug("DEBUG\ " . $logs);
         if ($isExecOk) {
             while ($line = $q->fetch()) { array_push($this->_result, $line); }
         } else {
@@ -76,11 +83,11 @@ class AbstractManager
                       VALUES ('SQL', '5001-".$q->errorCode()."', \"$q->queryString\", '".implode(", ", $this->_params).", ".implode(", ", $this->_values)."')";
             $qe = $this->_db->prepare($queryString);
             $qe->execute();
-            if ($this->_isDebug) {
-                print("<br> SQL ERROR\ ");
-                $qe->debugDumpParams();
-                print("<br>");
-            }
+            ob_start();
+            $qe->debugDumpParams();
+            $logs = ob_get_contents();
+            ob_end_clean();
+            $this->_logger->debug("SQL ERROR\ " . $logs);
             $qe = $this->_db->query("SELECT code, id FROM error ORDER BY id DESC LIMIT 1");
             $err = $qe->fetch();
             $code = $err["code"];
@@ -116,7 +123,7 @@ class AbstractManager
 
     public function addColumns(array $columns, $withRename = false, $table = NULL, $prefix = NULL): AbstractManager {
         $t = is_null($table) ? $this->_table : $table;
-        $p = is_null($prefix) ? $this->_prefix : $prefix."_";
+        $p = (is_null($prefix) ? $this->_prefix : $prefix)."_";
         if ($withRename) {
             foreach ($columns as $name => $rename) {
                 $this->_columns[] = "$t.$name as $rename";

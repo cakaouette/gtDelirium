@@ -1,18 +1,16 @@
 <?php
-include_once("AbstractManager.php");
-include_once("AlarmTypeManager.php");
-include_once("MemberManager.php");
 
-include_once("model/Entity/Alarm.php");
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Alarm;
 
 class AlarmManager extends AbstractManager
 {
     const DB_NAME = 'alarm';
     const DB_PREFIX = 'alm';
 
-    public function __construct() {
-        parent::__construct(AlarmManager::DB_NAME, AlarmManager::DB_PREFIX);
-    }
+    protected function getTable() { return [AlarmManager::DB_PREFIX, AlarmManager::DB_NAME]; }
     
     public function getByTime($hour, $min) {
         $this->reset();
@@ -49,4 +47,4 @@ class AlarmManager extends AbstractManager
             throw new Exception($this->getError());
         }
     }
-    }
+}

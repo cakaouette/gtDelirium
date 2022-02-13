@@ -1,17 +1,17 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Raid.php");
-include_once("model/Entity/RaidDate.php");
-include_once("model/Entity/Fight.php");
+
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Raid;
+use App\Entity\RaidDate;
 
 class RaidManager extends AbstractManager
 {
     const DB_NAME = 'raid';
     const DB_PREFIX = 'rad';
     
-    public function __construct() {
-        parent::__construct(RaidManager::DB_NAME, RaidManager::DB_PREFIX);
-    }
+    protected function getTable() { return [RaidManager::DB_PREFIX, RaidManager::DB_NAME]; }
 
     public function getLastByDate($baseDate = NULL) {
         $d = is_null($baseDate) ? date("Y-m-d") : $baseDate;

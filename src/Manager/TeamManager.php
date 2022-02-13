@@ -1,18 +1,18 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Manager/GuildManager.php");
 
-include_once("model/Entity/Team.php");
+namespace App\Manager;
+
+use PDO;
+use Exception;
+use PDOException;
+use App\Entity\Team;
 
 class TeamManager extends AbstractManager
 {
     const DB_NAME = 'team';
     const DB_PREFIX = 'tem';
     
-    public function __construct()
-    {
-        parent::__construct(TeamManager::DB_NAME, TeamManager::DB_PREFIX);
-    }
+    protected function getTable() { return [TeamManager::DB_PREFIX, TeamManager::DB_NAME]; }
 
     public function getAllByMember($memberId) {
         $this->reset();

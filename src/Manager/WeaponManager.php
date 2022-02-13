@@ -1,18 +1,17 @@
 <?php
-include_once("AbstractManager.php");
-include_once("model/Entity/Weapon.php");
-include_once("model/Entity/WeaponRaid.php");
 
-include_once("AilmentEnduranceManager.php");
+namespace App\Manager;
+
+use Exception;
+use App\Entity\Weapon;
+use App\Entity\WeaponRaid;
 
 class WeaponManager extends AbstractManager
 {
     const DB_NAME = 'weapon';
     const DB_PREFIX = 'wpn';
 
-    public function __construct() {
-        parent::__construct(WeaponManager::DB_NAME, WeaponManager::DB_PREFIX);
-    }
+    protected function getTable() { return [WeaponManager::DB_PREFIX, WeaponManager::DB_NAME]; }
     
     public function getAll() {
         $this->reset();

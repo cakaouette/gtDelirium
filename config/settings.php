@@ -29,4 +29,16 @@ $settings['session'] = [
     'name' => 'app',
     'cache_expire' => 0,
 ];
+
+$settings['salt'] = 'xxx';
+
+$settings['db'] = [
+    'path' => 'mysql:dbname=gtdelirium;host=db',
+    'login' => 'gtdelirium',
+    'pass' => 'gtdelirium'
+];
+
+if (file_exists(__DIR__ . '/../../env.php')) {
+    require __DIR__ . '/../../env.php';
+}
 return $settings;

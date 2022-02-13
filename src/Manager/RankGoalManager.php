@@ -1,19 +1,19 @@
 <?php
-include_once("AbstractManager.php");
-include_once("RaidManager.php");
 
-class RankManager extends AbstractManager 
+namespace App\Manager;
+
+use Exception;
+
+class RankGoalManager extends AbstractManager 
 {
-    const DB_NAME = 'rank';
-    const DB_PREFIX = 'rnk';
+    const DB_NAME = 'rankGoal';
+    const DB_PREFIX = 'rkg';
 
-    public function __construct() {
-        parent::__construct(RankManager::DB_NAME, RankManager::DB_PREFIX);
-    }
+    protected function getTable() { return [RankGoalManager::DB_PREFIX, RankGoalManager::DB_NAME]; }
     
     public function getAll() {
         $this->reset();
-        $this->addColumns(Array("guildId", "raidId", "rank", "damage"))
+        $this->addColumns(Array("guildId", "raidId", "rank"))
              ->addColumns(Array("date"), false, RaidManager::DB_NAME, RaidManager::DB_PREFIX)
              ->addJoin("LEFT", "raidId", "id", RaidManager::DB_NAME)
              ->addOrderBy("guildId", true)
@@ -23,12 +23,11 @@ class RankManager extends AbstractManager
             $entities = Array();
             $results = $this->getResult();
             if (empty($results)) {
-                throw new Exception("Aucune score de raid trouvé");
+                throw new Exception("Aucune objectif de raid trouvé");
             }
             foreach ($results as $line) {
               $info = Array("rank" => $line[$c[2]],
-                              "damage" => $line[$c[3]],
-                              "timestamp" => strtotime($line[$c[4]])
+                            "timestamp" => strtotime($line[$c[3]])
                         );
               if (array_key_exists($line[$c[0]], $entities)) {
                 $entities[(int) $line[$c[0]]][(int) $line[$c[1]]] = $info;

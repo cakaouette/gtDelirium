@@ -1,20 +1,29 @@
 <?php
-include_once("AbstractManager.php");
-include_once("GuildManager.php");
-include_once("PermissionManager.php");
 
-include_once("model/Entity/Member.php");
-include_once("model/Entity/MemberDetail.php");
+namespace App\Manager;
+
+use PDO;
+use Exception;
+use Monolog\Logger;
+use App\Entity\Team;
+use App\Entity\Member;
+use Laminas\Config\Config;
+use App\Entity\MemberDetail;
 
 class MemberManager extends AbstractManager
 {
-    const DB_NAME = 'member';
-    const DB_PREFIX = 'mbr';
+    public const DB_NAME = 'member';
+    public const DB_PREFIX = 'mbr';
 
-    public function __construct() {
-        parent::__construct(MemberManager::DB_NAME, MemberManager::DB_PREFIX);
+    private string $salt;
+
+    public function __constructor(Config $config, DatabaseClass $db, Logger $logger) {
+        parent::__constructor($db, $logger);
+        $this->salt = $config->get('salt');
     }
-    
+
+    protected function getTable() { return [MemberManager::DB_PREFIX, MemberManager::DB_NAME]; }
+
     /**
      * @throws Exception
      */
@@ -98,8 +107,8 @@ class MemberManager extends AbstractManager
         }
     }
 
-    public static function getAllByGuildIdInRawData($guildId, $date = NULL, bool $withNullLine = true) {
-        $db = \Gt\DatabaseClass::getInstance()->getDb();
+    public function getAllByGuildIdInRawData($guildId, $date = NULL, bool $withNullLine = true) {
+        $db = $this->_db;
         $dateQueryStr = !is_null($date) ? "AND dateStart <= :dateStartQuery " : "";
         $query = 'SELECT * FROM member WHERE guildId LIKE :guildIdQuery '. $dateQueryStr .'ORDER BY name ASC';
         $stmt = $db->prepare($query);
@@ -118,8 +127,8 @@ class MemberManager extends AbstractManager
         return $entities;
     }
 
-    public static function getAllWithDateStartByGuildIdInRawData($guildId, $date = NULL, bool $withNullLine = true) {
-        $db = \Gt\DatabaseClass::getInstance()->getDb();
+    public function getAllWithDateStartByGuildIdInRawData($guildId, $date = NULL, bool $withNullLine = true) {
+        $db = $this->_db;
         $dateQueryStr = !is_null($date) ? "AND dateStart <= :dateStartQuery " : "";
         $query = 'SELECT * FROM member WHERE guildId LIKE :guildIdQuery '. $dateQueryStr .'ORDER BY name ASC';
         $stmt = $db->prepare($query);
@@ -257,9 +266,7 @@ class MemberManager extends AbstractManager
     public function getRawGuild() {
         return $this->_guilds;
     }
-    
-    
-    
+
     public function getTeamsByGuild($guildId, $memberFilter = NULL) {
         $this->reset();
         $this->addColumns(Array("id", "name"))
@@ -318,10 +325,21 @@ class MemberManager extends AbstractManager
     public function updateLoginPasswd($id, $login, $passwd) {
         $this->reset();
         if(!$this->update($id, Array("login", "passwd"),
-                               Array($login, $passwd))) {
+                               Array($login, $this->cryptPassword($passwd, $login)))) {
             throw new Exception($this->getError());
         }
         return true;
     }
 
+    //not really the place to do it, but better than in the controller
+    //TODO move somewhere else when possible
+    public function isPasswdCorrect(Member $member, string $passwd)
+    {
+        return $member->getPasswd() == $this->cryptPassword($passwd, $member->getLogin());
+    }
+
+    public function cryptPassword($passwd, $login) {
+        return md5($passwd.$this->salt.$login);
+
+    }
 }

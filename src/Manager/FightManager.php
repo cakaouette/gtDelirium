@@ -1,20 +1,23 @@
 <?php
-include_once("AbstractManager.php");
 
-include_once("MemberManager.php");
-include_once("GuildManager.php");
-include_once("BossManager.php");
+namespace App\Manager;
 
-include_once('model/Entity/Fight.php');
+use Exception;
+use App\Entity\Fight;
 
 class FightManager extends  AbstractManager
 {
     const DB_NAME = 'fight';
     const DB_PREFIX = 'fgt';
 
-    public function __construct() {
-        parent::__construct(FightManager::DB_NAME, FightManager::DB_PREFIX);
+    private CharacterManager $_characterManager;
+
+    public function __constructor(DatabaseClass $db, Logger $logger, CharacterManager $characterManager) {
+        parent::__constructor($db, $logger);
+        $this->_characterManager = $characterManager;
     }
+
+    protected function getTable() { return [FightManager::DB_PREFIX, FightManager::DB_NAME]; }
 
     public function getCountByGuildIdDate($guildId, $date) {
         $this->reset();
@@ -59,7 +62,7 @@ class FightManager extends  AbstractManager
         if($this->select()) {
             $c = $this->getColumns();
             $results = $this->getResult();
-            $characNames = CharacterManager::getAllInRawData();
+            $characNames = $this->_characterManager->getAllInRawData();
             $ret = [];
             foreach ($results as $line) {
                 $entity = new Fight($line[$c[0]], $line[$c[1]], $line[$c[2]], $line[$c[3]], $line[$c[4]], $line[$c[5]],
@@ -164,7 +167,7 @@ class FightManager extends  AbstractManager
             $c = $this->getColumns();
             $entities = Array();
             $results = $this->getResult();
-            $characNames = CharacterManager::getAllInRawData();
+            $characNames = $this->_characterManager->getAllInRawData();
             foreach ($results as $line) {
                 $entity = new Fight($line[$c[0]], $line[$c[1]], $line[$c[2]], $line[$c[3]], $line[$c[4]], $line[$c[5]],
                     $line[$c[6]], $line[$c[7]], $line[$c[8]], $line[$c[9]], $line[$c[10]], $line[$c[11]],
@@ -222,7 +225,7 @@ class FightManager extends  AbstractManager
             $c = $this->getColumns();
             $entities = array(1 => NULL, 2 => NULL, 3 => NULL);
             $results = $this->getResult();
-            $characNames = CharacterManager::getAllInRawData();
+            $characNames = $this->_characterManager->getAllInRawData();
             foreach ($results as $line) {
                 $entity = new Fight($line[$c[0]], $line[$c[1]], $line[$c[2]], $line[$c[3]], $line[$c[4]], $line[$c[5]],
                     $line[$c[6]], $line[$c[7]], $line[$c[8]], $line[$c[9]], $line[$c[10]], $line[$c[11]],
@@ -308,7 +311,7 @@ class FightManager extends  AbstractManager
             $c = $this->getColumns();
             $entities = Array();
             $results = $this->getResult();
-            $characNames = CharacterManager::getAllInRawData();
+            $characNames = $this->_characterManager->getAllInRawData();
             foreach ($results as $line) {
                 $entity = new Fight($line[$c[0]], $line[$c[1]], $line[$c[2]], $line[$c[3]], $line[$c[4]], $line[$c[5]],
                     $line[$c[6]], $line[$c[7]], $line[$c[8]], $line[$c[9]], $line[$c[10]], $line[$c[11]],
