@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 class Raid
 {
     private $_id;

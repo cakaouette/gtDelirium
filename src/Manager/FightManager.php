@@ -3,6 +3,8 @@
 namespace App\Manager;
 
 use Exception;
+use Monolog\Logger;
+use Laminas\Config\Config;
 use App\Entity\Fight;
 
 class FightManager extends  AbstractManager
@@ -12,8 +14,8 @@ class FightManager extends  AbstractManager
 
     private CharacterManager $_characterManager;
 
-    public function __constructor(DatabaseClass $db, Logger $logger, CharacterManager $characterManager) {
-        parent::__constructor($db, $logger);
+    public function __construct(DatabaseClass $db, Logger $logger, CharacterManager $characterManager) {
+        parent::__construct($db, $logger);
         $this->_characterManager = $characterManager;
     }
 

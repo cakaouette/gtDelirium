@@ -2,7 +2,7 @@
 
 namespace App\Manager;
 
-class ElementManager
+class ElementManager extends AbstractManager
 {
     const DB_NAME = 'element';
     const DB_PREFIX = 'elt';

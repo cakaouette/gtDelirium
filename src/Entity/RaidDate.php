@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Entity;
+
 class RaidDate
 {
     private $_id;

@@ -96,7 +96,7 @@ final class ProfileController extends BaseController
                 $result = (new PasswordValidator())->validate($newPasswd);
                 $login = $form["loginForm"];
                 if ($result["accept"]) {
-                    $this->updateMember($id, $login, $newPasswd));
+                    $this->updateMember($id, $login, $newPasswd);
                 } else {
                     $this->addMsg("warning", $result["msg"]);
                 }

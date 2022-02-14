@@ -17,8 +17,8 @@ class MemberManager extends AbstractManager
 
     private string $salt;
 
-    public function __constructor(Config $config, DatabaseClass $db, Logger $logger) {
-        parent::__constructor($db, $logger);
+    public function __construct(Config $config, DatabaseClass $db, Logger $logger) {
+        parent::__construct($db, $logger);
         $this->salt = $config->get('salt');
     }
 
@@ -333,7 +333,7 @@ class MemberManager extends AbstractManager
 
     //not really the place to do it, but better than in the controller
     //TODO move somewhere else when possible
-    public function isPasswdCorrect(Member $member, string $passwd)
+    public function isPasswdCorrect(MemberDetail $member, string $passwd)
     {
         return $member->getPasswd() == $this->cryptPassword($passwd, $member->getLogin());
     }

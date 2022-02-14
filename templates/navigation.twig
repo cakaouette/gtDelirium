@@ -10,11 +10,6 @@
 
 <!-- Right navbar links -->
 <ul class="navbar-nav ml-auto">
-    {% if user.isGestion %}
-    <li class="nav-item d-none d-sm-inline-block">
-        <a href="/?page=debug" class="nav-link">debug</a>
-    </li>
-    {% endif %}
     {% if user.isConnected %}
     <li class="nav-item d-none d-sm-inline-block">
         <a href="{{ url_for ('my-profile') }}" class="nav-link">

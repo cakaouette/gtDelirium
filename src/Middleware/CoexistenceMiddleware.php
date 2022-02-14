@@ -75,7 +75,7 @@ final class CoexistenceMiddleware implements MiddlewareInterface
         $path = $uri->getPath();
         $query = $uri->getQuery();
         if ($path == "/" || $path == "/index.php") {
-            if (!isset($_GET['page'])) return $this->route->urlFor('home');
+            if (!isset($_GET['page'])) return $this->router->urlFor('home');
             switch ($_GET['page']) {
                 case 'connect':
                     return $this->router->urlFor('connect');
@@ -118,7 +118,7 @@ final class CoexistenceMiddleware implements MiddlewareInterface
                 'dateRaid' => $dPreview->getDate()
             ]);
         } else {
-            $this->sessions->set('raidPreview', ['id' => NULL, 'dateRaid' => NULL]);
+            $this->session->set('raidPreview', ['id' => NULL, 'dateRaid' => NULL]);
         }
         $date2 = strtotime($raidDate);
         $diff = max(($now - $date2), 0);

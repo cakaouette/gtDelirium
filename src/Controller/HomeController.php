@@ -35,7 +35,7 @@ final class HomeController extends BaseController
             $form = $request->getParsedBody();
             $login = $form['loginForm'];
             $passwd = $form['passwdForm'];
-            $redirect = $this->connectWith($login, $passwd));
+            $redirect = $this->connectWith($login, $passwd);
             if ($redirect !== false) {
                 return $this->redirect($response, $redirect);
             }
@@ -83,7 +83,7 @@ final class HomeController extends BaseController
                 $this->addMsg("danger", "Login ou mdp incorrect");
             }
             
-            if (!is_null($member) and $this->_memberManager->isPasswdCorrect($member, $passwd))) {
+            if (!is_null($member) and $this->_memberManager->isPasswdCorrect($member, $passwd)) {
                 $redirectUrl = $this->session->get("redirectUrl");
 
                 //TODO uncomment when grades are out of the session (security risk)
@@ -118,7 +118,6 @@ final class HomeController extends BaseController
     //TODO move out of the controller
     private function addPending($pseudo, $login, $passwd)
     {
-        //TODO inject in the constructor
         if(!is_null($this->_pendingManager->getPendingByPseudo($pseudo))) {
             $this->addMsg("warning", "Vous êtes toujours en attente de validation, "
             . "Si c'est urgent, vous pouvez contacter un admin/chef sur le channel \"Site\" du discord");
