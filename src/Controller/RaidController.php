@@ -40,23 +40,40 @@ final class RaidController extends BaseController
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $bossManager = new BossManager();
+        $guildManager = new GuildManager();
 
         try {
-            $id = $request->getQueryParams()['id'];
-            $now = time();
-            if (is_null($id)) {
+            $form = $request->getParsedBody();
+            
+            $formGuildId = $form['guildId'];
+            if (is_null($formGuildId)) {
+                $guildId = $this->session->get('guild')['id'];
+            } else {
+                $guildId = $formGuildId;
+                $guild = $guildManager->getById($guildId);
+                $this->session->set('guild', [
+                    "id" => $guild->getId(),
+                    "name" => $guild->getName(),
+                    "color" => $guild->getColor()
+                ]);
+            }
+            $v_guilds = $guildManager->getAll();
+            
+            $formRaidId = $request->getMethod() === "GET" ? $this->session->get('raidInfo')['id'] : $form['raidId'];
+            if (is_null($formRaidId)) {
                 $raid = $this->_raidManager->getLastByDate();
                 $raidId = $raid->getId();
                 $raidDate = $raid->getDate();
             } else {
-                $raidDate = $this->_raidManager->getDateById($id)->getDate();
-                $raidId = $id;
+                $raidId = $formRaidId;
+                $raidDate = $this->_raidManager->getDateById($raidId)->getDate();
             }
             $dPreview = $this->_raidManager->getPreviewDate();
             if (!is_null($dPreview)) {
                 $raidPreviewId = $dPreview->getId();
             }
             $date2 = strtotime($raidDate);
+            $now = time();
             $diff = max(($now - $date2), 0);
             $dayNumber = floor((($diff / 60) / 60 ) / 24);
             $this->session->set('raidInfo', [
@@ -124,7 +141,13 @@ final class RaidController extends BaseController
             $this->addMsg("warning", $e->getMessage());
         }
         
-        return $this->view->render($response, 'raid/info.twig', ['id' => $id, 'raids' => $v_raids, 'bosses' => $v_bosses, 'ailments' => $v_ailments]);
+        return $this->view->render($response, 'raid/info.twig',
+                ['guildId' => $guildId,
+                 'guilds' => $v_guilds,
+                 'raidId' => $raidId,
+                 'raids' => $v_raids,
+                 'bosses' => $v_bosses,
+                 'ailments' => $v_ailments]);
     }
 
     public function rank(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {

@@ -5,16 +5,26 @@
 {% block title %}Raid{% endblock %}
 
 {% block content %}
-<form action="{{ url_for('raid-info') }}" id="raid-select" method="get" class="form-horizontal">
+<form action="{{ url_for('raid-info') }}" method="post" class="form-horizontal">
+  {% include 'csrf.twig' %}
   <div class="col-md-6">
     <div class="form-group row">
+      <div class="col-sm-3">
+        <select name="guildId"
+                id="guildId"
+                class="custom-select form-control-border border-width-2">
+            {% for id, guild in guilds %}
+                <option value="{{ id }}"{{ id == guildId ? 'selected' : ''}}>{{ guild.name }}</option>
+            {% endfor %}
+        </select>
+      </div>
       <label for="raidFormId" class="col-sm-2 col-form-label">Date de raid</label>
       <div class="col-sm-3">
-        <select name="id"
-                id="id"
+        <select name="raidId"
+                id="raidId"
                 class="custom-select form-control-border border-width-2">
-            {% for raid, date in raids %}
-                <option value="{{ raid }}"{{ id == raid ? 'selected' : ''}}>{{ date }}</option>
+            {% for id, date in raids %}
+                <option value="{{ id }}"{{ id == raidId ? 'selected' : ''}}>{{ date }}</option>
             {% endfor %}
         </select>
       </div>

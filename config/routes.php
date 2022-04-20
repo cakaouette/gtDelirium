@@ -58,7 +58,7 @@ return function (App $app) {
             $members->map(['GET', 'POST'], '/{id}/crew/edit', [C\MemberController::class, 'crewedit'])->setName('member-crew-edit');
         });
         $group->group('/raid', function ($raid) {
-            $raid->get('/info', [C\RaidController::class, 'info'])->setName('raid-info')->setArgument('content-title', 'Informations raid');
+            $raid->map(['GET', 'POST'], '/info', [C\RaidController::class, 'info'])->setName('raid-info')->setArgument('content-title', 'Informations raid');
             $raid->get('/rank', [C\RaidController::class, 'rank'])->setName('raid-rank')->setArgument('content-title', 'Classement dans l\'alliance');
             $raid->get('/meteo[/{guildId}]', [C\RaidController::class, 'meteo'])->setName('raid-meteo');
             $raid->get('/followup[/{guildId}]', [C\RaidController::class, 'followup'])->setName('raid-followup');
