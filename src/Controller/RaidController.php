@@ -216,6 +216,7 @@ final class RaidController extends BaseController
         foreach ((new GuildManager())->getAll() as $guildId => $guild) {
             $guildSort[$guild->getName()] = Array();
         }
+        $bossSort[NULL] = Array();
         for ($i = 1; $i <= 4; $i++) {
             $bInfo = "getBoss".$i."Info";
             $boss = $raid->$bInfo();
