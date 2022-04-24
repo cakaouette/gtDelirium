@@ -22,20 +22,27 @@
 {% block content %}
 <div class="row justify-content-between">
 <div class="col-md-7">
-<form method="get" class="form-horizontal">
-  <div class="form-group row align-items-center">
-    <label for="dateFormId" class="col-sm-1 col-form-label">Date: </label>
-    <div class="col-sm-3">
-      <input type="date"
-             name="date"
-             id="dateFormId"
-             value="{{ date }}"/>
-    </div>
-    <div class="col-sm-2">
-      <button type="submit" class="btn btn-primary">Selectionner</button>
-    </div>
-  </div>
-</form>
+  <ul class="pagination pagination-month">
+    <li class="page-item"><a class="page-link" href="?dateNumber={{ max(0, dateNumber-1) }}">«</a></li>
+{% for i, d in dates %}
+{% set iPrint = i + 1 %}
+{% if i == dateNumber %}
+    {% set classLi = "active" %}
+{% elseif i > today %}
+    {% set classLi = "disabled" %}
+{% else %}
+    {% set classLi = "" %}
+{% endif %}
+    <li class="page-item {{ classLi }}">
+      <a class="page-link" href="?dateNumber={{ i }}">
+        <p class="page-month">{{ iPrint }}</p>
+        <p class="page-year">{{ d|date("D") }}</p>
+        <p class="page-year">{{ d|date("d") }}</p>
+      </a>
+    </li>
+{% endfor %}
+    <li class="page-item"><a class="page-link" href="?dateNumber={{ min(dateNumber+1, 13) }}">»</a></li>
+  </ul>
 </div>
 </div>
 <div class="row">

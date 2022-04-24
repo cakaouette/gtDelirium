@@ -37,6 +37,24 @@ final class RaidController extends BaseController
         $this->_fightManager = new FightManager();
         $this->_teamManager = new TeamManager();
     }
+    
+    public static function updateRaidInfo($session, $raidId = null) : int {
+      $raidManager = new RaidManager();
+      $raid = is_null($raidId) ? $raidManager->getLastByDate() : $raidManager->getDateById($raidId);
+      
+      $dateStart = strtotime($raid->getDate());
+      $now = time();
+      $diff = max(($now - $dateStart), 0);
+      $dayNumber = floor((($diff / 60) / 60 ) / 24);
+      
+      $session->set('raidInfo', [
+          "id" => $raid->getId(),
+          "dateRaid" => date("Y-m-d", $dateStart),
+          "dateNumber" => min($dayNumber, 13),
+          "isFinished" => $dayNumber > 13
+      ]);
+      return $raid->getId();
+    }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         $bossManager = new BossManager();
@@ -59,29 +77,34 @@ final class RaidController extends BaseController
             }
             $v_guilds = $guildManager->getAll();
             
-            $formRaidId = $request->getMethod() === "GET" ? $this->session->get('raidInfo')['id'] : $form['raidId'];
-            if (is_null($formRaidId)) {
-                $raid = $this->_raidManager->getLastByDate();
-                $raidId = $raid->getId();
-                $raidDate = $raid->getDate();
+//            $formRaidId = $request->getMethod() === "GET" ? $this->session->get('raidInfo')['id'] : $form['raidId'];
+            if ($request->getMethod() === "POST") {
+              $raidId = RaidController::updateRaidInfo($this->session, $form['raidId']);
             } else {
-                $raidId = $formRaidId;
-                $raidDate = $this->_raidManager->getDateById($raidId)->getDate();
+              $raidId = $this->session->get('raidInfo')['id'];
             }
-            $dPreview = $this->_raidManager->getPreviewDate();
-            if (!is_null($dPreview)) {
-                $raidPreviewId = $dPreview->getId();
-            }
-            $date2 = strtotime($raidDate);
-            $now = time();
-            $diff = max(($now - $date2), 0);
-            $dayNumber = floor((($diff / 60) / 60 ) / 24);
-            $this->session->set('raidInfo', [
-                "id" => $raidId,
-                "dateRaid" => $raidDate,
-                "dateNumber" => min($dayNumber, 13),
-                "isFinished" => $dayNumber > 13
-            ]);
+//            if (is_null($formRaidId)) {
+//                $raid = $this->_raidManager->getLastByDate();
+//                $raidId = $raid->getId();
+//                $raidDate = $raid->getDate();
+//            } else {
+//                $raidId = $formRaidId;
+//                $raidDate = $this->_raidManager->getDateById($raidId)->getDate();
+//            }
+//            $dPreview = $this->_raidManager->getPreviewDate();
+//            if (!is_null($dPreview)) {
+//                $raidPreviewId = $dPreview->getId();
+//            }
+//            $date2 = strtotime($raidDate);
+//            $now = time();
+//            $diff = max(($now - $date2), 0);
+//            $dayNumber = floor((($diff / 60) / 60 ) / 24);
+//            $this->session->set('raidInfo', [
+//                "id" => $raidId,
+//                "dateRaid" => $raidDate,
+//                "dateNumber" => min($dayNumber, 13),
+//                "isFinished" => $dayNumber > 13
+//            ]);
         } catch (Exception $e) {
             $this->addMsg("danger", $e->getMessage());
         }
@@ -95,7 +118,8 @@ final class RaidController extends BaseController
             $this->addMsg("danger", $e->getMessage());
         }
 
-        $f_raidId = $raidPreviewId ?? $raidId;
+        $dPreview = $this->_raidManager->getPreviewDate();
+        $f_raidId = !is_null($dPreview) ? $dPreview->getId() : $raidId;
         try {
             $v_raidInfo = $this->_raidManager->getById($f_raidId);
 
@@ -506,17 +530,15 @@ final class RaidController extends BaseController
         return $this->view->render($response, 'raid/summary.twig', ['fights' => $fights]);
     }
 
-    public function fights(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
-        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+    public function fights(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $guildId = $this->session->get('guild')['id'];
         $raidInfo = $this->session->get('raidInfo');
-        $date = date("Y-m-d");
-        $params = $request->getQueryParams();
-        if (isset($params['date'])) {
-            $date = $params['date'];
-            if (!$this->checkDate($date)) {
-                $date = date("Y-m-d");
-            }
-        }
+        
+        $today = $raidInfo['dateNumber'];
+        $dateNumber = $this->getDateNumber(
+                $request->getQueryParams()['dateNumber'],
+                $today);
+        $date = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateNumber day"));//date("Y-m-d");
         $isJoueur = $this->session->get('grade') == $this->session->get('Joueur');
     
         if ($request->getMethod() === 'POST') {
@@ -664,11 +686,18 @@ final class RaidController extends BaseController
             if (!isset($characters[$g]['elements'][$e['id']])) $characters[$g]['elements'][$e['id']] = ['name' => $e['name'], 'characters' => []];
             $characters[$g]['elements'][$e['id']]['characters'][$character->getId()] = $character->getName();
         }
-
+        
+        for ($i = 0; $i < 14; $i++) {
+          $dates[] = strtotime($raidInfo['dateRaid']."+$i day");
+        }
+        
         return $this->view->render($response, 'raid/fights.twig', [
-            'title' => "Enregistrement des attaques",
+            'title' => "Raid du ".date("d F", strtotime($raidInfo['dateRaid']))." - les attaques",
             'filter' => $filter,
             'members' => $v_fights,
+            'dateNumber' => $dateNumber,
+            'dates' => $dates,
+            'today' => $today,//$guildId = $this->session->get('raidInfo')['datenumber'],
             'date' => $f_date,
             'raid' => [
                 'id' => $f_raid->getId(),
@@ -681,6 +710,13 @@ final class RaidController extends BaseController
                 ],
                 'characters' => $characters
         ]);
+    }
+    
+    private function getDateNumber($dateFromQuery, $dateFromSession) : int {
+      if (isset($dateFromQuery) and $dateFromQuery <= $dateFromSession) {
+        return $dateFromQuery;
+      }
+      return $dateFromSession;
     }
 
     private function isInRange($value, $min, $max) {

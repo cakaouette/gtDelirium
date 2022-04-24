@@ -18,6 +18,7 @@ require_once('model/Manager/RaidManager.php');
 use RaidManager;
 require_once('model/Manager/PermissionManager.php');
 use PermissionManager;
+require_once('RaidController.php');
 
 final class HomeController extends BaseController
 {
@@ -100,6 +101,9 @@ final class HomeController extends BaseController
                 $this->session->set("login", $login);
                 $this->session->set("grade", $permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
+//                new RaidController();
+                RaidController::updateRaidInfo($this->session);
+                
                 //TODO replace url when the page is finished
                 $defaultPage = '/index.php?page=raid&subpage=info';
                 //$defaultPage = $this->router->urlFor('raid-info');
