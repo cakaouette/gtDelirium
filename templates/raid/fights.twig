@@ -73,7 +73,7 @@
                 data-date="{{ isEdit ? info.fights[i].date : date }}"
                 data-team_number="{{ i }}"
                 
-                data-boss_id="{{ isEdit ? info.fights[i].boss : 0 }}"
+                data-boss_id="{{ isEdit ? info.fights[i].boss : -1 }}"
                 data-damage="{{ isEdit ? info.fights[i].damage : '' }}"
                 data-team_hero1="{{ isEdit ? info.fights[i].hero1 : 0 }}"
                 data-team_hero2="{{ isEdit ? info.fights[i].hero2 : 0 }}"
@@ -126,10 +126,11 @@
               <select name="bossForm"
                       id="bossFormId"
                       class="custom-select form-control">
-                <option value="0"></option>
+                <option value="-1"></option>
                 {% for id, name in raid.bosses %}
                 <option value="{{ id }}">{{ name }}</option>
                 {% endfor %}
+                <option value="0">--- default ---</option>
               </select>
             </div>
             <div class="col-sm-2">

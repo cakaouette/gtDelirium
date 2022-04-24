@@ -77,34 +77,11 @@ final class RaidController extends BaseController
             }
             $v_guilds = $guildManager->getAll();
             
-//            $formRaidId = $request->getMethod() === "GET" ? $this->session->get('raidInfo')['id'] : $form['raidId'];
             if ($request->getMethod() === "POST") {
               $raidId = RaidController::updateRaidInfo($this->session, $form['raidId']);
             } else {
               $raidId = $this->session->get('raidInfo')['id'];
             }
-//            if (is_null($formRaidId)) {
-//                $raid = $this->_raidManager->getLastByDate();
-//                $raidId = $raid->getId();
-//                $raidDate = $raid->getDate();
-//            } else {
-//                $raidId = $formRaidId;
-//                $raidDate = $this->_raidManager->getDateById($raidId)->getDate();
-//            }
-//            $dPreview = $this->_raidManager->getPreviewDate();
-//            if (!is_null($dPreview)) {
-//                $raidPreviewId = $dPreview->getId();
-//            }
-//            $date2 = strtotime($raidDate);
-//            $now = time();
-//            $diff = max(($now - $date2), 0);
-//            $dayNumber = floor((($diff / 60) / 60 ) / 24);
-//            $this->session->set('raidInfo', [
-//                "id" => $raidId,
-//                "dateRaid" => $raidDate,
-//                "dateNumber" => min($dayNumber, 13),
-//                "isFinished" => $dayNumber > 13
-//            ]);
         } catch (Exception $e) {
             $this->addMsg("danger", $e->getMessage());
         }
@@ -175,10 +152,12 @@ final class RaidController extends BaseController
     }
 
     public function rank(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $defaultBoss = Array("id" => 0, "name" => "--- default ---", "shortName" => "default", "element" => 0, "e_name" => "");
         $id = $this->session->get('raidInfo')['id'];
         $raid = (new RaidManager())->getById($id);
         $v_fights = $this->_fightManager->getAllByRaid($raid->getDate());
         $v_bosses = [
+            NULL => $defaultBoss,
             $raid->getBoss1Info()["id"] => $raid->getBoss1Info(),
             $raid->getBoss2Info()["id"] => $raid->getBoss2Info(),
             $raid->getBoss3Info()["id"] => $raid->getBoss3Info(),
@@ -756,7 +735,7 @@ final class RaidController extends BaseController
     }
 
     private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
-        if ($bossId == 0 or is_null($damage)) {
+        if ($bossId < 0 or is_null($damage)) {
             $this->addMsg("warning", "Selectionner un boss et définisser des dommages");
             return;
         }
