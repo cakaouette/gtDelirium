@@ -559,13 +559,14 @@ final class RaidController extends BaseController
                         $form["teamForm"],
                         $boss == 0 ? NULL : $boss,
                         $form["damageForm"],
+                        $form["isExtraForm"],
                         $hero1 == 0 ? NULL : $hero1,
                         $hero2 == 0 ? NULL : $hero2,
                         $hero3 == 0 ? NULL : $hero3,
                         $hero4 == 0 ? NULL : $hero4
                     );
                 } elseif ($isUpdate or $isDeleted) {
-                        $boss = $isUpdate ? $form["bossForm"] : 0;
+                    $boss = $isUpdate ? $form["bossForm"] : 0;
                     $damage = $isUpdate ? $form["damageForm"] : NULL;
                     $hero1 = $form["hero1Form"];
                     $hero2 = $form["hero2Form"];
@@ -582,6 +583,7 @@ final class RaidController extends BaseController
                         $form["teamForm"],
                         $boss == 0 ? NULL : $boss,
                         $damage,
+                        $form["isExtraForm"],
                         $hero1 == 0 ? NULL : $hero1,
                         $hero2 == 0 ? NULL : $hero2,
                         $hero3 == 0 ? NULL : $hero3,
@@ -615,11 +617,17 @@ final class RaidController extends BaseController
 
         $members = (new MemberManager)->getAllByGuildId($guildId, $filter);
         $teams = (new MemberManager())->getTeamsByGuild($guildId, $filter);
-        $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, $filter);
+        $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, 0, $filter);
+        $extraFights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, 1, $filter);
 
         $v_fights = [];
         foreach($members as $memId => $member) {
-            $v_fights[$memId] = ["member" => $member->getName(), "guildId" => $guildId, "savedTeams" => [], "fights" => []];
+            $v_fights[$memId] = ["member" => $member->getName(),
+                                 "guildId" => $guildId,
+                                 "savedTeams" => [],
+                                 "fights" => [],
+                                 "extraFights" => []
+                                ];
             if (!array_key_exists($memId, $teams)) {
                 $v_fights[$memId]["teamIds"] = '';
                 $v_fights[$memId]["savedTeams"] = [];
@@ -642,6 +650,25 @@ final class RaidController extends BaseController
                 $fightsByMember = $fights[$memId]["fights"];
                 foreach ($fightsByMember as $fightNb => $fight) {
                     $v_fights[$memId]["fights"][$fightNb] = [
+                        'id' => $fight->getId(),
+                        'guild' => $fight->getGuildInfo()["id"],
+                        'raid' => $fight->getRaidId(),
+                        'date' => $fight->getDate(),
+                        'boss' => $fight->getBossInfo()["id"],
+                        'damage' => $fight->getDamage(),
+                        'hero1' => $fight->getHero1Info()["id"],
+                        'hero2' => $fight->getHero2Info()["id"],
+                        'hero3' => $fight->getHero3Info()["id"],
+                        'hero4' => $fight->getHero4Info()["id"]
+                    ];
+                }
+            }
+            if (!array_key_exists($memId, $extraFights)) {
+                $v_fights[$memId]["extraFights"] = [];
+            } else {
+                $fightsByMember = $extraFights[$memId]["fights"];
+                foreach ($fightsByMember as $fightNb => $fight) {
+                    $v_fights[$memId]["extraFights"][$fightNb] = [
                         'id' => $fight->getId(),
                         'guild' => $fight->getGuildInfo()["id"],
                         'raid' => $fight->getRaidId(),
@@ -735,16 +762,18 @@ final class RaidController extends BaseController
         return true;
     }
 
-    private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
+    private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, 
+            $teamNumber, $bossId, $damage, $isExtra,
+            $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
         if ($bossId < 0 or is_null($damage)) {
             $this->addMsg("warning", "Selectionner un boss et définisser des dommages");
             return;
         }
         try {
-            if (!$this->_fightManager->isExist($memberId, $date, $teamNumber)) {
+            if (!$this->_fightManager->isExist($memberId, $date, $teamNumber, $isExtra)) {
                 try {
                     $this->_fightManager->addFight($memberId, $guildId, $raidId, $date,
-                                                  $teamNumber, $bossId, $damage,
+                                                  $teamNumber, $bossId, $damage, $isExtra,
                                                   $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId);
                     $this->addMsg("success", "Attaque enregistrée");
                 } catch (Exception $e) {
@@ -757,9 +786,11 @@ final class RaidController extends BaseController
 
     }
 
-    private function saveFight($recorderId, $id, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $deleted) {
-        if ($this->_fightManager->checkFight($id, $guildId, $memberId, $date, $teamNumber)) {
-            if($this->_fightManager->updateFight($id, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted)){
+    private function saveFight($recorderId, $id, $guildId, $memberId, $raidId, $date,
+            $teamNumber, $bossId, $damage, $isExtra,
+            $hero1Id, $hero2Id, $hero3Id, $hero4Id, $deleted) {
+        if ($this->_fightManager->checkFight($id, $guildId, $memberId, $date, $teamNumber, $isExtra)) {
+            if($this->_fightManager->updateFight($id, $bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted)){
                     $this->addMsg("success", "Attaque modifiée");
             }
         }

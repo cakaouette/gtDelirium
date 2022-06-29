@@ -38,7 +38,7 @@ class FightManager extends  AbstractManager
         }
     }
 
-    public function getAllByGuildIdDate($guildId, $date, $memberFilter = NULL) {
+    public function getAllByGuildIdDate($guildId, $date, $isExtra = 0, $memberFilter = NULL) {
         $this->reset();
         $this->addColumns(Array("id", "pseudoId", "guildId", "raidId", "date", "teamNumber",
                                 "bossId", "damage", "hero1Id", "hero2Id", "hero3Id", "hero4Id"))
@@ -50,6 +50,7 @@ class FightManager extends  AbstractManager
              ->addJoin("LEFT", "guildId", "id", "guild")
              ->addWhere("guildId", $guildId, "=")
              ->addWhere("date", $date, "=")
+             ->addWhere("isExtraDamage", $isExtra, "=")
              ->addWhere("deleted", "1", "!=")
              ->addOrderBy("pseudoId", true)
              ->addOrderBy("teamNumber", true);
@@ -185,16 +186,16 @@ class FightManager extends  AbstractManager
     }
 
     public function addFight($pseudoId, $guildId, $raidId, $date,
-            $teamNumber, $bossId, $damage,
+            $teamNumber, $bossId, $damage, $isExtra,
             $hero1Id, $hero2Id, $hero3Id, $hero4Id,
             $recorderId) {
         $this->reset();
         if ( !$this->insert(Array("pseudoId", "guildId", "raidId", "date",
-                            "teamNumber", "bossId", "damage",
+                            "teamNumber", "bossId", "damage", "isExtraDamage",
                             "hero1Id", "hero2Id", "hero3Id", "hero4Id",
                             "recorderId", "deleted"), 
                       Array($pseudoId, $guildId, $raidId, $date,
-                            $teamNumber, $bossId, $damage,
+                            $teamNumber, $bossId, $damage, $isExtra,
                             $hero1Id, $hero2Id, $hero3Id, $hero4Id,
                             $recorderId, "0"))
             ) {
@@ -242,12 +243,13 @@ class FightManager extends  AbstractManager
         }
     }
     
-    public function isExist($memberId, $date, $teamNumber): int {
+    public function isExist($memberId, $date, $teamNumber, $isExtra): int {
         $this->reset();
         $this->addColumns(Array("teamNumber"))
              ->addWhere("date", $date, "=")
              ->addWhere("pseudoId", $memberId, "=")
              ->addWhere("teamNumber", $teamNumber, "=")
+             ->addWhere("isExtraDamage", $isExtra, "=")
              ->addWhere("deleted", "1", "!=")
              ->addLimit(1);
         if($this->select()) {
@@ -262,7 +264,7 @@ class FightManager extends  AbstractManager
         }
     }
 
-    public function checkFight($id, $guildId, $memberId, $date, $teamNumber): bool {
+    public function checkFight($id, $guildId, $memberId, $date, $teamNumber, $isExtra): bool {
         $this->reset();
         $this->addColumns(Array("teamNumber"))
              ->addWhere("id", $id, "=")
@@ -270,6 +272,7 @@ class FightManager extends  AbstractManager
              ->addWhere("pseudoId", $memberId, "=")
              ->addWhere("date", $date, "=")
              ->addWhere("teamNumber", $teamNumber, "=")
+             ->addWhere("isExtraDamage", $isExtra, "=")
              ->addLimit(1);
         if($this->select()) {
             $c = $this->getColumns();
@@ -282,10 +285,10 @@ class FightManager extends  AbstractManager
         }
     }
 
-    public function updateFight($id, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted) {
+    public function updateFight($id, $bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted) {
         $this->reset();
-        if(!$this->update($id, Array("bossId", "damage" , "hero1Id", "hero2Id", "hero3Id", "hero4Id", "recorderId", "deleted"),
-                               Array($bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted))) {
+        if(!$this->update($id, Array("bossId", "damage" , "isExtraDamage", "hero1Id", "hero2Id", "hero3Id", "hero4Id", "recorderId", "deleted"),
+                               Array($bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted))) {
             throw new Exception($this->getError());
         }
         return true;

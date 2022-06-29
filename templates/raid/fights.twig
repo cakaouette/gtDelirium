@@ -60,6 +60,8 @@
       </div>
       {% for i in 1..3 %}
       {% set isEdit = info.fights[i] is defined %}
+      {% set isEditExtra = info.extraFights[i] is defined %}
+      {% set isDisable = not isEdit %}
       <div class="info-box-content col-2">
         <button type="button" class="btn btn-{{ isEdit ? 'default' : 'primary' }}";
                 data-toggle="modal" 
@@ -75,6 +77,7 @@
                 
                 data-boss_id="{{ isEdit ? info.fights[i].boss : -1 }}"
                 data-damage="{{ isEdit ? info.fights[i].damage : '' }}"
+                data-is_extra="{{ false }}"
                 data-team_hero1="{{ isEdit ? info.fights[i].hero1 : 0 }}"
                 data-team_hero2="{{ isEdit ? info.fights[i].hero2 : 0 }}"
                 data-team_hero3="{{ isEdit ? info.fights[i].hero3 : 0 }}"
@@ -87,6 +90,40 @@
                 data-toggle="tooltip" title="{{ info.fights[i].damage|number_format(0, ',', ' ') }}"
                 style="padding: 0"
                 alt="{{ info.fights[i].boss }}">
+            {% else %}
+            <i class="right fas fa-plus"></i>
+            {% endif %}
+        </button>
+        <button type="button" class="btn btn-{{ isEditExtra ? 'default' : 'primary' }}";
+            {% if isEdit %}
+                data-toggle="modal" 
+                data-target="#modalExtra" 
+                data-is_edit="{{ isEditExtra ? 'true' : 'false' }}"
+                data-id="{{ isEditExtra ? info.extraFights[i].id : info.fights[i].id }}"
+                data-guild_id="{{ isEditExtra ? info.extraFights[i].guild : info.fights[i].guild }}"
+                data-raid_id="{{ isEditExtra ? info.extraFights[i].raid : info.fights[i].raid }}"
+                data-member_id="{{ memberId }}"
+                data-member_name="{{ info.member }}"
+                data-date="{{ isEditExtra ? info.extraFights[i].date : info.fights[i].date }}"
+                data-team_number="{{ i }}"
+                
+                data-boss_id="{{ isEditExtra ? info.extraFights[i].boss : -1 }}"
+                data-damage="{{ isEditExtra ? info.extraFights[i].damage : '' }}"
+                data-is_extra="{{ true }}"
+                data-team_hero1="{{ isEditExtra ? info.extraFights[i].hero1 : info.fights[i].hero1 }}"
+                data-team_hero2="{{ isEditExtra ? info.extraFights[i].hero2 : info.fights[i].hero2 }}"
+                data-team_hero3="{{ isEditExtra ? info.extraFights[i].hero3 : info.fights[i].hero3 }}"
+                data-team_hero4="{{ isEditExtra ? info.extraFights[i].hero4 : info.fights[i].hero4 }}"
+                {{ isEditExtra ? 'style="padding: 0"' : '' }}
+            {% endif %}
+                {{ isDisable ? "disabled" : "" }}
+        >
+            {% if isEditExtra %}
+            <img src="/dist/image/bosses/{{ info.extraFights[i].boss }}.png"
+                class="img-fluid img-thumbnail"
+                data-toggle="tooltip" title="{{ info.extraFights[i].damage|number_format(0, ',', ' ') }}"
+                style="padding: 0"
+                alt="{{ info.extraFights[i].boss }}">
             {% else %}
             <i class="right fas fa-plus"></i>
             {% endif %}
@@ -120,6 +157,7 @@
           <input type="hidden" id="dateFormId" name="dateForm" value=""/>
           <input type="hidden" id="teamFormId" name="teamForm" value=""/>
           <input type="hidden" id="teamNbUsedFormId" name="teamNbUsedForm" value=""/>
+          <input type="hidden" id="isExtraFormId" name="isExtraForm" value=""/>
           <div class="form-group row">
             <label for="bossFormId" class="col-sm-1 col-form-label">Boss: </label>
             <div class="col-sm-3">
@@ -203,6 +241,66 @@
   </div>
   <!-- /.modal-dialog -->
 </div>
+<div class="modal fade" id="modalExtra">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content bg-default">
+      <div class="modal-header bg-{{ guild.color }}">
+        <h4 class="modal-title">memberName:</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form class="form" role="form" method="post">
+        {% include 'csrf.twig' %}
+        <div class="modal-body">
+          <input type="hidden" id="recorderIdFormId" name="recorderIdForm" value="{{ user.id }}"/>
+          <input type="hidden" id="idFormId" name="idForm" value=""/>
+          <input type="hidden" id="guildFormId" name="guildForm" value=""/>
+          <input type="hidden" id="memberFormId" name="memberForm" value=""/>
+          <input type="hidden" id="raidIdFormId" name="raidIdForm" value=""/>
+          <input type="hidden" id="dateFormId" name="dateForm" value=""/>
+          <input type="hidden" id="teamFormId" name="teamForm" value=""/>
+          <input type="hidden" id="teamNbUsedFormId" name="teamNbUsedForm" value=""/>
+          <input type="hidden" id="hero1FormId" name="hero1Form" value=""/>
+          <input type="hidden" id="hero2FormId" name="hero2Form" value=""/>
+          <input type="hidden" id="hero3FormId" name="hero3Form" value=""/>
+          <input type="hidden" id="hero4FormId" name="hero4Form" value=""/>
+          <input type="hidden" id="isExtraFormId" name="isExtraForm" value=""/>
+          <div class="form-group row">
+            <label for="bossFormId" class="col-sm-1 col-form-label">Boss: </label>
+            <div class="col-sm-3">
+              <select name="bossForm"
+                      id="bossFormId"
+                      class="custom-select form-control">
+                <option value="-1"></option>
+                {% for id, name in raid.bosses %}
+                <option value="{{ id }}">{{ name }}</option>
+                {% endfor %}
+                <option value="0">--- default ---</option>
+              </select>
+            </div>
+            <div class="col-sm-2">
+              <input type="number"
+                     class="form-control" 
+                     id="damageFormId"
+                     name="damageForm"
+                     placeholder="Dégâts">
+            </div>
+            <button type="submit" class="btn btn-primary col-sm-2 buttonSubmit"></button>
+          </div>
+        <div class="modal-footer justify-content-between bg-default">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="submit"
+                  class="btn btn-primary buttonSubmit"
+                  name="updateForm"></button>
+          <button type="submit" class="btn btn-outline-danger float-right" name="teamDeleteForm" >Supprimer</button>
+        </div>
+      </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -226,6 +324,7 @@ $(function () {
       modal.find('#teamFormId').val(teamNumber);
       modal.find('#bossFormId').val(button.data('boss_id'));
       modal.find('#damageFormId').val(button.data('damage'));
+      modal.find('#isExtraFormId').val(button.data('is_extra'));
       // 
       var valueHero1 = '#hero1FormId option[value="' + button.data('team_hero1') + '"]';
       $(valueHero1).prop('selected', true);
@@ -289,6 +388,36 @@ $(function () {
         var valueHero = '#hero'+v+'FormId option[value="0"]';
         $(valueHero).prop('selected', true);
       });
+    });
+
+    $('#modalExtra').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget); // Button that triggered the modal
+      var modal = $(this);
+      var memberName = button.data('member_name'); // Extract info from data-* attributes
+      var teamNumber = button.data('team_number');
+      modal.find('.modal-title').text(memberName + ' - Attaque ' + teamNumber);
+      
+      modal.find('#idFormId').val(button.data('id'));
+      modal.find('#guildFormId').val(button.data('guild_id'));
+      modal.find('#memberFormId').val(button.data('member_id'));
+      modal.find('#raidIdFormId').val(button.data('raid_id'));
+      modal.find('#dateFormId').val(button.data('date'));
+      modal.find('#teamFormId').val(teamNumber);
+      modal.find('#bossFormId').val(button.data('boss_id'));
+      modal.find('#damageFormId').val(button.data('damage'));
+      modal.find('#isExtraFormId').val(button.data('is_extra'));
+      modal.find('#hero1FormId').val(button.data('team_hero1'));
+      modal.find('#hero2FormId').val(button.data('team_hero2'));
+      modal.find('#hero3FormId').val(button.data('team_hero3'));
+      modal.find('#hero4FormId').val(button.data('team_hero4'));
+      // 
+      if (button.data('is_edit')) {
+        modal.find('.buttonSubmit').attr("name" , 'teamUpdateForm');
+        modal.find('.buttonSubmit').text('Modifier');
+      } else {
+        modal.find('.buttonSubmit').attr("name" , 'teamAddForm');
+        modal.find('.buttonSubmit').text('Sauvegarder');
+      }
     });
 });
 </script>
