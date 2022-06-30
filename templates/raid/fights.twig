@@ -77,7 +77,7 @@
                 
                 data-boss_id="{{ isEdit ? info.fights[i].boss : -1 }}"
                 data-damage="{{ isEdit ? info.fights[i].damage : '' }}"
-                data-is_extra="{{ false }}"
+                data-is_extra="{{ 0 }}"
                 data-team_hero1="{{ isEdit ? info.fights[i].hero1 : 0 }}"
                 data-team_hero2="{{ isEdit ? info.fights[i].hero2 : 0 }}"
                 data-team_hero3="{{ isEdit ? info.fights[i].hero3 : 0 }}"
@@ -109,11 +109,15 @@
                 
                 data-boss_id="{{ isEditExtra ? info.extraFights[i].boss : -1 }}"
                 data-damage="{{ isEditExtra ? info.extraFights[i].damage : '' }}"
-                data-is_extra="{{ true }}"
-                data-team_hero1="{{ isEditExtra ? info.extraFights[i].hero1 : info.fights[i].hero1 }}"
-                data-team_hero2="{{ isEditExtra ? info.extraFights[i].hero2 : info.fights[i].hero2 }}"
-                data-team_hero3="{{ isEditExtra ? info.extraFights[i].hero3 : info.fights[i].hero3 }}"
-                data-team_hero4="{{ isEditExtra ? info.extraFights[i].hero4 : info.fights[i].hero4 }}"
+                data-is_extra="{{ 1 }}"
+                data-team_hero1="{{ isEditExtra ? info.extraFights[i].hero1 : 
+                        info.fights[i].hero1 != '' ? info.fights[i].hero1 : 0 }}"
+                data-team_hero2="{{ isEditExtra ? info.extraFights[i].hero2 : 
+                        info.fights[i].hero2 != '' ? info.fights[i].hero2 : 0 }}"
+                data-team_hero3="{{ isEditExtra ? info.extraFights[i].hero3 : 
+                        info.fights[i].hero3 != '' ? info.fights[i].hero3 : 0 }}"
+                data-team_hero4="{{ isEditExtra ? info.extraFights[i].hero4 : 
+                        info.fights[i].hero4 != '' ? info.fights[i].hero4 : 0 }}"
                 {{ isEditExtra ? 'style="padding: 0"' : '' }}
             {% endif %}
                 {{ isDisable ? "disabled" : "" }}
