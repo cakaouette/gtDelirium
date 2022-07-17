@@ -67,5 +67,8 @@ return function (App $app) {
             //$raid->map(['GET', 'POST'], '/fights/old', [C\RaidController::class, 'oldfights'])->setName('raid-old-fights')->setArgument('content-title', 'X');
             $raid->map(['GET', 'POST'], '/fights[/{guildId}]', [C\RaidController::class, 'fights'])->setName('raid-fights');
         })->add(Auth::class);
+        $group->group('/discord', function ($discord) {
+            $discord->get('/alarm', [C\DiscordController::class, 'api'])->setName('discord-alarm')->setArgument('content-title', 'Activation de l\'api');
+        })->add(Auth::class);
     });
 };
