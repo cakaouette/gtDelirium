@@ -66,6 +66,7 @@ return function (App $app) {
             $raid->get('/summary', [C\RaidController::class, 'summary'])->setName('raid-summary')->setArgument('content-title', 'Liste des 180 dernières attaques');
             //$raid->map(['GET', 'POST'], '/fights/old', [C\RaidController::class, 'oldfights'])->setName('raid-old-fights')->setArgument('content-title', 'X');
             $raid->map(['GET', 'POST'], '/fights[/{guildId}]', [C\RaidController::class, 'fights'])->setName('raid-fights');
+            $raid->get('/fights/{guildId}/end', [C\RaidController::class, 'fightsEnd'])->setName('raid-fights-end');
         })->add(Auth::class);
     });
 };

@@ -1,20 +1,22 @@
 {% extends "layout.twig" %}
 
-{% macro print_select_hero(position, charactersByGradeAndElement) %}
-<select name="hero{{ position }}Form" id="hero{{ position }}FormId" class="custom-select form-control">
-    <option value="0"></option>
-    {% for grade in charactersByGradeAndElement %}
-        <optgroup label="Level {{ grade.name }}*">
-        {% for element in grade.elements %}
-            <optgroup label=".{{element.name}}.">
-            {% for id, name in element.characters %}
-                <option value="{{id}}">{{name}}</option>
-            {% endfor %}
-            </optgroup>
-        {% endfor %}
-        </optgroup>
-    {% endfor %}
-</select>
+{% macro day_cell(member, day, team) %}
+  {% if member.days[day] is defined and member.days[day][team] is defined %}
+    {% set info = member.days[day][team] %}
+    <td style="background: grey">
+      <div style="text-align: center">
+        <img src="/dist/image/bosses/{{ info.boss }}.png" width="30" />
+        <span>{{ info.damage }}</span>
+        <div>
+          {% for id in info.team %}
+          <img src="/dist/image/heros/{{ id }}_icon.png"  width="30" />
+          {% endfor %}
+        </div>
+      </div>
+    </td>
+  {% else %}
+    <td style="text-align: center;vertical-align: middle;"><button class="btn btn-primary">Ajouter</button></td>
+  {% endif %}
 {% endmacro %}
 
 {% block title %}Raid{% endblock %}
@@ -22,83 +24,99 @@
 {% block content %}
 <div class="row justify-content-between">
   <div class="col-md-7">
-  <form method="get" class="form-horizontal">
     <div class="form-group row align-items-center">
-      <label for="dateFormId" class="col-sm-1 col-form-label">Date: </label>
+      <label for="dateFormId" class="col-sm-3 col-form-label">Degats totaux réels: </label>
       <div class="col-sm-3">
-        <input type="date"
-              name="date"
-              id="dateFormId"
-              value="{{ date }}"/>
+        <input type="input" id="real-total"/>
       </div>
       <div class="col-sm-2">
-        <button type="submit" class="btn btn-primary">Selectionner</button>
+        <button type="submit" class="btn btn-primary" id="validate-total-score">Valider</button>
       </div>
     </div>
-  </form>
   </div>
-  {% if user.isGestion %}
-  <div class="col-md-1 ml-auto">
-    <a class="btn btn-secondary" href="{{ url_for('raid-fights-end', { guildId: guildId }) }}" role="button">Finalisation</a>
+  <div class="col-md-12 row justify-content-center">
+    <h3>Objectif: <span id="objectif">inconnu</span></h3>
   </div>
-  {% endif %}
 </div>
 
 <div class="row">
-{% for memberId, info in members %}
-  <div class="col-lg-4 col-sm-6 col-12">
-    <div class="info-box">
-      <div class="info-box-content col-6">
-        <span class="info-box-text">{{ info.member }}</span>
-        <div team_nb="{{ info.teamIds }}"
-            {% for nb, team in info.savedTeams %}
-            team_{{ nb }}="{{ team.id }}:{{team.number}}:{{team.heros}}"
-            {% endfor %}
-            >
-        </div>
-      </div>
-      {% for i in 1..3 %}
-      {% set isEdit = info.fights[i] is defined %}
-      <div class="info-box-content col-2">
-        <button type="button" class="btn btn-{{ isEdit ? 'default' : 'primary' }}";
-                data-toggle="modal" 
-                data-target="#modalAll" 
-                data-is_edit="{{ isEdit ? 'true' : 'false' }}"
-                data-id="{{ isEdit ? info.fights[i].id : '' }}"
-                data-guild_id="{{ isEdit ? info.fights[i].guild : info.guildId }}"
-                data-raid_id="{{ isEdit ? info.fights[i].raid : raid.id }}"
-                data-member_id="{{ memberId }}"
-                data-member_name="{{ info.member }}"
-                data-date="{{ isEdit ? info.fights[i].date : date }}"
-                data-team_number="{{ i }}"
-                
-                data-boss_id="{{ isEdit ? info.fights[i].boss : 0 }}"
-                data-damage="{{ isEdit ? info.fights[i].damage : '' }}"
-                data-team_hero1="{{ isEdit ? info.fights[i].hero1 : 0 }}"
-                data-team_hero2="{{ isEdit ? info.fights[i].hero2 : 0 }}"
-                data-team_hero3="{{ isEdit ? info.fights[i].hero3 : 0 }}"
-                data-team_hero4="{{ isEdit ? info.fights[i].hero4 : 0 }}"
-                {{ isEdit ? 'style="padding: 0"' : '' }}
-        >
-            {% if isEdit %}
-            <img src="/dist/image/bosses/{{ info.fights[i].boss }}.png"
-                class="img-fluid img-thumbnail"
-                data-toggle="tooltip" title="{{ info.fights[i].damage|number_format(0, ',', ' ') }}"
-                style="padding: 0"
-                alt="{{ info.fights[i].boss }}">
-            {% else %}
-            <i class="right fas fa-plus"></i>
-            {% endif %}
-        </button>
-      </div>
-    {% endfor %}
+  <div class="card col-lg-6">
+    <div class="card-header">
+      <h3 class="card-title">Degats par joueur</h3>
+    </div>
+    <div class="card-body">
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Combats totaux</th>
+            <th>Degats</th>
+            <th>Valide</th>
+            <th>Editer</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for memberId, member in fights %}
+          <tr id="member-row-{{ memberId }}">
+            <td>{{ member.name }}</td>
+            <td>{{ member.count }}/42</td>
+            <td>{{ member.damage }}</td>
+            <td><input type="checkbox" value="{{ memberId }}" class="validate-member-total-score" /></td>
+            <td><button class="btn btn-primary edit-member-score" data-id="{{ memberId }}">Editer</button></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
-{% endfor %}
+  {% for memberId, member in fights %}
+  <div class="card col-lg-6 member-details" id="member-details-{{ memberId }}" style="display:none">
+    <div class="card-header">
+      <h3 class="card-title">Degats de {{ member.name }}</h3>
+    </div>
+    <div class="card-body">
+      <div class="form-group row align-items-center">
+        <label for="dateFormId" class="col-sm-3 col-form-label">Degats totaux réels: </label>
+        <div class="col-sm-4">
+          <input type="input" class="member-damage" id="member-damage-{{ memberId }}"/>
+        </div>
+        <div class="col-sm-2">
+          <button type="submit" class="btn btn-primary validate-member-score" data-id="{{ memberId }}">Valider</button>
+        </div>
+        <div class="col-sm-2">
+          <span id="member-details-{{ memberId }}-diff-score"></span>
+        </div>
+      </div>
+      <table class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>Jour</th>
+            <th>Team 1</th>
+            <th>Team 2</th>
+            <th>Team 3</th>
+            <th>Editer</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for day, index in days %}
+          <tr id="member-day-{{ day }}">
+            <td>{{ index + 1 }}</td>
+            {{ _self.day_cell(member, day, 0) }}
+            {{ _self.day_cell(member, day, 1) }}
+            {{ _self.day_cell(member, day, 2) }}
+            <td><button class="btn btn-primary edit-day-score" data-id="{{ memberId }}" data-day="{{ day }}">Editer</button></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 {% endblock %}
 
 {% block modal %}
+{% if false %}
 <div class="modal fade" id="modalAll">
   <div class="modal-dialog modal-xl">
     <div class="modal-content bg-default">
@@ -201,13 +219,135 @@
   </div>
   <!-- /.modal-dialog -->
 </div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script type="text/javascript">
 $(document).ready(function(){
-  $('[data-toggle="tooltip"]').tooltip();
+  let total = {{ total }}
+  const fights = {{ fights | json_encode | raw }}
+  const days = {{ days | json_encode | raw }}
+  const updateObjectif = () => {
+    const diff = $('#real-total').val() - total
+    if (diff == 0) $('#objectif').text("Accompli. Vous pouvez enregitrer maintenant").css('color', 'green')
+    else if (diff > 0) $('#objectif').text('Ajouter ' + diff).css('color', 'tomato')
+    else if (diff < 0) $('#objectif').text('Retirer ' + (diff * -1)).css('color', 'brown')
+  }
+  const updateMemberDiff = (id) => {
+    const diff = $('#member-damage-' + id).val() - fights[id].damage
+    const target = $('#member-details-' + id + '-diff-score')
+    if (diff == 0) target.text("OK").css('color', 'green')
+    else if (diff > 0) target.text('+' + diff).css('color', 'tomato')
+    else if (diff < 0) target.text(diff).css('color', 'brown')
+    fights[id].diff = diff
+  }
+  const suggestScores = (id) => {
+    const member = fights[id]
+    const missingBattles = member.diff > 0 ? fundMissingBattlesChoices(member) : []
+    if (missingBattles.length === 0) {
+      alert('Pas de suggestion trouvée. Veuillez les renseigner manuellement.')
+    }
+    else {
+      const suggestions = cartesian(...missingBattles.map(b => b.battlesCombinations.map(c => ({ battles: c, day: b.day, index: b.index, slots: b.slots }))))
+      for (const suggestion of suggestions) {
+        const total = suggestion.reduce((total, s) => total + s.battles.reduce((damage, b) => damage + b.damage, 0), 0)
+        for (const day of suggestion) {
+          for (const battle of day.battles) {
+            battle.weightedDamage = Math.round(battle.damage * member.diff / total)
+          }
+        }
+      }
+      //TODO open popup with list of missing battles and suggestions instead of this console.log
+      for (let i = 0; i < suggestions.length; i++) {
+        console.log(`Suggestion ${i + 1}: `)
+        for (let j = 0; j < suggestions[i].length; j++) {
+          const day = suggestions[i][j]
+          console.log(`- day ${day.index} (${day.day}):`)
+          for (let k = 0; k < day.battles.length; k++) {
+            const battle = day.battles[k]
+            console.log(`  - battle ${day.slots[k] + 1}: boss ${battle.boss} -  team ${battle.team} - suggested damage: ${battle.weightedDamage} - average damage: ${battle.damage}`)
+          }
+        }
+      }
+    }
+  }
+  const fundMissingBattlesChoices = (member) => {
+    const missingBattles = []
+    for (const [day, index] of Object.entries(days)) {
+      const battlesForDay = []
+      const slots = []
+      for (let team = 0; team < 3; team++) {
+        if (!member.days[day]?.[team]) {
+          slots.push(team)
+          battlesForDay.push(findPossibleTeams(member, day))
+        }
+      }
+      if (battlesForDay.length) {
+        const battlesCombinations = cartesian(...battlesForDay).reduce((final, combination) => {
+          const heroes = combination.flatMap(c => c.team)
+          if (heroes.length == new Set(heroes).size) {
+            if (!final.some(f => f.every(c => combination.map(m => m.team).includes(c.team)))) {
+              final.push(combination)
+            }
+          }
+          return final
+        }, [])
+        missingBattles.push({ day, index, slots, battlesCombinations })
+      }
+    }
+
+    return missingBattles
+  }
+  const cartesian = (...args) => {
+    var r = [], max = args.length-1;
+    function helper(arr, i) {
+        for (var j=0, l=args[i].length; j<l; j++) {
+            var a = arr.slice(0); // clone arr
+            a.push(args[i][j]);
+            if (i==max)
+                r.push(a);
+            else
+                helper(a, i+1);
+        }
+    }
+    helper([], 0);
+    return r;
+  }
+  const findPossibleTeams = (member, day) => {
+    if (!member.days[day]) return [...member.teams]
+    const usedHeros = member.days[day].reduce((team, battle) => team.concat(battle.team), [])
+    return member.teams.filter(x => !x.team.some(t => usedHeros.includes(t)))
+  }
+  $('#validate-total-score').click(updateObjectif)
+  $('.validate-member-total-score').change((e) => {
+    const self = $(e.currentTarget)
+    const checked = self.prop('checked');
+    const row = $('#member-row-' + self.val())
+    if (checked) {
+      row.css('background-color', 'green')
+      $('.edit-member-score', row).attr('disabled', true)
+      $('#member-details-' + self.val()).hide()
+    }
+    else {
+      row.css('background-color', '')
+      $('.edit-member-score', row).attr('disabled', false)
+    }
+  })
+  $('.edit-member-score').click((e) => {
+    const self = $(e.currentTarget)
+    $('.member-details').hide()
+    $('#member-details-' + self.data('id')).show()
+  })
+  $('body').on('click', '.validate-member-score', (e) => {
+    const id = $(e.currentTarget).data('id')
+    updateMemberDiff(id)
+    suggestScores(id)
+  })
 });
+</script>
+{% if false %}
+<script type="text/javascript">
 $(function () {
     $('#modalAll').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget); // Button that triggered the modal
@@ -290,4 +430,5 @@ $(function () {
     });
 });
 </script>
+{% endif %}
 {% endblock %}

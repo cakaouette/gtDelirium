@@ -638,6 +638,7 @@ final class RaidController extends BaseController
         }
 
         return $this->view->render($response, 'raid/fights.twig', [
+            'guildId' => $guildId,
             'title' => "Enregistrement des attaques",
             'filter' => $filter,
             'members' => $v_fights,
@@ -652,6 +653,86 @@ final class RaidController extends BaseController
                 ]
                 ],
                 'characters' => $characters
+        ]);
+    }
+
+    public function fightsEnd(ServerRequestInterface $request, ResponseInterface $response, string $guildId): ResponseInterface {
+        if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
+
+        $lastRaidDate = $this->_raidManager->getLastByDate()->getDate();
+        $fights = $this->_fightManager->getAllByRaidAndGuild($lastRaidDate, $guildId);
+        $days = [];
+        $total = 0;
+        foreach ($fights as &$member) {
+            $teams = [];
+            $battles = [];
+            $damage = 0;
+            $count = 0;
+            foreach ($member['days'] as $k => $day) {
+                $days[] = $k;
+                foreach ($day as $fight) {
+                    $count++;
+                    $key = implode('-', $fight['team']);
+                    $damage += $fight['damage'];
+                    if (!isset($teams[$key])) {
+                        $teams[$key] = [$k];
+                        $battles[$key] = ['damage' => $fight['damage'], 'bosses' => [$fight['boss'] => 1]];
+                    }
+                    else {
+                        $teams[$key][] = $k;
+                        $battles[$key]['damage'] += $fight['damage'];
+                        if (isset($battles[$key]['bosses'][$fight['boss']])) $battles[$key]['bosses'][$fight['boss']]++;
+                        else $battles[$key]['bosses'][$fight['boss']] = 1;
+                    }
+                }
+            }
+            arsort($teams);
+            $member['teams'] = [];
+            $member['damage'] = $damage;
+            $member['count'] = $count;
+            $total += $damage;
+            foreach ($teams as $key => $dates) {
+                //if a team have been used only once, it is very likely that it was a "day 1" team, so we don't include it
+                if (count($dates) < 2) continue;
+                $team = explode('-', $key);
+                $found = false;
+                foreach ($member['teams'] as $t) {
+                    foreach ($team as $hero) {
+                        $found = $found || in_array($hero, $t['team']);
+                    }
+                }
+                if (!$found)
+                {
+                    arsort($battles[$key]['bosses']);
+                    $member['teams'][] = [
+                        'team' => $team,
+                        'damage' => round($battles[$key]['damage'] / $count),
+                        'boss' => array_key_first($battles[$key]['bosses']),
+                        'days' => $dates
+                    ];
+                }
+            }
+        }
+        $days = array_unique($days);
+        sort($days);
+        uasort($fights, fn($a, $b) => $b['damage'] - $a['damage']);
+        //We remove the first team day suggestion
+        /*$firstDay = $days[0];
+        foreach ($fights as &$member) {
+            $newTeams = [];
+            foreach ($team as $member['teams']) {
+                if (count($team['days']) > 1 || $team['days'][0] != $firstDay) {
+                    $newTeams[] = $team;
+                }
+            }
+            $member['teams'] = $newTeams;
+        }*/
+
+        return $this->view->render($response, 'raid/fights-end.twig', [
+            'title' => 'Aide pour completion du raid',
+            'fights' => $fights,
+            'days' => array_flip($days),
+            'total' => $total
         ]);
     }
 

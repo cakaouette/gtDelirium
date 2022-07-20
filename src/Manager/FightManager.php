@@ -377,4 +377,46 @@ class FightManager extends  AbstractManager
         }
     }
 
+    public function getAllByRaidAndGuild($date, $guildId = null) {
+        $date14 = date("Y-m-d", strtotime("$date +13 day"));
+        $this->reset();
+        $this->addColumns(Array("id", "pseudoId", "bossId", "damage", "date", "hero1Id", "hero2Id", "hero3Id", "hero4Id"))
+             ->addColumns(Array("name"), false, MemberManager::DB_NAME, MemberManager::DB_PREFIX)
+             ->addJoin("LEFT", "pseudoId", "id", MemberManager::DB_NAME)
+             ->addJoin("LEFT", "guildId", "id", GuildManager::DB_NAME)
+             ->addWhere("date", $date, ">=")
+             ->addWhere("date", $date14, "<=")
+             ->addWhere("deleted", "1", "!=")
+//             ->betweenWhere("pseudoId", "1", "11")
+             ->addOrderBy("pseudoId", true)
+             ->addOrderBy("bossId", true)
+             ->addOrderBy("date", true);
+        if (!is_null($guildId)) $this->addWhere("guildId", $guildId, "=");
+        if($this->select()) {
+            $c = $this->getColumns();
+            $entities = Array();
+            $results = $this->getResult();
+            foreach ($results as $line) {
+                $id = $line[$c[0]];
+                $pseudoId = $line[$c[1]];
+                $bossId = $line[$c[2]];
+                $damage = $line[$c[3]];
+                $date = $line[$c[4]];
+                $hero1 = $line[$c[5]];
+                $hero2 = $line[$c[6]];
+                $hero3 = $line[$c[7]];
+                $hero4 = $line[$c[8]];
+                $member = $line[$c[9]];
+                if (!isset($entities[$pseudoId])) $entities[$pseudoId] = [ 'name' => $member, 'days' => [] ];
+                $entities[$pseudoId]['days'][$date][] = [
+                    'boss' => $bossId,
+                    'damage' => $damage,
+                    'team' => [ $hero1, $hero2, $hero3, $hero4]
+                ];
+            }
+            return $entities;
+        } else {
+            throw new Exception($this->getError());
+        }
+    }
 }
