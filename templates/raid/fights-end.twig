@@ -15,7 +15,7 @@
       </div>
     </td>
   {% else %}
-    <td style="text-align: center;vertical-align: middle;"><button class="btn btn-primary">Ajouter</button></td>
+    <td style="text-align: center;vertical-align: middle;"><button class="btn btn-primary" onclick="alert('pas encore possible')">Ajouter</button></td>
   {% endif %}
 {% endmacro %}
 
@@ -81,7 +81,7 @@
           <input type="input" class="member-damage" id="member-damage-{{ memberId }}"/>
         </div>
         <div class="col-sm-2">
-          <button type="submit" class="btn btn-primary validate-member-score" data-id="{{ memberId }}">Valider</button>
+          <button type="button" class="btn btn-primary validate-member-score" data-id="{{ memberId }}" data-toggle="modal" data-target="#suggestions-modal">Valider</button>
         </div>
         <div class="col-sm-2">
           <span id="member-details-{{ memberId }}-diff-score"></span>
@@ -104,7 +104,7 @@
             {{ _self.day_cell(member, day, 0) }}
             {{ _self.day_cell(member, day, 1) }}
             {{ _self.day_cell(member, day, 2) }}
-            <td><button class="btn btn-primary edit-day-score" data-id="{{ memberId }}" data-day="{{ day }}">Editer</button></td>
+            <td><button class="btn btn-primary edit-day-score" data-id="{{ memberId }}" data-day="{{ day }}" onclick="alert('pas encore possible')">Editer</button></td>
           </tr>
         {% endfor %}
         </tbody>
@@ -116,116 +116,45 @@
 {% endblock %}
 
 {% block modal %}
-{% if false %}
-<div class="modal fade" id="modalAll">
+<div class="modal fade" id="suggestions-modal">
   <div class="modal-dialog modal-xl">
     <div class="modal-content bg-default">
-      <div class="modal-header bg-{{ guild.color }}">
-        <h4 class="modal-title">memberName:</h4>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+      <div class="modal-header p-0 pt-1 bg-{{ guild.color }}">
+          <ul class="modal-title nav nav-tabs" id="suggestion-tabs-tab" role="tablist">
+            <!--suggestions tabs-->
+          </ul>
+        <button type="button" class="close mr-0" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
-      <form class="form" role="form" method="post">
-        {% include 'csrf.twig' %}
-        <div class="modal-body">
-          <input type="hidden" id="recorderIdFormId" name="recorderIdForm" value="{{ user.id }}"/>
-          <input type="hidden" id="idFormId" name="idForm" value=""/>
-          <input type="hidden" id="guildFormId" name="guildForm" value=""/>
-          <input type="hidden" id="memberFormId" name="memberForm" value=""/>
-          <input type="hidden" id="raidIdFormId" name="raidIdForm" value=""/>
-          <input type="hidden" id="dateFormId" name="dateForm" value=""/>
-          <input type="hidden" id="teamFormId" name="teamForm" value=""/>
-          <input type="hidden" id="teamNbUsedFormId" name="teamNbUsedForm" value=""/>
-          <div class="form-group row">
-            <label for="bossFormId" class="col-sm-1 col-form-label">Boss: </label>
-            <div class="col-sm-3">
-              <select name="bossForm"
-                      id="bossFormId"
-                      class="custom-select form-control">
-                <option value="0"></option>
-                {% for id, name in raid.bosses %}
-                <option value="{{ id }}">{{ name }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-sm-2">
-              <input type="number"
-                     class="form-control" 
-                     id="damageFormId"
-                     name="damageForm"
-                     placeholder="Dégâts">
-            </div>
-            <button type="submit" class="btn btn-primary col-sm-2 buttonSubmit"></button>
-          </div>
-          <div class="form-group row align-items-center">
-            <label for="hero1FormId" class="col-sm-1 col-form-label">Team: </label>
-            <div class="col-sm-2">
-                {{ _self.print_select_hero(1, characters) }}
-            </div>
-            <div class="col-sm-2">
-                {{ _self.print_select_hero(2, characters) }}
-            </div>
-            <div class="col-sm-2">
-                {{ _self.print_select_hero(3, characters) }}
-            </div>
-            <div class="col-sm-2">
-                {{ _self.print_select_hero(4, characters) }}
-            </div>
-            <div class="col-sm-2">
-              <div class="custom-control custom-switch" added="false">
-                <!-- input checkbox -->
-              </div>
-            </div>
-            <div class="col-sm-1">
-              <button type="button"
-                      class="btn btn-outline-secondary clean-team">
-                <i class="right fas fa-brush"></i>
-              </button>
-            </div>
-          </div>
-          <div class="row">
-          {% for i in 0..1 %}
-            <div class="col-sm-6">
-            {% for j in 1..3 %}
-                {% set index = j + (i * 3) %}
-                <div class="form-group row align-items-center">
-                    <div class="col-sm-1">
-                        <i class="far fa-dot-circle "></i>
-                    </div>
-                    <div class="col-sm-11 select-team" id="select-team{{ index }}">
-                    {% for k in 1..4 %}
-                        <img src="/dist/image/heros/0_icon.png" hero="{{ k }}"
-                            class="img-fluid img-thumbnail hero team{{ index }}"
-                            width="100" height="100" alt="0">
-                    {% endfor %}
-                    </div>
-                </div>
-            {% endfor %}
-            </div>
-          {% endfor %}
+      <div class="modal-body">
+        <div class="row">
+          <div class="tab-content" id="suggestion-tabs-tabContent">
+            <!--suggestions content-->
           </div>
         </div>
-        <div class="modal-footer justify-content-between bg-default">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
-          <button type="submit"
-                  class="btn btn-primary buttonSubmit"
-                  name="updateForm"></button>
-          <button type="submit" class="btn btn-outline-danger float-right" name="teamDeleteForm" >Supprimer</button>
-        </div>
-      </form>
+      </div>
+      <div class="modal-footer justify-content-between bg-default">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        <form class="form" role="form" method="post" id="suggestion-form">
+          {% include 'csrf.twig' %}
+          <input type="hidden" id="suggestion-member" name="member" value=""/>
+          <input type="hidden" id="suggestion-choice" name="suggestion" value=""/>
+          <button type="submit" class="btn btn-primary" id="submit-suggestion" name="updateForm">Choisir cette suggestion</button>
+        </form>
+      </div>
     </div>
     <!-- /.modal-content -->
   </div>
   <!-- /.modal-dialog -->
 </div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
 <script type="text/javascript">
 $(document).ready(function(){
   let total = {{ total }}
+  let suggestions = []
   const fights = {{ fights | json_encode | raw }}
   const days = {{ days | json_encode | raw }}
   const updateObjectif = () => {
@@ -245,11 +174,12 @@ $(document).ready(function(){
   const suggestScores = (id) => {
     const member = fights[id]
     const missingBattles = member.diff > 0 ? fundMissingBattlesChoices(member) : []
+    suggestions = []
     if (missingBattles.length === 0) {
       alert('Pas de suggestion trouvée. Veuillez les renseigner manuellement.')
     }
     else {
-      const suggestions = cartesian(...missingBattles.map(b => b.battlesCombinations.map(c => ({ battles: c, day: b.day, index: b.index, slots: b.slots }))))
+      suggestions = cartesian(...missingBattles.map(b => b.battlesCombinations.map(c => ({ battles: c, day: b.day, index: b.index, slots: b.slots }))))
       for (const suggestion of suggestions) {
         const total = suggestion.reduce((total, s) => total + s.battles.reduce((damage, b) => damage + b.damage, 0), 0)
         for (const day of suggestion) {
@@ -258,18 +188,37 @@ $(document).ready(function(){
           }
         }
       }
-      //TODO open popup with list of missing battles and suggestions instead of this console.log
+      const tabs = []
+      const contents = []
       for (let i = 0; i < suggestions.length; i++) {
-        console.log(`Suggestion ${i + 1}: `)
-        for (let j = 0; j < suggestions[i].length; j++) {
-          const day = suggestions[i][j]
-          console.log(`- day ${day.index} (${day.day}):`)
+        const suggestion = suggestions[i]
+        tabs.push('<li class="nav-item">' +
+              `<a class="nav-link${i === 0 ? ' active' : ''}" id="suggestion-tabs-${i}-tab" data-toggle="pill" href="#suggestion-tabs-${i}" role="tab" aria-controls="suggestion-tabs-${i}" aria-selected="true">Suggestion ${i + 1}</a>` +
+            '</li>')
+        const content = [`<div class="tab-pane suggestion-tab fade${i === 0 ? ' show active' : ''}" id="suggestion-tabs-${i}" data-suggestion="${i}" data-member="${id}" role="tabpanel" aria-labelledby="suggestion-tabs-${i}-tab">`,
+          `<dl class="row">`]
+        for (let j = 0; j < suggestion.length; j++) {
+          const day = suggestion[j]
+          content.push(`<dt class="col-sm-4">Day ${day.index + 1} - ${day.day}</dt>`)
           for (let k = 0; k < day.battles.length; k++) {
             const battle = day.battles[k]
-            console.log(`  - battle ${day.slots[k] + 1}: boss ${battle.boss} -  team ${battle.team} - suggested damage: ${battle.weightedDamage} - average damage: ${battle.damage}`)
+            content.push(`<dd class="col-sm-8${k !== 0 ? ' offset-sm-4' : ''}">` +
+              '<div style="text-align: center" class="d-flex justify-content-around">' +
+                '<div>' +
+                  battle.team.map(t => `<img src="/dist/image/heros/${t}_icon.png"  width="30" />`).join('') +
+                  ` vs <img src="/dist/image/bosses/${battle.boss}.png" width="30" />` +
+                '</div>' +
+                `<div>suggestion: ${battle.weightedDamage}</div>` +
+                `<div>moyenne: ${battle.damage}</div>` +
+              '</div>' +
+            '</dd>')
           }
         }
+        content.push('</dl></div>')
+        contents.push(content.join(''))
       }
+      $('#suggestions-modal #suggestion-tabs-tab').html(tabs.join(''))
+      $('#suggestions-modal #suggestion-tabs-tabContent').html(contents.join(''))
     }
   }
   const fundMissingBattlesChoices = (member) => {
@@ -344,91 +293,12 @@ $(document).ready(function(){
     updateMemberDiff(id)
     suggestScores(id)
   })
+  $('#suggestion-form').submit(() => {
+    const choice = $('.suggestion-tab.active');
+    $('#suggestion-choice').val(JSON.stringify(suggestions[choice.data('suggestion')]))
+    $('#suggestion-member').val(choice.data('member'))
+    return true
+  })
 });
 </script>
-{% if false %}
-<script type="text/javascript">
-$(function () {
-    $('#modalAll').on('show.bs.modal', function (event) {
-      var button = $(event.relatedTarget); // Button that triggered the modal
-      var modal = $(this);
-      var memberName = button.data('member_name'); // Extract info from data-* attributes
-      var teamNumber = button.data('team_number');
-      modal.find('.modal-title').text(memberName + ' - Attaque ' + teamNumber);
-      
-      modal.find('#idFormId').val(button.data('id'));
-      modal.find('#guildFormId').val(button.data('guild_id'));
-      modal.find('#memberFormId').val(button.data('member_id'));
-      modal.find('#raidIdFormId').val(button.data('raid_id'));
-      modal.find('#dateFormId').val(button.data('date'));
-      modal.find('#teamFormId').val(teamNumber);
-      modal.find('#bossFormId').val(button.data('boss_id'));
-      modal.find('#damageFormId').val(button.data('damage'));
-      // 
-      var valueHero1 = '#hero1FormId option[value="' + button.data('team_hero1') + '"]';
-      $(valueHero1).prop('selected', true);
-      var valueHero2 = '#hero2FormId option[value="' + button.data('team_hero2') + '"]';
-      $(valueHero2).prop('selected', true);
-      var valueHero3 = '#hero3FormId option[value="' + button.data('team_hero3') + '"]';
-      $(valueHero3).prop('selected', true);
-      var valueHero4 = '#hero4FormId option[value="' + button.data('team_hero4') + '"]';
-      $(valueHero4).prop('selected', true);
-      if (button.data('is_edit')) {
-        modal.find('.buttonSubmit').attr("name" , 'teamUpdateForm');
-        modal.find('.buttonSubmit').text('Modifier');
-      } else {
-        modal.find('.buttonSubmit').attr("name" , 'teamAddForm');
-        modal.find('.buttonSubmit').text('Sauvegarder');
-      }
-      
-      // set team saved
-      var teamSaved = button.parent().parent().children("div").first().children("div");
-      var teamSavedInfo = teamSaved.attr('team_nb');
-      if (teamSavedInfo !== "") {
-        $.each(teamSavedInfo.split('-'), function(index, value) {
-          var teamInfo = teamSaved.attr('team_'+value).split(':');
-          var heroId = teamInfo['2'].split('-');
-          $('.hero.team'+value).each(function(index) {
-            $( this ).attr("alt", heroId[index]);
-            $( this ).attr("src", '/dist/image/heros/'+heroId[index]+'_icon.png');
-          });
-        });
-      }
-    });
-    
-    $('.select-team').click(function () {
-      var teamNb = $(this).get(0).id.split("team")[1];
-      var savedHeros = $(this).find('.hero');
-      var switchButton = $('.custom-control.custom-switch');
-      if (switchButton.attr('added') == 'false') {
-        var input = '<input type="checkbox"'
-                    +'class="custom-control-input"'
-                    +'name="saveTeamForm"'
-                    +'id="saveTeamFormId">';
-        var label = '<label class="custom-control-label" for="saveTeamFormId">Save team ?</label>';
-        switchButton.append(input);
-        switchButton.append(label);
-        switchButton.attr('added', 'true');
-      }
-      
-      $('#teamNbUsedFormId').val(teamNb);
-      savedHeros.each(function( index ) {
-        var valueHero = '#hero'+(index+1)+'FormId option[value="' + $( this ).attr("alt") + '"]';
-        $(valueHero).prop('selected', true);
-      });
-    });
-    
-    $('.clean-team').click(function () {
-      var switchButton = $('.custom-control.custom-switch');
-      switchButton.attr('added', false);
-      switchButton.empty();
-      
-      $.each( [1,2,3,4], function( i, v ){
-        var valueHero = '#hero'+v+'FormId option[value="0"]';
-        $(valueHero).prop('selected', true);
-      });
-    });
-});
-</script>
-{% endif %}
 {% endblock %}

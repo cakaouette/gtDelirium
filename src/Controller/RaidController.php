@@ -707,8 +707,8 @@ final class RaidController extends BaseController
                     $member['teams'][] = [
                         'team' => $team,
                         'damage' => round($battles[$key]['damage'] / $count),
-                        'boss' => array_key_first($battles[$key]['bosses']),
-                        'days' => $dates
+                        'boss' => array_key_first($battles[$key]['bosses'])
+                        //'days' => $dates
                     ];
                 }
             }
@@ -734,6 +734,23 @@ final class RaidController extends BaseController
             'days' => array_flip($days),
             'total' => $total
         ]);
+    }
+
+    public function fightsEndSave(ServerRequestInterface $request, ResponseInterface $response, string $guildId): ResponseInterface {
+        if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
+        $recorder = $this->session->get("id");
+        $raid = $this->_raidManager->getLastByDate()->getId();
+        $body = $request->getParsedBody();
+        $member = $body['member'];
+        $suggestions = json_decode($body['suggestion']);
+        foreach ($suggestions as $day) {
+            foreach ($day->battles as $i => $battle) {
+                $this->_fightManager->addFight($member, $guildId, $raid, $day->day, $day->slots[$i], $battle->boss,
+                    $battle->weightedDamage, $battle->team[0], $battle->team[1], $battle->team[2], $battle->team[3], $recorder);
+            }
+        }
+
+        return $this->redirect($response, ['raid-fights-end', ['guildId' => $guildId]]);
     }
 
     private function isInRange($value, $min, $max) {
