@@ -12,7 +12,7 @@
         <th border="none"></th>
         <th>Pseudo</th>
         <th>Total j={{ prevDay }}</th>
-        {% for i in 1..14 %}
+        {% for i in 1..raidDuration %}
         <th>{{ i }}</th>
         {% endfor %}
         <th>Total</th>
@@ -31,7 +31,7 @@
                 {{ diff is null ? '' : " (#{sign}#{diff|number_format(0, ',', ' ')})" }}
             </div>
         </td>
-        {% for i in 0..13 %}
+        {% for i in 0..(raidDuration-1) %}
         <td>
             {% set day, prev = attribute(damage, "day#{i}"), attribute(damage, "day#{i}Prev") %}
             {% set diff = (day is null or prev is null) ? null : (day - prev) %}

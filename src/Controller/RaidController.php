@@ -50,8 +50,9 @@ final class RaidController extends BaseController
       $session->set('raidInfo', [
           "id" => $raid->getId(),
           "dateRaid" => date("Y-m-d", $dateStart),
-          "dateNumber" => min($dayNumber, 13),
-          "isFinished" => $dayNumber > 13
+          "duration" => $raid->getDuration(),
+          "dateNumber" => min($dayNumber, ($raid->getDuration()-1)),
+          "isFinished" => $dayNumber > ($raid->getDuration()-1)
       ]);
       return $raid->getId();
     }
@@ -299,6 +300,7 @@ final class RaidController extends BaseController
         if (is_null($raidInfo["dateRaid"])) {
             try {
                 $dateRaid = $this->_raidManager->getLastByDate()->getDate();
+                $raidDuration = $this->_raidManager->getLastByDate()->getDuration();
             } catch (Exception $e) {
                 $this->addMsg("danger", $e->getMessage());
             }
@@ -307,6 +309,7 @@ final class RaidController extends BaseController
         } else {
             $dateRaid = $raidInfo["dateRaid"];
             $dayNumber = $raidInfo["dateNumber"];
+            $raidDuration = $raidInfo["duration"];
         }
         $v_damagesByMemberByDay = Array();
         if ($dayNumber >= 0) {
@@ -334,7 +337,7 @@ final class RaidController extends BaseController
             $i = -1;
             $v_globalSum = 0;
             $d = date("Y-m-d", strtotime("$dateRaid +$dayNumber day"));
-            $prevDay = $raidInfo["isFinished"] ? 13 : max($dayNumber -1, 0);
+            $prevDay = $raidInfo["isFinished"] ? ($raidDuration-1) : max($dayNumber -1, 0);
             foreach ($members as $memberId => $memberInfo) {
                 $memberName = $memberInfo["name"];
                 $memberDateStart = $memberInfo["dateStart"];
@@ -381,7 +384,7 @@ final class RaidController extends BaseController
                         }
                         $v_damagesByMemberByDay[$i]["day$j"."Prev"] = $dailySumPrev;
                     }
-                    for (; $j < 14; $j++) {
+                    for (; $j < $raidDuration; $j++) {
                         $v_damagesByMemberByDay[$i]["day$j"] = 0;
                         $v_damagesByMemberByDay[$i]["day$j"."Prev"] = 0;
                         if ($j == $prevDay) {
@@ -392,17 +395,15 @@ final class RaidController extends BaseController
                     $v_globalSum += $sum;
                     $v_damagesByMemberByDay[$i]["daysSum"] = $sum;
                     $v_damagesByMemberByDay[$i]["daysSumPrev"] = ($sumPrev == 0 ? NULL : $sumPrev);
-                } else {
-                    $v_damagesByMemberByDay[$i] = Array("memberId" => $memberId, "memberName" => $memberName,
-                        "day0" => NULL, "day1" => NULL, "day2" => NULL, "day3" => NULL, "day4" => NULL,
-                        "day5" => NULL, "day6" => NULL, "day7" => NULL, "day8" => NULL, "day9" => NULL,
-                        "day10" => NULL, "day11" => NULL, "day12" => NULL, "day13" => NULL,
-                        "daysSum" => NULL, "yesterdaySum" => 0,
-                        "day0Prev" => NULL, "day1Prev" => NULL, "day2Prev" => NULL, "day3Prev" => NULL, "day4Prev" => NULL,
-                        "day5Prev" => NULL, "day6Prev" => NULL, "day7Prev" => NULL, "day8Prev" => NULL, "day9Prev" => NULL,
-                        "day10Prev" => NULL, "day11Prev" => NULL, "day12Prev" => NULL, "day13Prev" => NULL,
-                        "daysSumPrev" => NULL, "yesterdaySumPrev" => NULL
-                        );
+                } else {//$raidDuration
+                    $v_damagesByMemberByDay[$i] = array("memberId" => $memberId, "memberName" => $memberName,
+                                                        "daysSum" => NULL, "yesterdaySum" => 0,
+                                                        "daysSumPrev" => NULL, "yesterdaySumPrev" => NULL);
+                    for ($j = 0; $j < $raidDuration; $j++) {
+                      $v_damagesByMemberByDay[$i]["day$j"] = NULL;
+                      $v_damagesByMemberByDay[$i]["day$j"."Prev"] = NULL;
+                    }
+                    
                 }
             }
         }
@@ -421,7 +422,8 @@ final class RaidController extends BaseController
         return $this->view->render($response, 'raid/followup.twig', [
             'title' => "Suivi du raid, score actuel= ".number_format($v_globalSum, 0, ',', ' '),
             'damages' => $v_damagesByMemberByDay,
-            'prevDay' => $v_prevDayNumber
+            'prevDay' => $v_prevDayNumber,
+            'raidDuration' => $raidDuration,
         ]);
     }
 
@@ -694,7 +696,7 @@ final class RaidController extends BaseController
             $characters[$g]['elements'][$e['id']]['characters'][$character->getId()] = $character->getName();
         }
         
-        for ($i = 0; $i < 14; $i++) {
+        for ($i = 0; $i < $raidInfo['duration']; $i++) {
           $dates[] = strtotime($raidInfo['dateRaid']."+$i day");
         }
         

@@ -16,7 +16,7 @@ class RaidManager extends AbstractManager
     public function getLastByDate($baseDate = NULL) {
         $d = is_null($baseDate) ? date("Y-m-d") : $baseDate;
         $this->reset();
-        $this->addColumns(Array("id", "date"))
+        $this->addColumns(Array("id", "date", "duration"))
              ->addWhere("date", $d, "<=")
              ->addOrderBy("date", false)
              ->addLimit(1);
@@ -27,7 +27,7 @@ class RaidManager extends AbstractManager
                 throw new Exception("Aucun raid trouvé");
             }
             $line = $results[0];
-            return new RaidDate($line[$c[0]], $line[$c[1]]);
+            return new RaidDate($line[$c[0]], $line[$c[1]], $line[$c[2]]);
         } else {
             throw new Exception($this->getError());
         }
@@ -36,7 +36,7 @@ class RaidManager extends AbstractManager
     public function getPreviewDate() {
         $d = date("Y-m-d");
         $this->reset();
-        $this->addColumns(Array("id", "date"))
+        $this->addColumns(Array("id", "date", "duration"))
              ->addWhere("date", $d, ">")
              ->addOrderBy("date", false)
              ->addLimit(1);
@@ -47,7 +47,7 @@ class RaidManager extends AbstractManager
                 return NULL;
             }
             $line = $results[0];
-            return new RaidDate($line[$c[0]], $line[$c[1]]);
+            return new RaidDate($line[$c[0]], $line[$c[1]], $line[$c[2]]);
         } else {
             throw new Exception($this->getError());
         }
@@ -58,7 +58,7 @@ class RaidManager extends AbstractManager
      */
     public function getDates() {
         $this->reset();
-        $this->addColumns(Array("id", "date"))
+        $this->addColumns(Array("id", "date", "duration"))
              ->addOrderBy("date", false);
         if($this->select()) {
             $c = $this->getColumns();
@@ -71,6 +71,7 @@ class RaidManager extends AbstractManager
                 $entities[] = new RaidDate(
                         $line[$c[0]],
                         $line[$c[1]],
+                        $line[$c[2]],
                         );
             }
             return $entities;
@@ -81,7 +82,7 @@ class RaidManager extends AbstractManager
     
     public function getDateById($id) {
         $this->reset();
-        $this->addColumns(Array("id", "date"))
+        $this->addColumns(Array("id", "date", "duration"))
              ->addWhere("id", strval($id), "=");
         if($this->select()) {
             $c = $this->getColumns();
@@ -91,7 +92,7 @@ class RaidManager extends AbstractManager
                 throw new Exception("Aucun raid trouvé");
             }
             $line = $results[0];
-            return new RaidDate($line[$c[0]], $line[$c[1]]);
+            return new RaidDate($line[$c[0]], $line[$c[1]], $line[$c[2]]);
         } else {
             throw new Exception($this->getError());
         }
