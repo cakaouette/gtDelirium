@@ -38,6 +38,9 @@ $settings['db'] = [
     'pass' => 'gtdelirium'
 ];
 
+if (file_exists($settings['root'] . '/private/settings.php')) {
+    require $settings['root'] . '/private/settings.php';
+}
 if (file_exists(__DIR__ . '/../../env.php')) {
     require __DIR__ . '/../../env.php';
 }

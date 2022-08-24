@@ -21,7 +21,7 @@ final class DatabaseClass
             $db = $config->get('db');
             $this->db = new PDO($db['path'], $db['login'], $db['pass']);
         } catch (Exception $e) {
-            die('Erreur : ' . $e->getMessage());
+            die('[DatabaseClass] new PDO error: ' . $e->getMessage());
         }
     }
 
