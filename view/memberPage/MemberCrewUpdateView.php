@@ -113,7 +113,12 @@
                            class="form-check-input"
                            name="isMlbForm"
                            id="isMlbFormId"/>
-                    <label class="form-check-label" for="isMlbFormId">Mlb ? (si sélectionné, pas besoin de remplir les 3 champs suivants)</label>
+                    <label class="form-check-label" 
+                           
+                           for="isMlbFormId">
+                      <span data-toggle="tooltip" title="mlb = rupture de limite maximum">Mlb* </span>
+                      ? (si sélectionné, pas besoin de remplir les 3 champs suivants)
+                    </label>
                   </div>
               </div>
               <div class="form-group">
@@ -176,5 +181,12 @@
 <?php } ?>
 <?php $modal = ob_get_clean(); ?>
 
+<?php ob_start(); ?>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+<?php $specScript = ob_get_clean(); ?>
 
 <?php require('view/template.php'); ?>

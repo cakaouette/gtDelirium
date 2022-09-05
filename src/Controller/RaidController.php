@@ -35,32 +35,48 @@ final class RaidController extends BaseController
         $this->_ailmentManager = $bag->get(AilmentManager::class);
         $this->_characterManager = $bag->get(CharacterManager::class);
     }
+    
+    public function updateRaidInfo($session, $raidId = null) : int {
+      $raid = is_null($raidId) ? $this->_raidManager->getLastByDate() : $this->_raidManager->getDateById($raidId);
+      
+      $dateStart = strtotime($raid->getDate());
+      $now = time();
+      $diff = max(($now - $dateStart), 0);
+      $dayNumber = floor((($diff / 60) / 60 ) / 24);
+      
+      $session->set('raidInfo', [
+          "id" => $raid->getId(),
+          "dateRaid" => date("Y-m-d", $dateStart),
+          "duration" => $raid->getDuration(),
+          "dateNumber" => min($dayNumber, ($raid->getDuration()-1)),
+          "isFinished" => $dayNumber > ($raid->getDuration()-1)
+      ]);
+      return $raid->getId();
+    }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         try {
-            $id = $request->getQueryParams()['id'];
-            $now = time();
-            if (is_null($id)) {
-                $raid = $this->_raidManager->getLastByDate();
-                $raidId = $raid->getId();
-                $raidDate = $raid->getDate();
+            $form = $request->getParsedBody();
+            
+            $formGuildId = $form['guildId'];
+            if (is_null($formGuildId)) {
+                $guildId = $this->session->get('guild')['id'];
             } else {
-                $raidDate = $this->_raidManager->getDateById($id)->getDate();
-                $raidId = $id;
+                $guildId = $formGuildId;
+                $guild = $this->_guildManager->getById($guildId);
+                $this->session->set('guild', [
+                    "id" => $guild->getId(),
+                    "name" => $guild->getName(),
+                    "color" => $guild->getColor()
+                ]);
             }
-            $dPreview = $this->_raidManager->getPreviewDate();
-            if (!is_null($dPreview)) {
-                $raidPreviewId = $dPreview->getId();
+            $v_guilds = $this->_guildManager->getAll();
+            
+            if ($request->getMethod() === "POST") {
+              $raidId = RaidController::updateRaidInfo($this->session, $form['raidId']);
+            } else {
+              $raidId = $this->session->get('raidInfo')['id'];
             }
-            $date2 = strtotime($raidDate);
-            $diff = max(($now - $date2), 0);
-            $dayNumber = floor((($diff / 60) / 60 ) / 24);
-            $this->session->set('raidInfo', [
-                "id" => $raidId,
-                "dateRaid" => $raidDate,
-                "dateNumber" => min($dayNumber, 13),
-                "isFinished" => $dayNumber > 13
-            ]);
         } catch (Exception $e) {
             $this->addMsg("danger", $e->getMessage());
         }
@@ -74,7 +90,8 @@ final class RaidController extends BaseController
             $this->addMsg("danger", $e->getMessage());
         }
 
-        $f_raidId = $raidPreviewId ?? $raidId;
+        $dPreview = $this->_raidManager->getPreviewDate();
+        $f_raidId = !is_null($dPreview) ? $dPreview->getId() : $raidId;
         try {
             $v_raidInfo = $this->_raidManager->getById($f_raidId);
 
@@ -120,14 +137,22 @@ final class RaidController extends BaseController
             $this->addMsg("warning", $e->getMessage());
         }
         
-        return $this->view->render($response, 'raid/info.twig', ['id' => $id, 'raids' => $v_raids, 'bosses' => $v_bosses, 'ailments' => $v_ailments]);
+        return $this->view->render($response, 'raid/info.twig',
+                ['guildId' => $guildId,
+                 'guilds' => $v_guilds,
+                 'raidId' => $raidId,
+                 'raids' => $v_raids,
+                 'bosses' => $v_bosses,
+                 'ailments' => $v_ailments]);
     }
 
     public function rank(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $defaultBoss = Array("id" => 0, "name" => "--- default ---", "shortName" => "default", "element" => 0, "e_name" => "");
         $id = $this->session->get('raidInfo')['id'];
         $raid = $this->_raidManager->getById($id);
         $v_fights = $this->_fightManager->getAllByRaid($raid->getDate());
         $v_bosses = [
+            NULL => $defaultBoss,
             $raid->getBoss1Info()["id"] => $raid->getBoss1Info(),
             $raid->getBoss2Info()["id"] => $raid->getBoss2Info(),
             $raid->getBoss3Info()["id"] => $raid->getBoss3Info(),
@@ -186,6 +211,7 @@ final class RaidController extends BaseController
         foreach ($this->_guildManager->getAll() as $guildId => $guild) {
             $guildSort[$guild->getName()] = Array();
         }
+        $bossSort[NULL] = Array();
         for ($i = 1; $i <= 4; $i++) {
             $bInfo = "getBoss".$i."Info";
             $boss = $raid->$bInfo();
@@ -268,6 +294,7 @@ final class RaidController extends BaseController
         if (is_null($raidInfo["dateRaid"])) {
             try {
                 $dateRaid = $this->_raidManager->getLastByDate()->getDate();
+                $raidDuration = $this->_raidManager->getLastByDate()->getDuration();
             } catch (Exception $e) {
                 $this->addMsg("danger", $e->getMessage());
             }
@@ -276,6 +303,7 @@ final class RaidController extends BaseController
         } else {
             $dateRaid = $raidInfo["dateRaid"];
             $dayNumber = $raidInfo["dateNumber"];
+            $raidDuration = $raidInfo["duration"];
         }
         $v_damagesByMemberByDay = Array();
         if ($dayNumber >= 0) {
@@ -303,7 +331,7 @@ final class RaidController extends BaseController
             $i = -1;
             $v_globalSum = 0;
             $d = date("Y-m-d", strtotime("$dateRaid +$dayNumber day"));
-            $prevDay = $raidInfo["isFinished"] ? 13 : max($dayNumber -1, 0);
+            $prevDay = $raidInfo["isFinished"] ? ($raidDuration-1) : max($dayNumber -1, 0);
             foreach ($members as $memberId => $memberInfo) {
                 $memberName = $memberInfo["name"];
                 $memberDateStart = $memberInfo["dateStart"];
@@ -350,7 +378,7 @@ final class RaidController extends BaseController
                         }
                         $v_damagesByMemberByDay[$i]["day$j"."Prev"] = $dailySumPrev;
                     }
-                    for (; $j < 14; $j++) {
+                    for (; $j < $raidDuration; $j++) {
                         $v_damagesByMemberByDay[$i]["day$j"] = 0;
                         $v_damagesByMemberByDay[$i]["day$j"."Prev"] = 0;
                         if ($j == $prevDay) {
@@ -361,17 +389,15 @@ final class RaidController extends BaseController
                     $v_globalSum += $sum;
                     $v_damagesByMemberByDay[$i]["daysSum"] = $sum;
                     $v_damagesByMemberByDay[$i]["daysSumPrev"] = ($sumPrev == 0 ? NULL : $sumPrev);
-                } else {
-                    $v_damagesByMemberByDay[$i] = Array("memberId" => $memberId, "memberName" => $memberName,
-                        "day0" => NULL, "day1" => NULL, "day2" => NULL, "day3" => NULL, "day4" => NULL,
-                        "day5" => NULL, "day6" => NULL, "day7" => NULL, "day8" => NULL, "day9" => NULL,
-                        "day10" => NULL, "day11" => NULL, "day12" => NULL, "day13" => NULL,
-                        "daysSum" => NULL, "yesterdaySum" => 0,
-                        "day0Prev" => NULL, "day1Prev" => NULL, "day2Prev" => NULL, "day3Prev" => NULL, "day4Prev" => NULL,
-                        "day5Prev" => NULL, "day6Prev" => NULL, "day7Prev" => NULL, "day8Prev" => NULL, "day9Prev" => NULL,
-                        "day10Prev" => NULL, "day11Prev" => NULL, "day12Prev" => NULL, "day13Prev" => NULL,
-                        "daysSumPrev" => NULL, "yesterdaySumPrev" => NULL
-                        );
+                } else {//$raidDuration
+                    $v_damagesByMemberByDay[$i] = array("memberId" => $memberId, "memberName" => $memberName,
+                                                        "daysSum" => NULL, "yesterdaySum" => 0,
+                                                        "daysSumPrev" => NULL, "yesterdaySumPrev" => NULL);
+                    for ($j = 0; $j < $raidDuration; $j++) {
+                      $v_damagesByMemberByDay[$i]["day$j"] = NULL;
+                      $v_damagesByMemberByDay[$i]["day$j"."Prev"] = NULL;
+                    }
+                    
                 }
             }
         }
@@ -390,7 +416,8 @@ final class RaidController extends BaseController
         return $this->view->render($response, 'raid/followup.twig', [
             'title' => "Suivi du raid, score actuel= ".number_format($v_globalSum, 0, ',', ' '),
             'damages' => $v_damagesByMemberByDay,
-            'prevDay' => $v_prevDayNumber
+            'prevDay' => $v_prevDayNumber,
+            'raidDuration' => $raidDuration,
         ]);
     }
 
@@ -478,17 +505,15 @@ final class RaidController extends BaseController
         return $this->view->render($response, 'raid/summary.twig', ['fights' => $fights]);
     }
 
-    public function fights(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
-        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+    public function fights(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $guildId = $this->session->get('guild')['id'];
         $raidInfo = $this->session->get('raidInfo');
-        $date = date("Y-m-d");
-        $params = $request->getQueryParams();
-        if (isset($params['date'])) {
-            $date = $params['date'];
-            if (!$this->checkDate($date)) {
-                $date = date("Y-m-d");
-            }
-        }
+        
+        $today = $raidInfo['dateNumber'];
+        $dateNumber = $this->getDateNumber(
+                $request->getQueryParams()['dateNumber'],
+                $today);
+        $date = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateNumber day"));//date("Y-m-d");
         $isJoueur = $this->session->get('grade') == $this->session->get('Joueur');
     
         if ($request->getMethod() === 'POST') {
@@ -529,13 +554,14 @@ final class RaidController extends BaseController
                         $form["teamForm"],
                         $boss == 0 ? NULL : $boss,
                         $form["damageForm"],
+                        $form["isExtraForm"],
                         $hero1 == 0 ? NULL : $hero1,
                         $hero2 == 0 ? NULL : $hero2,
                         $hero3 == 0 ? NULL : $hero3,
                         $hero4 == 0 ? NULL : $hero4
                     );
                 } elseif ($isUpdate or $isDeleted) {
-                        $boss = $isUpdate ? $form["bossForm"] : 0;
+                    $boss = $isUpdate ? $form["bossForm"] : 0;
                     $damage = $isUpdate ? $form["damageForm"] : NULL;
                     $hero1 = $form["hero1Form"];
                     $hero2 = $form["hero2Form"];
@@ -552,6 +578,7 @@ final class RaidController extends BaseController
                         $form["teamForm"],
                         $boss == 0 ? NULL : $boss,
                         $damage,
+                        $form["isExtraForm"],
                         $hero1 == 0 ? NULL : $hero1,
                         $hero2 == 0 ? NULL : $hero2,
                         $hero3 == 0 ? NULL : $hero3,
@@ -585,11 +612,17 @@ final class RaidController extends BaseController
 
         $members = $this->_memberManager->getAllByGuildId($guildId, $filter);
         $teams = $this->_memberManager->getTeamsByGuild($guildId, $filter);
-        $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, $filter);
+        $fights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, 0, $filter);
+        $extraFights = $this->_fightManager->getAllByGuildIdDate($guildId, $date, 1, $filter);
 
         $v_fights = [];
         foreach($members as $memId => $member) {
-            $v_fights[$memId] = ["member" => $member->getName(), "guildId" => $guildId, "savedTeams" => [], "fights" => []];
+            $v_fights[$memId] = ["member" => $member->getName(),
+                                 "guildId" => $guildId,
+                                 "savedTeams" => [],
+                                 "fights" => [],
+                                 "extraFights" => []
+                                ];
             if (!array_key_exists($memId, $teams)) {
                 $v_fights[$memId]["teamIds"] = '';
                 $v_fights[$memId]["savedTeams"] = [];
@@ -625,6 +658,25 @@ final class RaidController extends BaseController
                     ];
                 }
             }
+            if (!array_key_exists($memId, $extraFights)) {
+                $v_fights[$memId]["extraFights"] = [];
+            } else {
+                $fightsByMember = $extraFights[$memId]["fights"];
+                foreach ($fightsByMember as $fightNb => $fight) {
+                    $v_fights[$memId]["extraFights"][$fightNb] = [
+                        'id' => $fight->getId(),
+                        'guild' => $fight->getGuildInfo()["id"],
+                        'raid' => $fight->getRaidId(),
+                        'date' => $fight->getDate(),
+                        'boss' => $fight->getBossInfo()["id"],
+                        'damage' => $fight->getDamage(),
+                        'hero1' => $fight->getHero1Info()["id"],
+                        'hero2' => $fight->getHero2Info()["id"],
+                        'hero3' => $fight->getHero3Info()["id"],
+                        'hero4' => $fight->getHero4Info()["id"]
+                    ];
+                }
+            }
         }
 
         $v_characters = $this->_characterManager->getAllOrderByGradeElementName();
@@ -636,12 +688,19 @@ final class RaidController extends BaseController
             if (!isset($characters[$g]['elements'][$e['id']])) $characters[$g]['elements'][$e['id']] = ['name' => $e['name'], 'characters' => []];
             $characters[$g]['elements'][$e['id']]['characters'][$character->getId()] = $character->getName();
         }
-
+        
+        for ($i = 0; $i < $raidInfo['duration']; $i++) {
+          $dates[] = strtotime($raidInfo['dateRaid']."+$i day");
+        }
+        
         return $this->view->render($response, 'raid/fights.twig', [
+            'title' => "Raid du ".date("d F", strtotime($raidInfo['dateRaid']))." - les attaques",
             'guildId' => $guildId,
-            'title' => "Enregistrement des attaques",
             'filter' => $filter,
             'members' => $v_fights,
+            'dateNumber' => $dateNumber,
+            'dates' => $dates,
+            'today' => $today,//$guildId = $this->session->get('raidInfo')['datenumber'],
             'date' => $f_date,
             'raid' => [
                 'id' => $f_raid->getId(),
@@ -654,6 +713,13 @@ final class RaidController extends BaseController
                 ],
                 'characters' => $characters
         ]);
+    }
+    
+    private function getDateNumber($dateFromQuery, $dateFromSession) : int {
+      if (isset($dateFromQuery) and $dateFromQuery <= $dateFromSession) {
+        return $dateFromQuery;
+      }
+      return $dateFromSession;
     }
 
     public function fightsEnd(ServerRequestInterface $request, ResponseInterface $response, string $guildId): ResponseInterface {
@@ -789,16 +855,18 @@ final class RaidController extends BaseController
         return true;
     }
 
-    private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
-        if ($bossId == 0 or is_null($damage)) {
+    private function submitFight($recorderId, $guildId, $memberId, $raidId, $date, 
+            $teamNumber, $bossId, $damage, $isExtra,
+            $hero1Id, $hero2Id, $hero3Id, $hero4Id) {
+        if ($bossId < 0 or is_null($damage)) {
             $this->addMsg("warning", "Selectionner un boss et définisser des dommages");
             return;
         }
         try {
-            if (!$this->_fightManager->isExist($memberId, $date, $teamNumber)) {
+            if (!$this->_fightManager->isExist($memberId, $date, $teamNumber, $isExtra)) {
                 try {
                     $this->_fightManager->addFight($memberId, $guildId, $raidId, $date,
-                                                  $teamNumber, $bossId, $damage,
+                                                  $teamNumber, $bossId, $damage, $isExtra,
                                                   $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId);
                     $this->addMsg("success", "Attaque enregistrée");
                 } catch (Exception $e) {
@@ -811,9 +879,11 @@ final class RaidController extends BaseController
 
     }
 
-    private function saveFight($recorderId, $id, $guildId, $memberId, $raidId, $date, $teamNumber, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $deleted) {
-        if ($this->_fightManager->checkFight($id, $guildId, $memberId, $date, $teamNumber)) {
-            if($this->_fightManager->updateFight($id, $bossId, $damage, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted)){
+    private function saveFight($recorderId, $id, $guildId, $memberId, $raidId, $date,
+            $teamNumber, $bossId, $damage, $isExtra,
+            $hero1Id, $hero2Id, $hero3Id, $hero4Id, $deleted) {
+        if ($this->_fightManager->checkFight($id, $guildId, $memberId, $date, $teamNumber, $isExtra)) {
+            if($this->_fightManager->updateFight($id, $bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted)){
                     $this->addMsg("success", "Attaque modifiée");
             }
         }
