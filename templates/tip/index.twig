@@ -38,6 +38,10 @@
              id="colise-tab" data-toggle="pill"
              href="#colise" role="tab"
              aria-controls="colise" aria-selected="false">Colisé</a>
+          <a class="nav-link"
+             id="ailment-tab" data-toggle="pill"
+             href="#ailment" role="tab"
+             aria-controls="ailment" aria-selected="false">Résistance des boss</a>
           {% if user.isOfficier %}
           <a class="nav-link"
              id="ressources-tab" data-toggle="pill"
@@ -77,6 +81,13 @@
             <a href="https://thewwworm.github.io/">Placement en colisé</a>
             <br>
             <a href="https://www.youtube.com/watch?v=936HEjWxHhA">Explication des targets et des resets</a>
+          </div>
+          <div class="tab-pane fade"
+               id="ailment" role="tabpanel"
+               aria-labelledby="ailment-tab">
+            <a href="https://docs.google.com/spreadsheets/d/1_M7FHciakmedREJFP9XvbR3_rmWYIdkWRjuypfyh84Y/edit#gid=1997928964">
+              Les résistences des boss aux dégâts de compétence
+            </a>
           </div>
           {% if user.isOfficier %}
           <div class="tab-pane fade"
