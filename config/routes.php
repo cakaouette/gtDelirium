@@ -17,7 +17,7 @@ return function (App $app) {
             $error->get('/403', [C\ErrorController::class, 'x403'])->setName('403');
         });
         $group->group('/profile', function ($profile) {
-            $profile->get('[/me]', [C\ProfileController::class, 'me'])->setName('my-profile');
+            $profile->map(['GET', 'POST'], '[/me]', [C\ProfileController::class, 'me'])->setName('my-profile');
             $profile->get('/{id}', [C\ProfileController::class, 'index'])->setName('profile');
             $profile->post('/{id}/settings', [C\ProfileController::class, 'settings'])->setName('profile-settings');
         })->add(Auth::class);
@@ -46,6 +46,8 @@ return function (App $app) {
             $admin->map(['GET', 'POST'], '/dashboard', [C\AdminController::class, 'todo'])->setName('admin-dashboard')->setArgument('content-title', 'TODO');
             $admin->map(['GET', 'POST'], '/bosses', [C\AdminController::class, 'todo'])->setName('admin-bosses')->setArgument('content-title', 'TODO');
             $admin->map(['GET', 'POST'], '/members', [C\AdminController::class, 'todo'])->setName('admin-members')->setArgument('content-title', 'TODO');
+            $admin->map(['GET', 'POST'], '/worlds', [C\AdminController::class, 'worlds'])->setName('admin-worlds')->setArgument('content-title', 'Liste des mondes');
+            $admin->get('/worlds/{id}/delete', [C\AdminController::class, 'delWorld'])->setName('admin-world-delete');
         })->add(Auth::class);
         $group->group('/members', function ($members) {
             $members->map(['GET', 'POST'], '/new', [C\MemberController::class, 'new'])->setName('member-new')->setArgument('content-title', 'Nouveau membre');

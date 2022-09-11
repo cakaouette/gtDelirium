@@ -10,6 +10,7 @@ use App\Manager\MemberManager;
 use App\Manager\ElementManager;
 use App\Manager\PendingManager;
 use App\Manager\CharacterManager;
+use App\Manager\SettingManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -22,6 +23,7 @@ final class MemberController extends BaseController
     private GuildManager $_guildManager;
     private TeamManager $_teamManager;
     private CrewManager $_crewManager;
+    private SettingManager $_settingManager;
     
     protected function __init($bag) {
         $this->_characterManager = $bag->get(CharacterManager::class);
@@ -31,6 +33,7 @@ final class MemberController extends BaseController
         $this->_guildManager = $bag->get(GuildManager::class);
         $this->_teamManager = $bag->get(TeamManager::class);
         $this->_crewManager = $bag->get(CrewManager::class);
+        $this->_settingManager = $bag->get(SettingManager::class);
     }
 
     public function new(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -249,19 +252,22 @@ final class MemberController extends BaseController
 
         if ($request->getMethod() === 'POST') {
             $form = $request->getParsedBody();
+
+            $f_memberId = $form["memberIdForm"];
+            $maxlevel = $this->_settingManager->getByMemberId($f_memberId)->getMaxHeroLevel();
+
             $isPull = isset($form["pullHeroOrWeaponForm"]);
             $isUpdate = isset($form["updateForm"]);
             $isMlb = isset($form["isMlbForm"]);
             $f_id = $form["crewIdForm"];
-            $f_memberId = $form["memberIdForm"];
             $f_charactId = $form["charactIdForm"];
-            $f_level = $form["levelForm"];
-            $f_evolved = $form["evolutionForm"];
             $f_nbBreak = $form["breakForm"];
+            $f_level = min($form["levelForm"], $maxlevel+$f_nbBreak);
+            $f_evolved = $form["evolutionForm"];
             $f_hasWeapon = isset($form["weaponForm"]);
             $f_nbWeaponBreak = $form["weaponBreakForm"];
             if ($isMlb) {
-                $f_level = 83;
+                $f_level = $maxlevel+5;
                 $f_evolved = 5;
                 $f_nbBreak = 5;
             }

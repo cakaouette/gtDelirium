@@ -12,10 +12,28 @@ final class ManagerBag {
 
     private array $managers;
 
-    public function  __construct(PermissionManager $permission, GuildManager $guild, MemberManager $member, TeamManager $team,
-        AlarmManager $alarm, AlarmTypeManager $alarmType, FightManager $fight, BossManager $boss, CharacterManager $character,
-        ElementManager $element, AilmentEnduranceManager $ailmentEndurance, AilmentManager $ailment, CrewManager $crew,
-        PendingManager $pending, RaidManager $raid, RankGoalManager $rankGoal, RankManager $rank, WeaponManager $weapon) {
+    public function  __construct(
+            PermissionManager $permission,
+            GuildManager $guild,
+            MemberManager $member,
+            TeamManager $team,
+            AlarmManager $alarm,
+            AlarmTypeManager $alarmType,
+            FightManager $fight,
+            BossManager $boss,
+            CharacterManager $character,
+            ElementManager $element,
+            AilmentEnduranceManager $ailmentEndurance,
+            AilmentManager $ailment,
+            CrewManager $crew,
+            PendingManager $pending,
+            RaidManager $raid,
+            RankGoalManager $rankGoal,
+            RankManager $rank,
+            WeaponManager $weapon,
+            SettingManager $setting,
+            WorldManager $world)
+      {
         $this->managers = [
             AilmentEnduranceManager::class => $ailmentEndurance,
             PermissionManager::class => $permission,
@@ -35,6 +53,8 @@ final class ManagerBag {
             CrewManager::class => $crew,
             RaidManager::class => $raid,
             RankManager::class => $rank,
+            SettingManager::class => $setting,
+            WorldManager::class => $world,
         ];
     }
 

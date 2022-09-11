@@ -62,6 +62,14 @@
                         </a>
                     </li>
                 </ul>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin-worlds') }}" class="{{ _self.nav_link_class('admin-worlds') }}">
+                            <i class="nav-icon fas fa-map text-fuchsia"></i>
+                            <p>Mondes</p>
+                        </a>
+                    </li>
+                </ul>
             </li>
             {% endif %}
             {% if  user.isGestion %}

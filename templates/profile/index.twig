@@ -31,6 +31,10 @@
           <a class="float-right">{{ member.start }}</a>
         </li>
         {% endif %}
+        <li class="list-group-item">
+          <b>Niveau maximum des héros</b>
+          <a class="float-right">{{ igSetting.maxLevel }}</a>
+        </li>
         <!--
         <li class="list-group-item">
           <b>Following</b> <a class="float-right">543</a>
@@ -61,7 +65,7 @@
     <div class="card-body">
       <div class="tab-content">
         <div class="tab-pane {{ _self.active_tab('heros', activeTab) }}" id="heros">
-            <table id="example1" class="table table-bordered table-hover">
+            <table id="herosList" class="table table-bordered table-hover">
             <thead>
                 <tr>
                 <th></th><!-- for primary sort only -->
@@ -185,6 +189,44 @@
 <!-- /.row -->
 
 {% endblock %}
+    
+{% block modal %}
+<div class="modal fade" id="maxLevelModel">
+  <div class="modal-dialog">
+    <div class="modal-content bg-default text-center">
+        <div class="modal-header bg-info">
+          <h4 class="modal-title">Limite de niveau</h4>
+        </div>
+        <form class="form" role="form" actionpage="{{ url_for('my-profile') }}" method="post">
+          {% include 'csrf.twig' %}
+          <div class="modal-body">
+              <input type="hidden" name="settingIdForm" value="{{ igSetting.id }}"/>
+              <input type="hidden" name="memberIdForm" value="{{ igSetting.memberId }}"/>
+              <div class="form-group">
+                  <label for="levelFormId">Niv: </label>
+                  <select name="levelForm" id="levelFormId">
+                    {% for mondeId, levelInfo in igSetting.maxLevelList %}
+                        <option {{ levelInfo.level == igSetting.maxLevel ? 'selected' : '' }} 
+                                {{ levelInfo.disabled ? 'disabled' : '' }}
+                                value="{{ levelInfo.level }}">
+                            {{ levelInfo.level }} (monde {{ mondeId }})
+                        </option>
+                    {% endfor %}
+                  </select>
+              </div>
+          </div>
+          <div class="modal-footer justify-content-between bg-secondary">
+            <button type="button" class="btn btn-outline-light" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-outline-light" name="updateIgSettingForm">Sauvegarder</button>
+          </div>
+        </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+{% endblock %} 
+    
 {% block scripts %}
 
 <!-- DataTables  & Plugins -->
@@ -207,9 +249,10 @@ $(document).ready(function(){
 $(function () {
   var jsMemberId = {{ member.id }};
 
-  $("#example1").DataTable({
+  $.fn.dataTable.Buttons.defaults.dom.button.className = 'btn';
+  $("#herosList").DataTable({
     "responsive": true,
-    "lengthChange": true, pageLength: 10, lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+    "lengthChange": true, pageLength: 50, lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
     "autoWidth": false,
     "searching": true,
     "scrollCollapse": true, "scrollY": "500px",
@@ -223,18 +266,62 @@ $(function () {
                 orderData: [ 0, 4, 5, 7 ]
             }
         ],
-    "buttons": ["copy", "csv", "excel", "pdf"
-    {% if isProfile %}
-    ,{
-          text: 'modifier Héros',
-          action: function ( e, dt, node, config ) {
-              location.href = '{{ url_for('member-crew-edit', { id: member.id }) }}';
+    "buttons": [
+        {
+            text: 'Feu',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {
+            text: 'Eau',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {
+            text: 'Ter',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {
+            text: 'Lum',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {
+            text: 'Ten',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {
+            text: 'Bas',
+            className: 'btn-info', 
+            action: function ( e, dt, node, config ) {
+            }
+        },
+        {% if isProfile %}
+        ,{
+              text: 'modifier Héros',
+              className: 'btn-link btn-outline-primary',
+              action: function ( e, dt, node, config ) {
+                  location.href = '{{ url_for('member-crew-edit', { id: member.id }) }}';
+              }
           }
-      }
-    {% endif %}
+        ,{
+              text: 'Update niv. max',
+              className: 'btn-primary',
+              action: function ( e, dt, node, config ) {
+                  $('#maxLevelModel').modal('show');
+              }
+          }
+        {% endif %}
     ]
 
-  }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+  }).buttons().container().appendTo('#herosList_wrapper .col-md-6:eq(0)');
 });
 </script>
 {% endblock %}

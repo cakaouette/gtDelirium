@@ -5,6 +5,7 @@ namespace App\Controller;
 use Exception;
 use App\Manager\ElementManager;
 use App\Manager\CharacterManager;
+use App\Manager\WorldManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -12,10 +13,12 @@ final class AdminController extends BaseController
 {
     private CharacterManager $_characterManager;
     private ElementManager $_elementManager;
+    private WorldManager $_worldManager;
 
     protected function __init($bag) {
         $this->_characterManager = $bag->get(CharacterManager::class);
         $this->_elementManager = $bag->get(ElementManager::class);
+        $this->_worldManager = $bag->get(WorldManager::class);
     }
 
     public function heroes(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -51,7 +54,10 @@ final class AdminController extends BaseController
             $v_characts = [];
             $this->addMsg("danger", $e->getMessage());
         }
-        return $this->view->render($response, 'admin/heroes.twig', ['characs' => $v_characts, 'elements' => $this->_elementManager->getAllInRawData()]);
+        return $this->view->render($response, 'admin/heroes.twig', 
+                ['characs' => $v_characts,
+                 'elements' => $this->_elementManager->getAllInRawData()
+                ]);
     }
 
     public function delhero(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
@@ -106,4 +112,64 @@ final class AdminController extends BaseController
             }
         }
     }
+    
+    public function worlds(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
+
+        if ($request->getMethod() === 'POST') {
+            $form = $request->getParsedBody();
+
+            $isWorldInsert = isset($form["createWorldForm"]);
+            $isWorldUpdate = isset($form["updateWorldForm"]);
+            
+            $id = $form["idForm"];
+            $number = $form["numberForm"];
+            $maxLevel = $form["maxLevelForm"];
+            $disable = isset($form["disableForm"]) ? '1' : '0';
+
+            if ($isWorldInsert) {
+              try {
+                  if ($this->_worldManager->addEntity($number,
+                                                      $maxLevel,
+                                                      $disable)) {
+                      $this->addMsg("success", "Monde ajouté");
+                  }
+              } catch (Exception $e) {
+                  $this->addMsg("danger", $e->getMessage());
+              }
+            } else if ($isWorldUpdate) {
+              try {
+                  if ($this->_worldManager->updateEntity($id,
+                                                         $number,
+                                                         $maxLevel,
+                                                         $disable)) {
+                      $this->addMsg("success", "Monde ajouté");
+                  }
+              } catch (Exception $e) {
+                  $this->addMsg("danger", $e->getMessage());
+              }
+            }
+        }
+        $worlds = Array();
+        foreach ($this->_worldManager->getAll() as $world) {
+            $worlds[] = [
+              'id' => $world->getId(),
+              'number' => $world->getNumber(),
+              'maxLevel' => $world->getMaxLevel(),
+              'disable' => $world->isDisabled(),
+            ];
+        }
+        return $this->view->render($response, 'admin/worlds.twig', 
+                ['worlds' => $worlds,
+                ]);
+    }
+    
+    public function delWorld(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
+        if ($this->session->get("grade") > $this->session->get("Gestion")) return $this->redirect($response, ['403']);
+        if ($this->_worldManager->deleteEntity($id)) {
+            $this->addMsg("info", "Monde supprimé");
+        }
+        return $this->redirect($response, ['admin-worlds']);
+    }
+
 }

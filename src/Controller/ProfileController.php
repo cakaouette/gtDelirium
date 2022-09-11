@@ -6,6 +6,8 @@ use Exception;
 use App\Manager\MemberManager;
 use App\Manager\ElementManager;
 use App\Manager\CharacterManager;
+use App\Manager\SettingManager;
+use App\Manager\WorldManager;
 use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,15 +17,34 @@ final class ProfileController extends BaseController
     private MemberManager $_memberManager;
     private ElementManager $_elementManager;
     private CharacterManager $_characterManager;
+    private SettingManager $_settingManager;
+    private WorldManager $_worldManager;
     
     protected function __init($bag) {
         $this->_characterManager = $bag->get(CharacterManager::class);
         $this->_elementManager = $bag->get(ElementManager::class);
         $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_settingManager = $bag->get(SettingManager::class);
+        $this->_worldManager = $bag->get(WorldManager::class);
     }
 
     public function me(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
         return $this->index($request, $response, $this->session->get('id'));
+    }
+    
+    private function checkIgSettingForm(ServerRequestInterface $request) {
+        $form = $request->getParsedBody();
+        $update = isset($form["updateIgSettingForm"]);
+        if ($update) {
+            $id = $form["settingIdForm"];
+            $memberId = $form["memberIdForm"];
+            $level = $form["levelForm"];
+            
+            if ($memberId == $this->session->get('id')) {
+              $editParams = Array("memberId" => $memberId, "maxLevel" => $level);
+              $this->_settingManager->updateEntity($id, $editParams);
+            }
+        }
     }
 
     public function index(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
@@ -37,6 +58,7 @@ final class ProfileController extends BaseController
         
         $frame3 = "#ffd626";
         $frame2 = "#26dbff";
+        $this->checkIgSettingForm($request);
 
         $elements = $this->_elementManager->getAllInRawData();
         try {
@@ -65,7 +87,15 @@ final class ProfileController extends BaseController
 
         $v_member = $this->_memberManager->getDetailById($id);
         $v_guild = $v_member->getGuildInfo();
-              
+        
+        $igSettings = $this->_settingManager->getByMemberId($id);
+        $maxLevelList = Array();
+        foreach ($this->_worldManager->getAll() as $world) {
+          $maxLevelList[$world->getNumber()] = [
+              'level' => $world->getMaxLevel(),
+              'disabled' => $world->isDisabled()];
+        }
+
         return $this->view->render($response, 'profile/index.twig', [
             'id' => $id,
             'heros' => $v_heros,
@@ -80,7 +110,13 @@ final class ProfileController extends BaseController
                 'guild' => $v_guild["id"] != 0 ? $v_guild["name"] : '',
                 'start' => strftime("%e %B %Y", strtotime($v_member->getDateStart()))
             ],
-            'title' => "Profil de ".$v_member->getName()
+            'title' => "Profil de ".$v_member->getName(),
+            'igSetting' => [
+                'maxLevelList' => $maxLevelList,
+                'id' => $igSettings->getId(),
+                'memberId' => $igSettings->getMemberId(),
+                'maxLevel' => $igSettings->getMaxHeroLevel(),
+            ],
         ]);
     }
 
