@@ -1,0 +1,386 @@
+{% extends "layout.twig" %}
+
+{% block title %}TODO{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-md-12">
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Liste des raids</h3>
+    </div>
+    <div class="card-body">
+      <table id="table-raids" class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Date</th>
+            <th>Durée</th>
+            <th>Boss1</th>
+            <th>Boss2</th>
+            <th>Boss3</th>
+            <th>Boss4</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for raid in raids %}
+          <tr>
+            <td>{{ raid.id }}</td>
+            <td>{{ raid.date }}</td>
+            <td>{{ raid.duration }}</td>
+            <td>{{ raid.boss1Nickname }} / {{ raid.element1Name }}</td>
+            <td>{{ raid.boss2Nickname }} / {{ raid.element2Name }}</td>
+            <td>{{ raid.boss3Nickname }} / {{ raid.element3Name }}</td>
+            <td>{{ raid.boss4Nickname }} / {{ raid.element4Name }}</td>
+            <td>
+              <div class="btn-group">
+                <button type="button" class="btn btn-default">Action</button>
+                <button type="button" class="btn btn-default dropdown-toggle dropdown-icon" data-toggle="dropdown">
+                  <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <div class="dropdown-menu" role="menu">
+                  <a class="dropdown-item" role="button"
+                     data-toggle="modal" 
+                     data-target="#modalRaid"
+                     edit="true"
+                     data-id="{{ raid.id }}"
+                     data-date="{{ raid.date }}"
+                     data-duration="{{ raid.duration }}"
+                     data-boss1_id="{{ raid.boss1Id }}"
+                     data-element1_id="{{ raid.element1Id }}"
+                     data-boss2_id="{{ raid.boss2Id }}"
+                     data-element2_id="{{ raid.element2Id }}"
+                     data-boss3_id="{{ raid.boss3Id }}"
+                     data-element3_id="{{ raid.element3Id }}"
+                     data-boss4_id="{{ raid.boss4Id }}"
+                     data-element4_id="{{ raid.element4Id }}"
+                  >
+                    Modifier
+                  </a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item bg-danger"
+                     href="{{ url_for('admin-raid-delete', {'id': raid.id}) }}"
+                  >
+                    Supprimer
+                  </a>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+<a role="button"
+   data-toggle="modal" 
+   data-target="#modalRaid"
+   data-id={#"{{ world.id }}"
+   data-number="{{ world.number }}"
+   data-level="{{ world.maxLevel }}"
+   data-disabl#}e="{{ world.disable }}"
+>
+  ajouter
+</a>
+{% endblock %}
+
+{% block modal %}
+<div class="modal fade" id="modalRaid">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-default">
+      <div class="modal-header bg-{{ guild.color }}">
+        <h4 class="modal-title">Nouveau raid</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form class="form" role="form" action="{{ url_for('admin-raids') }}" method="post">
+        {% include 'csrf.twig' %}
+        <input type="hidden" id="raid-idFormId" name="idForm" value=""/>
+        <input type="hidden" id="raid-boss1IdFormId" name="boss1IdForm" value=""/>
+        <input type="hidden" id="raid-boss2IdFormId" name="boss2IdForm" value=""/>
+        <input type="hidden" id="raid-boss3IdFormId" name="boss3IdForm" value=""/>
+        <input type="hidden" id="raid-boss4IdFormId" name="boss4IdForm" value=""/>
+        <input type="hidden" id="raid-element1IdFormId" name="element1IdForm" value=""/>
+        <input type="hidden" id="raid-element2IdFormId" name="element2IdForm" value=""/>
+        <input type="hidden" id="raid-element3IdFormId" name="element3IdForm" value=""/>
+        <input type="hidden" id="raid-element4IdFormId" name="element4IdForm" value=""/>
+        <div class="modal-body text-center">
+          <div class="form-group row">
+            <label for="dateFormId" class="col-1 offset-1 col-form-label">Date: </label>
+            <div class="col-sm-3">
+              <input type="date"
+                     id="raid-dateFormId"
+                     name="dateForm" value="">
+            </div>
+            <label for="durationFormId" class="col-2 col-form-label">durée (en jours): </label>
+            <div class="col-sm-3">
+              <input type="number"
+                     id="raid-durationFormId"
+                     name="durationForm" value="14">
+            </div>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-4 offset-4">
+                <img src="/dist/image/bosses/.png"
+                    id="raid-boss1"
+                    class="img-fluid img-thumbnail boss-selected"
+                    style="padding: 0"
+                    width="80" height="80"
+                    alt="undefined">
+                <img src="/dist/image/elements/.png"
+                    id="raid-element1"
+                    class="img-fluid img-thumbnail element-selected"
+                    style="padding: 0"
+                    width="40" height="40"
+                    alt="undefined">
+            </div>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-4">
+                <img src="/dist/image/bosses/.png"
+                    id="raid-boss4"
+                    class="img-fluid img-thumbnail boss-selected"
+                    style="padding: 0"
+                    width="80" height="80"
+                    alt="undefined">
+                <img src="/dist/image/elements/.png"
+                    id="raid-element4"
+                    class="img-fluid img-thumbnail element-selected"
+                    style="padding: 0"
+                    width="40" height="40"
+                    alt="undefined">
+            </div>
+            <div class="col-4 offset-4">
+                <img src="/dist/image/bosses/.png"
+                    id="raid-boss2"
+                    class="img-fluid img-thumbnail boss-selected"
+                    style="padding: 0"
+                    width="80" height="80"
+                    alt="undefined">
+                <img src="/dist/image/elements/.png"
+                    id="raid-element2"
+                    class="img-fluid img-thumbnail element-selected"
+                    style="padding: 0"
+                    width="40" height="40"
+                    alt="undefined">
+            </div>
+          </div>
+          <div class="row align-items-center">
+            <div class="col-4 offset-4">
+                <img src="/dist/image/bosses/.png"
+                    id="raid-boss3"
+                    class="img-fluid img-thumbnail boss-selected"
+                    style="padding: 0"
+                    width="80" height="80"
+                    alt="undefined">
+                <img src="/dist/image/elements/.png"
+                    id="raid-element3"
+                    class="img-fluid img-thumbnail element-selected"
+                    style="padding: 0"
+                    width="40" height="40"
+                    alt="undefined">
+            </div>
+          </div>
+          <div class="element-list-selection">
+            {% for element in elements %}
+              <img src="/dist/image/elements/text{{ element.id }}.png"
+                  id="element-{{ element.id }}"
+                  data-id="{{ element.id }}"
+                  class="img-fluid img-thumbnail element-item-selection"
+                  style="padding: 0"
+                  width="100" height="100"
+                  alt="{{ element.name }}">
+            {% endfor %}
+          </div>
+          <div class="boss-list-selection">
+            {% for boss in bosses %}
+              <img src="/dist/image/bosses/{{ boss.id }}.png"
+                  id="boss-{{ boss.id }}"
+                  data-id="{{ boss.id }}"
+                  class="img-fluid img-thumbnail boss-item-selection"
+                  style="padding: 0"
+                  width="80" height="80"
+                  alt="{{ boss.name }}">
+            {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer justify-content-between bg-default">
+          <button type="button" class="btn btn-primary float-right" data-dismiss="modal">Close</button>
+          <button type="submit"
+                  class="btn btn-primary buttonSubmit"
+                  name="createRaidForm"
+          >
+            Ajouter
+          </button>
+        </div>
+      </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables  & Plugins -->
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/jszip/jszip.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/pdfmake/pdfmake.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/pdfmake/vfs_fonts.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.dataTables_length').addClass('bs-select');
+});
+$(function () {
+  // Data table config
+  $("#table-raids").DataTable({
+    "responsive": true,
+    "lengthChange": false, //"lengthChange": true, pageLength: 5, lengthMenu: [10, 30, 20, 50, 100, 200, 500],
+    "searching": true,
+    "scrollCollapse": true, "scrollY": "500px",
+    "paging": false,
+    "order": [0, 'desc'],
+    "dom": 'Bfrtip',
+      buttons: [
+          {
+              text: 'Ajouter',
+              action: function ( e, dt, node, config ) {
+                  $('#modalRaid').modal('toggle');
+              }
+          }
+      ]
+  });
+  
+  // Edit raid
+  $('#modalRaid').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    if (button.attr('edit') == "true") {
+      var modal = $(this);
+
+      modal.find('.modal-title').text("Modification du raid " + button.data('id'));
+      
+      modal.find('#raid-idFormId').val(button.data('id'));
+      modal.find('#raid-boss1IdFormId').val();
+      modal.find('#raid-element1IdFormId').val();
+      modal.find('#raid-boss2IdFormId').val();
+      modal.find('#raid-element2IdFormId').val();
+      modal.find('#raid-boss3IdFormId').val();
+      modal.find('#raid-element3IdFormId').val();
+      modal.find('#raid-boss4IdFormId').val();
+      modal.find('#raid-element4IdFormId').val();
+      $('#boss-'+button.data('boss1_id')).trigger("click");
+      $('#element-'+button.data('element1_id')).trigger("click");
+      $('#boss-'+button.data('boss2_id')).trigger("click");
+      $('#element-'+button.data('element2_id')).trigger("click");
+      $('#boss-'+button.data('boss3_id')).trigger("click");
+      $('#element-'+button.data('element3_id')).trigger("click");
+      $('#boss-'+button.data('boss4_id')).trigger("click");
+      $('#element-'+button.data('element4_id')).trigger("click");
+      modal.find('#raid-dateFormId').val(button.data('date'));
+      modal.find('#raid-durationFormId').val(button.data('duration'));
+      
+      modal.find('.buttonSubmit').attr("name" , 'updateRaidForm');
+      modal.find('.buttonSubmit').text('Modifier');
+    }
+  });
+    
+  // Boss selection
+  $('.boss-item-selection').click(function() {
+      var boss1FormValue = $('#raid-boss1IdFormId').val();
+      var boss2FormValue = $('#raid-boss2IdFormId').val();
+      var boss3FormValue = $('#raid-boss3IdFormId').val();
+      var boss4FormValue = $('#raid-boss4IdFormId').val();
+      
+      var bossId = $(this).attr("data-id");
+      var bossName = $(this).attr("alt");
+      if (boss1FormValue.length === 0) {
+        $('#raid-boss1').attr('src', '/dist/image/bosses/'+bossId+'.png');
+        $('#raid-boss1').attr('alt', bossName);
+        $('#raid-boss1IdFormId').val(bossId);
+      } else if (boss2FormValue.length === 0) {
+        $('#raid-boss2').attr('src', '/dist/image/bosses/'+bossId+'.png');
+        $('#raid-boss2').attr('alt', bossName);
+        $('#raid-boss2IdFormId').val(bossId);
+      } else if (boss3FormValue.length === 0) {
+        $('#raid-boss3').attr('src', '/dist/image/bosses/'+bossId+'.png');
+        $('#raid-boss3').attr('alt', bossName);
+        $('#raid-boss3IdFormId').val(bossId);
+      } else if (boss4FormValue.length === 0) {
+        $('#raid-boss4').attr('src', '/dist/image/bosses/'+bossId+'.png');
+        $('#raid-boss4').attr('alt', bossName);
+        $('#raid-boss4IdFormId').val(bossId);
+      } else {
+        return false;
+      }
+    $(this).hide();
+  });
+  
+  // Boss dé-selection
+  $('.boss-selected').click(function() {
+    $(this).attr('src', "/dist/image/bosses/.png");
+    $(this).attr('alt', "undefined");
+    var bossForm = $('#'+$(this).attr('id')+'IdFormId');
+    $('#boss-'+bossForm.val()).show();
+    bossForm.val('');
+  });
+
+  // Element selection
+  $('.element-item-selection').click(function() {
+      var element1FormValue = $('#raid-element1IdFormId').val();
+      var element2FormValue = $('#raid-element2IdFormId').val();
+      var element3FormValue = $('#raid-element3IdFormId').val();
+      var element4FormValue = $('#raid-element4IdFormId').val();
+      
+      var elementId = $(this).attr("data-id");
+      var elementName = $(this).attr("alt");
+      if (element1FormValue.length === 0) {
+        $('#raid-element1').attr('src', '/dist/image/elements/'+elementId+'.png');
+        $('#raid-element1').attr('alt', elementName);
+        $('#raid-element1IdFormId').val(elementId);
+      } else if (element2FormValue.length === 0) {
+        $('#raid-element2').attr('src', '/dist/image/elements/'+elementId+'.png');
+        $('#raid-element2').attr('alt', elementName);
+        $('#raid-element2IdFormId').val(elementId);
+      } else if (element3FormValue.length === 0) {
+        $('#raid-element3').attr('src', '/dist/image/elements/'+elementId+'.png');
+        $('#raid-element3').attr('alt', elementName);
+        $('#raid-element3IdFormId').val(elementId);
+      } else if (element4FormValue.length === 0) {
+        $('#raid-element4').attr('src', '/dist/image/elements/'+elementId+'.png');
+        $('#raid-element4').attr('alt', elementName);
+        $('#raid-element4IdFormId').val(elementId);
+      } else {
+        return false;
+      }
+    $(this).hide();
+  });
+  
+  // Element dé-selection
+  $('.element-selected').click(function() {
+    $(this).attr('src', "/dist/image/elements/.png");
+    $(this).attr('alt', "undefined");
+    var elementForm = $('#'+$(this).attr('id')+'IdFormId');
+    $('#element-'+elementForm.val()).show();
+    elementForm.val('');
+  });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+{% endblock %}

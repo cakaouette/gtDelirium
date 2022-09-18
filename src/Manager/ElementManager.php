@@ -2,6 +2,9 @@
 
 namespace App\Manager;
 
+use Exception;
+use App\Entity\Element;
+
 class ElementManager extends AbstractManager
 {
     const DB_NAME = 'element';
@@ -17,5 +20,25 @@ class ElementManager extends AbstractManager
             $elements[$line["id"]] = $line["name"];
         }
         return $elements;
+    }
+    
+    public function getAll() {
+        $this->reset();
+        $this->addColumns(Array("id", "name"))
+             ->addOrderBy("id", false);
+        if($this->select()) {
+            $c = $this->getColumns();
+            $entities = Array();
+            $results = $this->getResult();
+            foreach ($results as $line) {
+                $entities[(int) $line[$c[0]]] = new Element(
+                        $line[$c[0]],
+                        $line[$c[1]],
+                        );
+            }
+            return $entities;
+        } else {
+            throw new Exception($this->getError());
+        }
     }
 }

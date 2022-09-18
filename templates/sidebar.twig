@@ -70,6 +70,14 @@
                         </a>
                     </li>
                 </ul>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ url_for('admin-raids') }}" class="{{ _self.nav_link_class('admin-raids') }}">
+                            <i class="nav-icon fas fa-skull text-fuchsia"></i>
+                            <p>Raids</p>
+                        </a>
+                    </li>
+                </ul>
             </li>
             {% endif %}
             {% if  user.isGestion %}
