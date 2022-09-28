@@ -7,6 +7,7 @@ use App\Manager\GuildManager;
 use App\Manager\MemberManager;
 use App\Manager\PendingManager;
 use App\Manager\PermissionManager;
+use App\Manager\RaidManager;
 use App\Validator\PasswordValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -17,16 +18,19 @@ final class HomeController extends BaseController
     private MemberManager $_memberManager;
     private PendingManager $_pendingManager;
     private PermissionManager $_permissionManager;
+    private RaidManager $_raidManager;
 
     protected function __init($bag) {
         $this->_guildManager = $bag->get(GuildManager::class);
         $this->_memberManager = $bag->get(MemberManager::class);
         $this->_pendingManager = $bag->get(PendingManager::class);
         $this->_permissionManager = $bag->get(PermissionManager::class);
+        $this->_raidManager = $bag->get(RaidManager::class);
     }
 
     public function index(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        return $this->view->render($response, 'home/index.twig');
+//        return $this->view->render($response, 'home/index.twig');
+        return $this->redirect($response, ['alliance']);
     }
 
     public function connect(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
@@ -97,6 +101,7 @@ final class HomeController extends BaseController
                 $this->session->set("login", $login);
                 $this->session->set("grade", $this->_permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
+                RaidController::updateRaidInfo($this->session, $this->_raidManager);
                 $defaultPage = ['raid-info'];
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
                 {

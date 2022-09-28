@@ -33,7 +33,18 @@
         {% endif %}
         <li class="list-group-item">
           <b>Niveau maximum des héros</b>
-          <a class="float-right">{{ igSetting.maxLevel }}</a>
+          {% if isProfile and igSetting.upgradeLevelList is not empty %}
+              <a class="float-right" data-target="#automaticLevelUpgrade" data-toggle="modal" >
+            <i class="fas fa-arrow-up"></i>
+          </a>
+          {% endif %}
+          <a class="float-right padding-right-2"
+          {% if isProfile and igSetting.upgradeLevelList is not empty %}
+              style="padding-right: 5px"
+          {% endif %}
+          >
+            {{ igSetting.maxLevel }}
+          </a>
         </li>
         <!--
         <li class="list-group-item">
@@ -191,6 +202,55 @@
 {% endblock %}
     
 {% block modal %}
+<div class="modal fade" id="automaticLevelUpgrade">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content bg-default">
+        <div class="modal-header bg-info">
+          <h4 class="modal-title">Limite de niveau</h4>
+        </div>
+        <form class="form" role="form" actionpage="{{ url_for('my-profile') }}" method="post">
+          {% include 'csrf.twig' %}
+          <div class="modal-body">
+              {#<input type="hidden" name="settingIdForm" value="{{ igSetting.id }}"/>
+              <input type="hidden" name="memberIdForm" value="{{ igSetting.memberId }}"/>#}
+              <div class="form-group text-center">
+                  <label for="levelFormId">Nouveau niv. max : </label>
+                  <select name="levelForm" id="levelFormId">
+                    {% for levelInfo in igSetting.upgradeLevelList %}
+                        <option value="{{ levelInfo.level }}">
+                            {{ levelInfo.level }}
+                        </option>
+                    {% endfor %}
+                  </select>                    
+              </div>
+              <div class="form-group">
+                Choisissez les héros qui ont ce nouveau niveau max :
+              </div>
+              {% for info in heros|filter(i => i.isPull)|sort((a, b) => a.charac.level <=> b.charac.level)|reverse %}
+                <div class="form-group">
+                  <label for="levelUpgradeId-{{ info.charac.id }}">
+                        <img src="/dist/image/heros/{{ info.charac.id }}_icon.png"
+                            class="img-fluid img-thumbnail"
+                            width="50" height="50"
+                            style="border: 2px solid {{ info.charac.color.frame }}; padding: 0; background-color: #a56e957a"
+                            alt="{{ info.charac.name }}">
+                    {{ info.charac.name }}
+                  </label>
+                  <input type="checkbox" id="levelUpgradeId-{{ info.charac.id }}" name="characId-{{ info.charac.id }}">
+                </div>
+              {% endfor %}
+          </div>
+          <div class="modal-footer justify-content-between bg-secondary">
+            <button type="button" class="btn btn-outline-light" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-outline-light" name="automaticLevelUpgradeForm" disabled>Sauvegarder</button>
+          </div>
+        </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+
 <div class="modal fade" id="maxLevelModel">
   <div class="modal-dialog">
     <div class="modal-content bg-default text-center">

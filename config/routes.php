@@ -41,6 +41,7 @@ return function (App $app) {
             $tip->get('/tremens', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/tremens.twig'))->setName('conquest-tremens')->setArgument('content-title', 'Stratégie des Tremens');
             $tip->get('/nocturnum', fn ($request, $response) => $this->get(Twig::class)->render($response, 'conquest/nocturnum.twig'))->setName('conquest-nocturnum')->setArgument('content-title', 'Stratégie des Nocturnums');
         });
+// alliance pages
         $group->group('/alliance', function ($alliance) {
             $alliance->get('', [C\AllianceController::class, 'index'])->setName('alliance')->setArgument('content-title', 'L\'alliance Délirium');
             $alliance->map(['GET', 'POST'], '/guild', [C\AllianceController::class, 'new'])->setName('alliance-new-guild')->setArgument('content-title', 'Nouvelle guilde')->add(Auth::class);
@@ -58,7 +59,7 @@ return function (App $app) {
             $admin->map(['GET', 'POST'], '/raids', [C\AdminController::class, 'raids'])->setName('admin-raids')->setArgument('content-title', 'Liste des raids');
             $admin->get('/raids/{id}/delete', [C\AdminController::class, 'delraid'])->setName('admin-raid-delete');
         })->add(Auth::class);
-// ALLIANCE page
+// MEMBER page
         $group->group('/members', function ($members) {
             $members->map(['GET', 'POST'], '/new', [C\MemberController::class, 'new'])->setName('member-new')->setArgument('content-title', 'Nouveau membre');
             $members->map(['GET', 'POST'], '/{id}/edit', [C\MemberController::class, 'edit'])->setName('member-edit');

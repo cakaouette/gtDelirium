@@ -36,8 +36,8 @@ final class RaidController extends BaseController
         $this->_characterManager = $bag->get(CharacterManager::class);
     }
     
-    public function updateRaidInfo($session, $raidId = null) : int {
-      $raid = is_null($raidId) ? $this->_raidManager->getLastByDate() : $this->_raidManager->getDateById($raidId);
+    static public function updateRaidInfo($session, $raidManager, $raidId = null) : int {
+      $raid = is_null($raidId) ? $raidManager->getLastByDate() : $raidManager->getDateById($raidId);
       
       $dateStart = strtotime($raid->getDate());
       $now = time();
@@ -73,7 +73,7 @@ final class RaidController extends BaseController
             $v_guilds = $this->_guildManager->getAll();
             
             if ($request->getMethod() === "POST") {
-              $raidId = RaidController::updateRaidInfo($this->session, $form['raidId']);
+              $raidId = RaidController::updateRaidInfo($this->session, $this->_raidManager, $form['raidId']);
             } else {
               $raidId = $this->session->get('raidInfo')['id'];
             }

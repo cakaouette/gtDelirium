@@ -71,17 +71,18 @@ final class ProfileController extends BaseController
             $frame = 'frame'.$crew->getGrade();
             $color = 'color'.$crew->getElementId();
             $v_heros[$cid] = ["isPull" => !is_null($crew->getLevel()),
-                "charac" => Array("name" => $crew->getName(),
-                          "grade" => ["value" => $crew->getGrade(), "name" => $this->getGradeName($crew->getGrade())],
-                          "color" => ["frame" => $$frame, "background" => $$color],
-                          "level" => $crew->getLevel(),
-                          "stars" => $crew->getEvolvedGrade(), 
-                          "nbBreak" => $crew->getNumberBreak(),
-                          "hasWeapon" => $crew->hasExclusiveWeapon(),
-                          "nbWeaponBreak" => $crew->getNumberWeaponBreak(),
-                          "crewId" => $crew->getCrewId(),
-                          "element" => $elements[$crew->getElementId()]
-                    )
+                          "charac" => Array("id" => $cid,
+                                      "name" => $crew->getName(),
+                                      "grade" => ["value" => $crew->getGrade(), "name" => $this->getGradeName($crew->getGrade())],
+                                      "color" => ["frame" => $$frame, "background" => $$color],
+                                      "level" => $crew->getLevel(),
+                                      "stars" => $crew->getEvolvedGrade(), 
+                                      "nbBreak" => $crew->getNumberBreak(),
+                                      "hasWeapon" => $crew->hasExclusiveWeapon(),
+                                      "nbWeaponBreak" => $crew->getNumberWeaponBreak(),
+                                      "crewId" => $crew->getCrewId(),
+                                      "element" => $elements[$crew->getElementId()]
+                                )
                 ];
         }
 
@@ -90,10 +91,15 @@ final class ProfileController extends BaseController
         
         $igSettings = $this->_settingManager->getByMemberId($id);
         $maxLevelList = Array();
+        $upgradeLevelList = Array();
         foreach ($this->_worldManager->getAll() as $world) {
           $maxLevelList[$world->getNumber()] = [
               'level' => $world->getMaxLevel(),
               'disabled' => $world->isDisabled()];
+          if (!$world->isDisabled() and $world->getMaxLevel() > $igSettings->getMaxHeroLevel()) {
+            $upgradeLevelList[$world->getNumber()] = [
+              'level' => $world->getMaxLevel()];
+          }
         }
 
         return $this->view->render($response, 'profile/index.twig', [
@@ -113,6 +119,7 @@ final class ProfileController extends BaseController
             'title' => "Profil de ".$v_member->getName(),
             'igSetting' => [
                 'maxLevelList' => $maxLevelList,
+                'upgradeLevelList' => $upgradeLevelList,
                 'id' => $igSettings->getId(),
                 'memberId' => $igSettings->getMemberId(),
                 'maxLevel' => $igSettings->getMaxHeroLevel(),

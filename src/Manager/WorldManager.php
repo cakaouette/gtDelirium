@@ -15,7 +15,7 @@ class WorldManager extends AbstractManager
     public function getAll() {
         $this->reset();
         $this->addColumns(Array("id", "number", "maxLevel", "disable"))
-             ->addOrderBy("number", true);
+             ->addOrderBy("number", false);
         if($this->select()) {
             $c = $this->getColumns();
             $entities = array();
