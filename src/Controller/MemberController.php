@@ -262,7 +262,7 @@ final class MemberController extends BaseController
             $f_id = $form["crewIdForm"];
             $f_charactId = $form["charactIdForm"];
             $f_nbBreak = $form["breakForm"];
-            $f_level = min($form["levelForm"], $maxlevel+$f_nbBreak);
+            $f_level = min($form["levelForm"], (int)$maxlevel + (int)$f_nbBreak);
             $f_evolved = $form["evolutionForm"];
             $f_hasWeapon = isset($form["weaponForm"]);
             $f_nbWeaponBreak = $form["weaponBreakForm"];
@@ -410,7 +410,7 @@ final class MemberController extends BaseController
         $editParams = Array("level" => $level, "evolvedGrade" => $evolveld, "nbBreak" => $nbBreak,
                             "hasWeapon" => $hasWeapon, "nbWeaponBreak" => $nbWeaponBreak);
         try {
-            return $this->_crewManager->updateCrew($id, $editParams);
+            return $this->_crewManager->updateEntity($id, $editParams);
         } catch (Exception $e) {
             $this->addMsg("danger", "Erreur pendant la mise à jour des informations du Héro $e->getMessage()");
         }

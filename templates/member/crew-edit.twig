@@ -100,7 +100,7 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form class="form" role="form" actionpage="{{ url_for('member-crew-edit', { id: id }) }}" method="post">
+        <form class="form" role="form" action="{{ url_for('member-crew-edit', { id: id }) }}" method="post">
           {% include 'csrf.twig' %}
           <div class="modal-body">
               <input type="hidden" name="crewIdForm" value="{{ info.charac.crewId }}"/>

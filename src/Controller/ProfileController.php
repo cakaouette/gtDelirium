@@ -6,6 +6,7 @@ use Exception;
 use App\Manager\MemberManager;
 use App\Manager\ElementManager;
 use App\Manager\CharacterManager;
+use App\Manager\CrewManager;
 use App\Manager\SettingManager;
 use App\Manager\WorldManager;
 use App\Validator\PasswordValidator;
@@ -17,11 +18,13 @@ final class ProfileController extends BaseController
     private MemberManager $_memberManager;
     private ElementManager $_elementManager;
     private CharacterManager $_characterManager;
+    private CrewManager $_crewManager;
     private SettingManager $_settingManager;
     private WorldManager $_worldManager;
     
     protected function __init($bag) {
         $this->_characterManager = $bag->get(CharacterManager::class);
+        $this->_crewManager = $bag->get(CrewManager::class);
         $this->_elementManager = $bag->get(ElementManager::class);
         $this->_memberManager = $bag->get(MemberManager::class);
         $this->_settingManager = $bag->get(SettingManager::class);
@@ -177,4 +180,28 @@ final class ProfileController extends BaseController
             $this->addMsg("success", "Login et/ou mot de passe sauvegardé");
         }
       }
-  }
+      
+    public function upgrade(ServerRequestInterface $request, ResponseInterface $response, $id): ResponseInterface {
+        $form = $request->getParsedBody();
+        $formReceived = isset($form["automaticLevelUpgradeForm"]);
+        if (!$formReceived or $this->session->get('id') != $id)
+        {
+          return $this->redirect($response, ['profile', ['id' => $id]]);
+        }
+        
+        $level = $form["levelForm"];
+        preg_match_all('/characId\-(?<heroesId>\d+)/', implode(" ", array_keys($form)), $matches);
+        $heroesId = $matches["heroesId"];
+        $crew = $this->_crewManager->getAllByMemberId($id);
+        foreach ($heroesId as $heroId) {
+          if (array_key_exists($heroId, $crew))  {
+            $this->_crewManager->updateEntity($crew[$heroId]["id"], Array("level" => $level + $crew[$heroId]["nbBreak"]));
+          }
+        }
+        $igSetting = $this->_settingManager->getByMemberId($id);
+        $editParams = Array("maxLevel" => $level);
+        $this->_settingManager->updateEntity($igSetting->getId(), $editParams);
+        return $this->redirect($response, ['my-profile']);
+    }
+
+}

@@ -23,6 +23,7 @@ return function (App $app) {
             $profile->map(['GET', 'POST'], '[/me]', [C\ProfileController::class, 'me'])->setName('my-profile');
             $profile->get('/{id}', [C\ProfileController::class, 'index'])->setName('profile');
             $profile->post('/{id}/settings', [C\ProfileController::class, 'settings'])->setName('profile-settings');
+            $profile->post('/{id}/upgrade', [C\ProfileController::class, 'upgrade'])->setName('profile-heroes');
         })->add(Auth::class);
 // boss-ailments pages
         $group->group('/boss', function ($boss) {

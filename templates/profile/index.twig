@@ -208,11 +208,10 @@
         <div class="modal-header bg-info">
           <h4 class="modal-title">Limite de niveau</h4>
         </div>
-        <form class="form" role="form" actionpage="{{ url_for('my-profile') }}" method="post">
+        <form class="form" role="form" action="{{ url_for('profile-heroes', { 'id': id }) }}" method="post">
           {% include 'csrf.twig' %}
           <div class="modal-body">
-              {#<input type="hidden" name="settingIdForm" value="{{ igSetting.id }}"/>
-              <input type="hidden" name="memberIdForm" value="{{ igSetting.memberId }}"/>#}
+              <input type="hidden" name="memberIdForm" value="{{ id }}"/>
               <div class="form-group text-center">
                   <label for="levelFormId">Nouveau niv. max : </label>
                   <select name="levelForm" id="levelFormId">
@@ -242,7 +241,7 @@
           </div>
           <div class="modal-footer justify-content-between bg-secondary">
             <button type="button" class="btn btn-outline-light" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-outline-light" name="automaticLevelUpgradeForm" disabled>Sauvegarder</button>
+            <button type="submit" class="btn btn-outline-light" name="automaticLevelUpgradeForm">Sauvegarder</button>
           </div>
         </form>
     </div>
@@ -257,7 +256,7 @@
         <div class="modal-header bg-info">
           <h4 class="modal-title">Limite de niveau</h4>
         </div>
-        <form class="form" role="form" actionpage="{{ url_for('my-profile') }}" method="post">
+        <form class="form" role="form" action="{{ url_for('my-profile') }}" method="post">
           {% include 'csrf.twig' %}
           <div class="modal-body">
               <input type="hidden" name="settingIdForm" value="{{ igSetting.id }}"/>

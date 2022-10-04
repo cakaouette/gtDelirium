@@ -58,6 +58,8 @@ abstract class AbstractManager
     private function execute($queryString): bool {
         $this->_result = array();
 //        print("queryString= $queryString<br>");
+//        print("params= ");print_r($this->_params);print("<br>");
+//        print("values= ");print_r($this->_values);print("<br>");
         $q = $this->_db->prepare($queryString);
         if (sizeof($this->_params) != sizeof($this->_values)) {
             $this->_error = "bind ERROR '$this->_table': nb params= ".sizeof($this->_params)." different de nb values= ".$this->_values;

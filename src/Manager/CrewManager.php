@@ -20,12 +20,36 @@ class CrewManager extends AbstractManager
         return true;
     }
 
-    public function updateCrew($id, array $params) /*$level, $evolveld, $nbBreak, $hasWeapon*/ {
+    public function updateEntity($id, array $params) /*$level, $evolveld, $nbBreak, $hasWeapon*/ {
         $this->reset();
         if(!$this->update($id, array_keys($params), array_values($params))) {
             throw new Exception($this->getError());
         }
         return true;
+    }
+    
+    public function getAllByMemberId($id) /*$level, $evolveld, $nbBreak, $hasWeapon*/ {
+        $this->reset();
+        $this->addColumns(Array("id", "memberId", "charactId", "level", "nbBreak"))
+             ->addWhere("memberId", strval($id), "=")
+             ->addOrderBy("charactId", true);
+        if($this->select()) {
+            $c = $this->getColumns();
+            $entities = Array();
+            $results = $this->getResult();
+            foreach ($results as $line) {
+                $entities[(int) $line[$c[2]]] = Array(
+                        "id" => $line[$c[0]],
+                        "memberId" => $line[$c[1]],
+                        "charactId" => $line[$c[2]],
+                        "level" => $line[$c[3]],
+                        "nbBreak" => $line[$c[4]],
+                        );
+            }
+            return $entities;
+        } else {
+            throw new Exception($this->getError());
+        }
     }
     
 }
