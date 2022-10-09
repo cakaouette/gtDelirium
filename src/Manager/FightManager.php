@@ -292,8 +292,17 @@ class FightManager extends  AbstractManager
 
     public function updateFight($id, $bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted) {
         $this->reset();
-        if(!$this->update($id, Array("bossId", "damage" , "isExtraDamage", "hero1Id", "hero2Id", "hero3Id", "hero4Id", "recorderId", "deleted"),
+        if(!$this->update($id, Array("bossId", "damage", "isExtraDamage", "hero1Id", "hero2Id", "hero3Id", "hero4Id", "recorderId", "deleted"),
                                Array($bossId, $damage, $isExtra, $hero1Id, $hero2Id, $hero3Id, $hero4Id, $recorderId, $deleted))) {
+            throw new Exception($this->getError());
+        }
+        return true;
+    }
+
+    public function updateFightDamage($id, $damage, $recorderId) {
+        $this->reset();
+        if(!$this->update($id, Array("damage", "recorderId"),
+                               Array($damage, $recorderId))) {
             throw new Exception($this->getError());
         }
         return true;
@@ -456,4 +465,48 @@ class FightManager extends  AbstractManager
             throw new Exception($this->getError());
         }
     }
+    
+    public function getAllByGuildIdGroupByPseudoIdDateTeamNumber($guildId, $raidId, $memberId = NULL) {
+        $this->reset();
+        $this->addColumns(Array("id", "pseudoId", "guildId", "raidId", "date", "teamNumber", "damage"))
+            ->addfunction("sum", "damage")
+            ->addWhere("guildId", strval($guildId), "=")
+            ->addWhere("raidId", strval($raidId), "=")
+            ->addWhere("deleted", "1", "!=")
+            ->addGroupBy("pseudoId")
+            ->addGroupBy("date")
+            ->addGroupBy("teamNumber")
+            ->addOrderBy("pseudoId", true)
+            ->addOrderBy("date", true)
+            ->addOrderBy("teamNumber", true);
+        if (!is_null($memberId)) {
+          $this->addWhere("pseudoId", strval($memberId), "=");
+        }
+        if($this->select()) {
+            $c = $this->getColumns();
+            $entities = Array();
+            $results = $this->getResult();
+            foreach ($results as $line) {
+                if (array_key_exists((int) $line[$c[1]], $entities)) {
+                    $entities[(int) $line[$c[1]]][] = 
+                            Array("id" => $line[$c[0]],
+                                  "date" => $line[$c[4]],
+                                  "teamNumber" => $line[$c[5]],
+                                  "damage" => $line[$c[6]],
+                                  "sum" => $line[$c[7]]);
+                } else {
+                    $entities[(int) $line[$c[1]]] = Array(
+                            Array("id" => $line[$c[0]],
+                                  "date" => $line[$c[4]],
+                                  "teamNumber" => $line[$c[5]],
+                                  "damage" => $line[$c[6]],
+                                  "sum" => $line[$c[7]]));
+                }
+            }
+            return $entities;
+        } else {
+            throw new Exception($this->getError());
+        }
+    }
+
 }

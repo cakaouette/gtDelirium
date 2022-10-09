@@ -13,7 +13,7 @@
     <!-- Sidebar Menu -->
     <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-            <!--Alliance-->
+        <!--Alliance-->
             <li class="nav-item">
                 <a href="{{ url_for('alliance') }}" class="nav-link">
                     <i class="nav-icon fas fa-shield-alt text-purple"></i>
@@ -21,7 +21,7 @@
                 </a>
             </li>
             {% if user.isOfficier %}
-            <!--Administration-->
+        <!--Administration-->
             <li class="{{ _self.nav_item_class('admin') }}">
                 <a href="#" class="{{ _self.nav_link_class('admin') }}">
                     <i class="nav-icon fas fa-tools text-fuchsia"></i>
@@ -81,7 +81,7 @@
             </li>
             {% endif %}
             {% if  user.isGestion %}
-            <!--Api Discord ShortCut-->
+        <!--Api Discord ShortCut-->
             <li class="{{ _self.nav_item_class('discord') }}">
                 <a href="#" class="{{ _self.nav_link_class('discord') }}">
                     <i class="nav-icon fas fa-bell text-blue"></i>
@@ -100,7 +100,7 @@
                 </ul>
             </li>
             {% endif %}
-            <!--Raid-->
+        <!--Raid-->
             <li class="{{ _self.nav_item_class('raid') }}">
                 <a href="#" class="{{ _self.nav_link_class('raid') }}">
                     <i class="nav-icon fas fa-skull text-red"></i>
@@ -154,9 +154,17 @@
                         </a>
                     </li>
                     {% endif %}
+                    {% if user.isOfficier %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('raid-finalise') }}" class="{{ _self.nav_link_class('raid-finalise') }}">
+                            <i class="nav-icon fas fa-calendar-check text-red"></i>
+                            <p>Fin de raid</p>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </li>
-            <!--Conquête-->
+        <!--Conquête-->
             <li class="{{ _self.nav_item_class('conquest') }}">
                 <a href="#" class="{{ _self.nav_link_class('conquest') }}">
                     <i class="nav-icon fas fa-chess-knight text-orange"></i>
@@ -192,7 +200,7 @@
                     </li>
                 </ul>
             </li>
-            <!--Membre-->
+        <!--Membre-->
             <li class="{{ _self.nav_item_class('member') }}">
                 <a href="#" class="{{ _self.nav_link_class('member') }}">
                     <i class="nav-icon fas fa-users text-purple"></i>
@@ -228,7 +236,7 @@
                     </li>
                 </ul>
             </li>
-            <!--Boss-->
+        <!--Boss-->
             <li class="nav-item">
                 <a href="{{ url_for('bosses') }}" class="{{ _self.nav_link_class('boss') }}">
                     <i class="nav-icon fas fa-pastafarianism text-teal"></i>
@@ -245,7 +253,7 @@
                     </p>
                 </a>
             </li>
-            <!-- Discord -->
+        <!-- Discord -->
             <li class="nav-item">
                 <a href="https://discord.gg/z33d8uZ" target="_blank" class="nav-link">
                     <i class="nav-icon fab fa-discord text-blue"></i>

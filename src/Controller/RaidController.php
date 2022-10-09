@@ -901,4 +901,96 @@ final class RaidController extends BaseController
             $this->_teamManager->addTeam($memberId, $teamNumber, $hero1Id, $hero2Id, $hero3Id, $hero4Id);
         }
     }
+    
+    public function finalise(ServerRequestInterface $request, ResponseInterface $response, string $guildId = null): ResponseInterface {
+        if (is_null($guildId)) $guildId = $this->session->get('guild')['id'];
+        $guildId = $this->session->get('guild')['id'];
+        $raidInfo = $this->session->get('raidInfo');
+        
+        if (($request->getMethod() === 'POST')) {
+          $form = $request->getParsedBody();
+          $memberIdForm = $form["memberIdForm"];
+          $memberFights = $this->_fightManager->getAllByGuildIdGroupByPseudoIdDateTeamNumber($guildId, $raidInfo["id"], $memberIdForm);
+          $fights = array_key_exists($memberIdForm, $memberFights) ? $memberFights[$memberIdForm] : Array();
+          $fightNbToAdd = min($raidInfo["duration"]*3, $form["nbFightForm"]) - count($fights);
+          $fightDamageToAdd = $form["damageForm"] - array_sum(array_column($fights, "sum"));
+          $firstAdd = true;
+          if (count($fights) > 0 and $fightNbToAdd == 0) {
+            $rest = $fightDamageToAdd % count($fights);
+            $avg = ($fightDamageToAdd - $rest) / count($fights);
+            foreach ($fights as $fight) {
+              $damage = $firstAdd ? $avg + $rest : $avg;
+              $this->_fightManager->updateFightDamage($fight["id"], $fight["damage"] + $damage, $this->session->get('id'));
+              $firstAdd = false;
+            }
+          } else {
+            $rest = $fightDamageToAdd % $fightNbToAdd;
+            $avg = ($fightDamageToAdd - $rest) / $fightNbToAdd;
+            $dateIdx = 0;
+            $teamIdx = 1;
+            $nbAdded = 0;
+            foreach ($fights as $fight) {
+              $d = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateIdx day"));
+              while ($fight["date"] != $d or $fight["teamNumber"] != $teamIdx) {
+                if ($nbAdded < $fightNbToAdd) {
+                  $damage = $firstAdd ? $avg + $rest : $avg;
+                  $this->_fightManager->addFight($memberIdForm, $guildId, $raidInfo["id"], $d, $teamIdx, 0, $damage,
+                                                 0, 0, 0, 0, 0, $this->session->get('id'));
+                  $firstAdd = false;
+                  $nbAdded+=1;
+                }
+                $teamIdx+=1;
+                if ($teamIdx === 4) {
+                  $teamIdx = 1;
+                  $dateIdx+=1;
+                  $d = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateIdx day"));
+                }
+              }
+              $teamIdx+=1;
+              if ($teamIdx === 4) {
+                $teamIdx = 1;
+                $dateIdx+=1;
+                $d = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateIdx day"));
+              }
+            }
+            while ($nbAdded < $fightNbToAdd) {
+              $d = date("Y-m-d", strtotime($raidInfo["dateRaid"]." +$dateIdx day"));
+              $damage = $firstAdd ? $avg + $rest : $avg;
+              $this->_fightManager->addFight($memberIdForm, $guildId, $raidInfo["id"], $d, $teamIdx, 0, $damage,
+                                             0, 0, 0, 0, 0, $this->session->get('id'));
+              $firstAdd = false;
+              $nbAdded+=1;
+              $teamIdx+=1;
+              if ($teamIdx === 4) {
+                $teamIdx = 1;
+                $dateIdx+=1;
+              }
+            }
+          }
+        }
+        
+        $members = Array();
+        $raidFightsByMember = $this->_fightManager->getAllByGuildIdGroupByPseudoIdDateTeamNumber($guildId, $raidInfo["id"]);
+        
+        $guildMembers = $this->_memberManager->getAllByGuildId($guildId);
+        foreach ($guildMembers as $memberId => $member) {
+          if (array_key_exists($memberId, $raidFightsByMember)) {
+            $size = count($raidFightsByMember[$memberId]);
+            $sum = array_sum(array_column($raidFightsByMember[$memberId], "sum"));
+          } else {
+            $size = 0;
+            $sum = 0;
+          }
+          $members[] = Array("id" => $memberId,
+                             "name" => $member->getName(),
+                             "nbFights" => $size,
+                             "damage" => $sum);
+        }
+
+        return $this->view->render($response, 'raid/finalise.twig',
+                ['guildId' => $guildId,
+                 'form' => $form,
+                 'members' => $members
+                ]);
+    }
 }

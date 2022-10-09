@@ -1,0 +1,121 @@
+{% extends "layout.twig" %}
+
+{% block title %}Complétion du raid {{ guildId }}{% endblock %}
+
+{% block content %}
+<div class="row">
+<div class="col-md-12">
+  <div class="card">
+    <div class="card-header">
+{#      <h3 class="card-title">Membres</h3>#}
+{{ form }}
+    </div>
+    <div class="card-body">
+      <table id="table-worlds" class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>Id</th>
+            <th>Membre</th>
+            <th>Dégâts</th>
+            <th>nb d'attaques</th>
+            <th>corrections</th>
+            <th>action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+          <tr>
+            <form class="form" role="form" method="post">
+            <td>{{ member.id }}</td>
+            <td>{{ member.name }}</td>
+            <td>{{ member.damage }}</td>
+            <td>{{ member.nbFights }}</td>
+            <td>
+                {% include 'csrf.twig' %}
+                <input type="hidden" id="memberIdFormId" name="memberIdForm" value="{{ member.id }}"/>
+                <div class="form-row">
+                    <div class="form-group col-4 align-items-center">
+                      <label for="damageFormId" class="col-form-label">nb d'attaques </label>
+                      <input type="number" disabled
+                             class="form-control form-{{ member.id }}" 
+                             id="nbFightFormId"
+                             name="nbFightForm"/>
+                    </div>
+                    <div class="form-group col-6 offset-1 align-items-center">
+                      <label for="damageFormId" class="col-form-label">dégâts </label>
+                      <input type="number" disabled
+                             class="form-control form-{{ member.id }}" 
+                             id="damageFormId"
+                             name="damageForm"/>
+                    </div>
+                </div>
+            </td>
+            <td>
+              <div class="row">
+                <button type="button" class="btn btn-default form-show" id="form-show-{{ member.id }}">Corriger</button>
+                <button type="button" class="btn btn-default form-hide" id="form-hide-{{ member.id }}" hidden="true">Annuler</button>
+              </div>
+              <div class="row">
+                <button type="submit" class="btn btn-primary form-{{ member.id }}" disabled>Enregistrer</button>
+              </div>
+            </td>
+          </tr>
+          </form>
+         {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- DataTables  & Plugins -->
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/jszip/jszip.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/pdfmake/pdfmake.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/pdfmake/vfs_fonts.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+  $('.dataTables_length').addClass('bs-select');
+});
+$(function () {
+  $("#table-worlds").DataTable({
+    "responsive": true,
+    "lengthChange": false, //"lengthChange": true, pageLength: 5, lengthMenu: [10, 30, 20, 50, 100, 200, 500],
+    "searching": true,
+    "scrollCollapse": true, "scrollY": "500px",
+    "paging": false
+  });
+  
+  $( ".form-show" ).click(function() {
+    $(this).attr("hidden", true);
+    var id = $(this).attr('id').split("form-show-")[1];
+    $("#form-hide-"+id).removeAttr("hidden");
+    $(".form-"+id).removeAttr("disabled");
+  });
+
+  $( ".form-hide" ).click(function() {
+    $(this).attr("hidden", true);
+    var id = $(this).attr('id').split("form-hide-")[1];
+    $("#form-show-"+id).removeAttr("hidden", true);
+    $(".form-"+id).attr("disabled", true);
+  });
+});
+</script>
+{% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+{% endblock %}
