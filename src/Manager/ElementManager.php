@@ -25,7 +25,7 @@ class ElementManager extends AbstractManager
     public function getAll() {
         $this->reset();
         $this->addColumns(Array("id", "name"))
-             ->addOrderBy("id", false);
+             ->addOrderBy("id", true);
         if($this->select()) {
             $c = $this->getColumns();
             $entities = Array();

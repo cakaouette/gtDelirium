@@ -49,6 +49,7 @@ class TwigGlobalsMiddleware
             //TODO change when we remove grades from session
             'isGestion' => $this->session->get("grade") <= $this->session->get("Gestion"),
             'isOfficier' => $this->session->get("grade") <= $this->session->get("Officier"),
+            'isVolunteer' => $this->session->get("grade") <= $this->session->get("Benevole"),
             'isJoueur' => $this->session->get("grade") <= $this->session->get("Joueur"),
             'isConnected' => $this->session->get("grade") < $this->session->get("Visiteur"),
             'id' => $this->session->get("id")

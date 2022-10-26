@@ -120,7 +120,46 @@
             </table>
         </div>
         <div class="tab-pane {{ _self.active_tab('stats', activeTab) }}" id="stats">
-          statistiques en tout genre
+            <div class="card card-info">
+              <div class="card-header">
+                <h3 class="card-title">Répartition des attaques</h3>
+
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart">
+                  <canvas id="statsRaidFightCount" style="min-height: 250px; height: 400px; max-width: 100%;"></canvas>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <div class="card card-info">
+              <div class="card-header">
+                <h3 class="card-title">Répartition des attaques</h3>
+
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="chart">
+                  <canvas id="statsRaidFightSum" style="min-height: 250px; height: 400px; max-width: 100%;"></canvas>
+                </div>
+              </div>
+              <!-- /.card-body -->
+            </div>
         </div>
         {% if isProfile %}
         <div class="tab-pane {{ _self.active_tab('settings', activeTab) }}" id="settings">
@@ -213,8 +252,8 @@
           <div class="modal-body">
               <input type="hidden" name="memberIdForm" value="{{ id }}"/>
               <div class="form-group text-center">
-                  <label for="levelFormId">Nouveau niv. max : </label>
-                  <select name="levelForm" id="levelFormId">
+                  <label for="levelFormId_autoLevel">Nouveau niv. max : </label>
+                  <select name="levelForm" id="levelFormId_autoLevel">
                     {% for levelInfo in igSetting.upgradeLevelList %}
                         <option value="{{ levelInfo.level }}">
                             {{ levelInfo.level }}
@@ -262,8 +301,8 @@
               <input type="hidden" name="settingIdForm" value="{{ igSetting.id }}"/>
               <input type="hidden" name="memberIdForm" value="{{ igSetting.memberId }}"/>
               <div class="form-group">
-                  <label for="levelFormId">Niv: </label>
-                  <select name="levelForm" id="levelFormId">
+                  <label for="levelFormId_maxLevel">Niv: </label>
+                  <select name="levelForm" id="levelFormId_maxLevel">
                     {% for mondeId, levelInfo in igSetting.maxLevelList %}
                         <option {{ levelInfo.level == igSetting.maxLevel ? 'selected' : '' }} 
                                 {{ levelInfo.disabled ? 'disabled' : '' }}
@@ -301,6 +340,8 @@
 <script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
 <script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.print.min.js"></script>
 <script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/chart.js/Chart.min.js"></script>
+<script src="/dist/js/patternomaly.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
   $('.dataTables_length').addClass('bs-select');;
@@ -381,6 +422,116 @@ $(function () {
     ]
 
   }).buttons().container().appendTo('#herosList_wrapper .col-md-6:eq(0)');
+
+  var stackedBarChartCanvas = $('#statsRaidFightCount').get(0).getContext('2d');
+    var areaChartData = {
+      labels  : [
+        {% for raidId, raid in raidInfo %}
+          {{ loop.last ? raidId : raidId~", " }}
+        {% endfor %}
+      ],
+      datasets: [
+      {% for eId, name in elements %}
+        {
+          label               : '{{ name }}',
+          backgroundColor     : '{{ colors[eId] }}',
+          borderColor         : '#ffc107',
+          borderWidth         : {left: 2, right: 2},
+          data                : [
+            {% for count in stat1[eId] %}
+              {{ loop.last ? count : count~", " }}
+            {% endfor %}
+            ]
+        },
+      {% endfor %}
+        {
+          label               : 'défaut',
+          backgroundColor     : pattern.draw('diagonal-right-left', 'rgb(255, 193, 07, 0.4)'),
+          borderColor         : '#ffc107',
+          borderWidth         : {bottom: 2},
+          borderSkipped       : false,
+          minBarLength        : 2,
+          data                : [
+            {% for count in stat1[0] %}
+              {{ loop.last ? count : count~", " }}
+            {% endfor %}
+            ]
+        }
+      ]
+    };
+  var stackedBarChartData = $.extend(true, {}, areaChartData);
+  var stackedBarChartOptions = {
+    responsive              : true,
+    maintainAspectRatio     : false,
+    scales: {
+      xAxes: [{
+        stacked: true,
+      }],
+      yAxes: [{
+        stacked: true
+      }]
+    }
+  };
+  new Chart(stackedBarChartCanvas, {
+    type: 'bar',
+    data: stackedBarChartData,
+    options: stackedBarChartOptions
+  });
+  
+  var stackedBarChartCanvas = $('#statsRaidFightSum').get(0).getContext('2d');
+    var areaChartData = {
+      labels  : [
+        {% for raidId, raid in raidInfo %}
+          {{ loop.last ? raidId : raidId~", " }}
+        {% endfor %}
+      ],
+      datasets: [
+      {% for eId, name in elements %}
+        {
+          label               : '{{ name }}',
+          backgroundColor     : '{{ colors[eId] }}',
+          borderColor         : '#ffc107',
+          borderWidth         : {left: 2, right: 2},
+          data                : [
+            {% for sum in stat2[eId] %}
+              {{ loop.last ? sum : sum~", " }}
+            {% endfor %}
+            ]
+        },
+      {% endfor %}
+        {
+          label               : 'défaut',
+          backgroundColor     : pattern.draw('diagonal-right-left', 'rgb(255, 193, 07, 0.4)'),
+          borderColor         : '#ffc107',
+          borderWidth         : {bottom: 2},
+          borderSkipped       : false,
+          minBarLength        : 2,
+          data                : [
+            {% for sum in stat2[0] %}
+              {{ loop.last ? sum : sum~", " }}
+            {% endfor %}
+            ]
+        }
+      ]
+    };
+  var stackedBarChartData = $.extend(true, {}, areaChartData);
+  var stackedBarChartOptions = {
+    responsive              : true,
+    maintainAspectRatio     : false,
+    scales: {
+      xAxes: [{
+        stacked: true,
+      }],
+      yAxes: [{
+        stacked: true
+      }]
+    }
+  };
+  new Chart(stackedBarChartCanvas, {
+    type: 'bar',
+    data: stackedBarChartData,
+    options: stackedBarChartOptions
+  });
 });
 </script>
 {% endblock %}

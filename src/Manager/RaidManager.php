@@ -133,7 +133,7 @@ class RaidManager extends AbstractManager
         }
     }
     
-    public function getAll() {
+    public function getAllWithNames() {
         $this->reset();
         $str = "SELECT raid.id as rId, raid.date as rDate, raid.duration as rDuration,
             b1.id as b1Id, b1.name as b1Name, b1.shortName as b1Short, e1.id as e1Id, e1.name as e1Name,

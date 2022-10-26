@@ -154,7 +154,7 @@
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.isOfficier %}
+                    {% if user.isVolunteer %}
                     <li class="nav-item">
                         <a href="{{ url_for('raid-finalise') }}" class="{{ _self.nav_link_class('raid-finalise') }}">
                             <i class="nav-icon fas fa-calendar-check text-red"></i>

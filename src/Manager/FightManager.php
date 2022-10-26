@@ -509,4 +509,32 @@ class FightManager extends  AbstractManager
         }
     }
 
+    public function getFightSummaryByPseudoIdGroupByRaidIdBossId($memberId) {
+        $this->reset();
+        $this->addColumns(Array("bossId", "raidId"))
+            ->addfunction("count", "damage")
+            ->addfunction("sum", "damage")
+            ->addWhere("pseudoId", strval($memberId), "=")
+            ->addWhere("deleted", "1", "!=")
+            ->addGroupBy("raidId")
+            ->addGroupBy("bossId");
+        if ($this->select()) {
+            $c = $this->getColumns();
+            $entities = Array();
+            $results = $this->getResult();
+            foreach ($results as $line) {
+                if (array_key_exists((int) $line[$c[1]], $entities)) {
+                  $entities[(int) $line[$c[1]]][(int) $line[$c[0]]] = 
+                          ["count" => $line[$c[2]], "sum" => $line[$c[3]]];
+                } else {
+                  $entities[(int) $line[$c[1]]] = Array(
+                      (int) $line[$c[0]] => ["count" => $line[$c[2]], "sum" => $line[$c[3]]]
+                  );
+                }
+            }
+            return $entities;
+        } else {
+            throw new Exception($this->getError());
+        }
+    }
 }

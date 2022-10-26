@@ -228,7 +228,7 @@ final class AdminController extends BaseController
                         ];
         }
         
-        foreach ($this->_raidManager->getAll() as $raid) {
+        foreach ($this->_raidManager->getAllWithNames() as $raid) {
           $raids[] = ['id' => $raid->getId(),
                       'date' => $raid->getDate(),
                       'duration' => $raid->getDuration(),

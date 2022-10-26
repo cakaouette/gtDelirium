@@ -7,6 +7,8 @@ use App\Manager\MemberManager;
 use App\Manager\ElementManager;
 use App\Manager\CharacterManager;
 use App\Manager\CrewManager;
+use App\Manager\FightManager;
+use App\Manager\RaidManager;
 use App\Manager\SettingManager;
 use App\Manager\WorldManager;
 use App\Validator\PasswordValidator;
@@ -19,6 +21,8 @@ final class ProfileController extends BaseController
     private ElementManager $_elementManager;
     private CharacterManager $_characterManager;
     private CrewManager $_crewManager;
+    private FightManager $_fightManager;
+    private RaidManager $_raidManager;
     private SettingManager $_settingManager;
     private WorldManager $_worldManager;
     
@@ -27,6 +31,8 @@ final class ProfileController extends BaseController
         $this->_crewManager = $bag->get(CrewManager::class);
         $this->_elementManager = $bag->get(ElementManager::class);
         $this->_memberManager = $bag->get(MemberManager::class);
+        $this->_fightManager = $bag->get(FightManager::class);
+        $this->_raidManager = $bag->get(RaidManager::class);
         $this->_settingManager = $bag->get(SettingManager::class);
         $this->_worldManager = $bag->get(WorldManager::class);
     }
@@ -58,6 +64,7 @@ final class ProfileController extends BaseController
         $color4 = "#9f9f9fba"; //dark
         $color5 = "#ffc7127a"; //light
         $color6 = "#ffffffff"; //basic
+        $colors = [1 => $color1, 2 => $color2, 3 => $color3, 4 => $color4, 5 => $color5, 6 => $color6];
         
         $frame3 = "#ffd626";
         $frame2 = "#26dbff";
@@ -104,6 +111,41 @@ final class ProfileController extends BaseController
               'level' => $world->getMaxLevel()];
           }
         }
+        $raidInfo = Array();
+        foreach ($this->_raidManager->getAllWithNames() as $raid) {
+          $raidInfo[$raid->getId()] = ['date' => $raid->getDate(),
+                                       $raid->getBoss1Info()['element'] => $raid->getBoss1Info()['id'],
+                                       $raid->getBoss2Info()['element'] => $raid->getBoss2Info()['id'],
+                                       $raid->getBoss3Info()['element'] => $raid->getBoss3Info()['id'],
+                                       $raid->getBoss4Info()['element'] => $raid->getBoss4Info()['id']];
+        }
+        $fightSummaries = $this->_fightManager->getFightSummaryByPseudoIdGroupByRaidIdBossId($id);
+        $stat1Raid = Array();
+        $stat2Raid = Array();
+        foreach ($elements as $eId => $element) {
+          $stat1Raid[$eId] = Array();
+          $stat2Raid[$eId] = Array();
+          foreach ($raidInfo as $raidId => $info) {
+            if (array_key_exists($raidId, $fightSummaries)
+                and array_key_exists($info[$eId], $fightSummaries[$raidId])) {
+              $stat1Raid[$eId][$raidId] = $fightSummaries[$raidId][$info[$eId]]["count"];
+              $stat2Raid[$eId][$raidId] = $fightSummaries[$raidId][$info[$eId]]["sum"];
+            } else {
+              $stat1Raid[$eId][$raidId] = 0;
+              $stat2Raid[$eId][$raidId] = 0;
+            }
+          }
+        }
+        foreach ($raidInfo as $raidId => $info) {
+          if (array_key_exists($raidId, $fightSummaries)
+              and array_key_exists(0, $fightSummaries[$raidId])) {
+            $stat1Raid[0][$raidId] = $fightSummaries[$raidId][0]["count"];
+            $stat2Raid[0][$raidId] = $fightSummaries[$raidId][0]["sum"];
+          } else {
+            $stat1Raid[0][$raidId] = 0;
+            $stat2Raid[0][$raidId] = 0;
+          }
+        }
 
         return $this->view->render($response, 'profile/index.twig', [
             'id' => $id,
@@ -127,6 +169,11 @@ final class ProfileController extends BaseController
                 'memberId' => $igSettings->getMemberId(),
                 'maxLevel' => $igSettings->getMaxHeroLevel(),
             ],
+            'stat1' => $stat1Raid,
+            'stat2' => $stat2Raid,
+            'elements' => $elements,
+            'colors' => $colors,
+            'raidInfo' => $raidInfo,
         ]);
     }
 
