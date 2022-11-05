@@ -11,8 +11,11 @@ use App\Manager\MemberManager;
 use App\Manager\WeaponManager;
 use App\Manager\AilmentManager;
 use App\Manager\CharacterManager;
+use App\Manager\RaidInfoManager;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\UploadedFile;
+use Slim\Routing\RouteContext;
 
 final class RaidController extends BaseController
 {
@@ -24,6 +27,7 @@ final class RaidController extends BaseController
     private WeaponManager $_weaponManager;
     private AilmentManager $_ailmentManager;
     private CharacterManager $_characterManager;
+    private RaidInfoManager $_raidImageManager;
     
     protected function __init($bag) {
         $this->_raidManager = $bag->get(RaidManager::class);
@@ -34,9 +38,10 @@ final class RaidController extends BaseController
         $this->_memberManager = $bag->get(MemberManager::class);
         $this->_ailmentManager = $bag->get(AilmentManager::class);
         $this->_characterManager = $bag->get(CharacterManager::class);
+        $this->_raidImageManager = $bag->get(RaidInfoManager::class);
     }
     
-    static public function updateRaidInfo($session, $raidManager, $raidId = null) : int {
+    static public function updateRaidInfo($session, $raidManager, $raidId = null) {
       $raid = is_null($raidId) ? $raidManager->getLastByDate() : $raidManager->getDateById($raidId);
       
       $dateStart = strtotime($raid->getDate());
@@ -49,66 +54,39 @@ final class RaidController extends BaseController
           "dateRaid" => date("Y-m-d", $dateStart),
           "duration" => $raid->getDuration(),
           "dateNumber" => min($dayNumber, ($raid->getDuration()-1)),
-          "isFinished" => $dayNumber > ($raid->getDuration()-1)
+          "isFinished" => $dayNumber > ($raid->getDuration()-1),
+          'isAutoSelected' => is_null($raidId)
       ]);
-      return $raid->getId();
     }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        $preview = $this->_raidManager->getPreviewDate();
+        if ($request->getMethod() === "POST") {
+          $form = $request->getParsedBody();
+          $usePreview = (!is_null($preview) and ($preview->getId() == $form['raidId']));
+          $raidId = $form['raidId'];
+          RaidController::updateRaidInfo($this->session, $this->_raidManager, !$usePreview ? $raidId : NULL);
+        } else {
+          $usePreview = ($this->session->get('raidInfo')['isAutoSelected'] and !is_null($preview));
+          $raidId = $usePreview ? $preview->getId() : $this->session->get('raidInfo')['id'];
+        }
+
+        $raidDates = Array();
+        foreach ($this->_raidManager->getDates() as $raid) {
+          $raidDates[$raid->getId()] = $raid->getDate();
+        }
+        
         try {
-            $form = $request->getParsedBody();
-            
-            $formGuildId = $form['guildId'];
-            if (is_null($formGuildId)) {
-                $guildId = $this->session->get('guild')['id'];
-            } else {
-                $guildId = $formGuildId;
-                $guild = $this->_guildManager->getById($guildId);
-                $this->session->set('guild', [
-                    "id" => $guild->getId(),
-                    "name" => $guild->getName(),
-                    "color" => $guild->getColor()
-                ]);
-            }
-            $v_guilds = $this->_guildManager->getAll();
-            
-            if ($request->getMethod() === "POST") {
-              $raidId = RaidController::updateRaidInfo($this->session, $this->_raidManager, $form['raidId']);
-            } else {
-              $raidId = $this->session->get('raidInfo')['id'];
-            }
+            $raidInfo = $this->_raidManager->getById($raidId);
         } catch (Exception $e) {
             $this->addMsg("danger", $e->getMessage());
         }
 
-        $v_raids = [];
-        try {
-            foreach ($this->_raidManager->getDates() as $raid) {
-              $v_raids[$raid->getId()] = $raid->getDate();
-            }
-        } catch (Exception $e) {
-            $this->addMsg("danger", $e->getMessage());
-        }
-
-        $dPreview = $this->_raidManager->getPreviewDate();
-        $f_raidId = !is_null($dPreview) ? $dPreview->getId() : $raidId;
-        try {
-            $v_raidInfo = $this->_raidManager->getById($f_raidId);
-
-        } catch (Exception $e) {
-            $this->addMsg("danger", $e->getMessage());
-        }
-
-        $b1 = $v_raidInfo->getBoss1Info();
-        $b2 = $v_raidInfo->getBoss2Info();
-        $b3 = $v_raidInfo->getBoss3Info();
-        $b4 = $v_raidInfo->getBoss4Info();
-        $v_bosses = [
-            ['id' => $b1['id'], 'name' => $b1['name'], 'element' => $b1['e_name']],
-            ['id' => $b2['id'], 'name' => $b2['name'], 'element' => $b2['e_name']],
-            ['id' => $b3['id'], 'name' => $b3['name'], 'element' => $b3['e_name']],
-            ['id' => $b4['id'], 'name' => $b4['name'], 'element' => $b4['e_name']]
-        ];
+        $b1 = $raidInfo->getBoss1Info();
+        $b2 = $raidInfo->getBoss2Info();
+        $b3 = $raidInfo->getBoss3Info();
+        $b4 = $raidInfo->getBoss4Info();
+        $bosses = [$b1, $b2, $b3, $b4];
 
         $v_ailments = [];
         try {
@@ -137,13 +115,62 @@ final class RaidController extends BaseController
             $this->addMsg("warning", $e->getMessage());
         }
         
+        $infos = Array();
+        $imgRaidPath = $this->configDirPath->get('imageRelative').$this->configDirPath->get('raidInfo');
+        foreach ($this->_raidImageManager->getAllByRaid($raidId) as $infoId => $info) {
+          if ($info->getType() == "image") {
+            $infos[] = ["source" => $imgRaidPath.$infoId.".".$info->getExtension(),
+                        "imgSrc" => $imgRaidPath.$infoId.".".$info->getExtension(),
+                        "originalName" => $info->getSource()];
+          } else if ($info->getType() == "video") {
+            $infos[] = ["source" => $info->getSource(),
+                        "imgSrc" => $imgRaidPath."video.png",
+                        "originalName" => ""];
+          }
+        }
+        
         return $this->view->render($response, 'raid/info.twig',
-                ['guildId' => $guildId,
-                 'guilds' => $v_guilds,
-                 'raidId' => $raidId,
-                 'raids' => $v_raids,
-                 'bosses' => $v_bosses,
-                 'ailments' => $v_ailments]);
+                ['raidId' => $raidId,
+                 'raids' => $raidDates,
+                 'isPreview' => $usePreview,
+                 'bosses' => $bosses,
+                 'ailments' => $v_ailments,
+                 'imgHeros' => $this->configDirPath->get('imageRelative').$this->configDirPath->get('heros'),
+                 'imgRaidPath' => $imgRaidPath,
+                 'infos' => $infos]);
+    }
+
+    public function addInfo(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+      $form = $request->getParsedBody();
+      $directory = $this->configDirPath->get('imageRoot').$this->configDirPath->get('raidInfo');
+      $raidId = $form['raidIdForm'];
+
+      $uploadedFiles = $request->getUploadedFiles();
+      $images = $this->_raidImageManager->getAllByRaid($raidId);
+      
+      $infoId = empty($images) ? 0 : max(array_keys($images))+1;
+      foreach ($uploadedFiles["files"] as $uploadedFile) {
+        print("file= ");print_r($uploadedFile);print("<br>");
+        if ($uploadedFile->getError() === UPLOAD_ERR_OK
+            and str_contains($uploadedFile->getClientMediaType(), 'image')) {
+          $type = 'image';
+          $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
+          $source = pathinfo($uploadedFile->getClientFilename(), PATHINFO_BASENAME);
+          if ($this->_raidImageManager->addEntity($raidId, $infoId, $type, $extension, $source)) {
+            $uploadedFile->moveTo($directory.$infoId.".".$extension);
+            $infoId+=1;
+          } else {
+
+          }
+        }
+      }
+      if (!empty($form["videoLinkForm"])) {
+        $type = 'video';
+        $extension = "";
+        $source = $form["videoLinkForm"];
+        $this->_raidImageManager->addEntity($raidId, $infoId, $type, $extension, $source);
+      }
+      return $this->redirect($response, ['raid-info']);
     }
 
     public function rank(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {

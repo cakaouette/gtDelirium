@@ -38,6 +38,13 @@ $settings['db'] = [
     'pass' => 'gtdelirium'
 ];
 
+$settings['dirPath'] = [
+    'imageRoot' => dirname(__DIR__).'/public/dist/image/',
+    'imageRelative' => '/dist/image/',
+    'raidInfo' => 'raidInfo/',
+    'heros' => 'heros/',
+];
+
 if (file_exists($settings['root'] . '/private/settings.php')) {
     require $settings['root'] . '/private/settings.php';
 }

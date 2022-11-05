@@ -7,23 +7,30 @@ use App\Manager\ManagerBag;
 use Odan\Session\SessionInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Interfaces\RouteParserInterface;
+use Laminas\Config\Config;
 
 class BaseController
 {
     protected Twig $view;
     protected SessionInterface $session;
     protected RouteParserInterface $router;
+    protected $configDirPath;
 
     /**
      * The constructor.
      *
      * @param Twig $twig The twig template engine
      */
-    public function __construct(Twig $twig, SessionInterface $session, RouteParserInterface $router, ManagerBag $bag) {
+    public function __construct(Twig $twig,
+                                SessionInterface $session,
+                                RouteParserInterface $router,
+                                ManagerBag $bag,
+                                Config $config) {
         $this->view = $twig;
         $this->session = $session;
         $this->router = $router;
         $this->__init($bag);
+        $this->configDirPath = $config->get('dirPath');
     }
 
     protected function __init($bag) {}

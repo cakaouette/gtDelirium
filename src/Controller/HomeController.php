@@ -95,12 +95,14 @@ final class HomeController extends BaseController
                 //$this->session->start();
                 //$this->session->regenerateId();
 
+                $guilds = $this->_guildManager->getAll();
                 $guild = $this->_guildManager->getById($member->getGuildInfo()["id"]);
 
                 $this->session->set("id", $member->getId());
                 $this->session->set("login", $login);
                 $this->session->set("grade", $this->_permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
+                $this->session->set("guilds", $guilds);
                 RaidController::updateRaidInfo($this->session, $this->_raidManager);
                 $defaultPage = ['raid-info'];
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
@@ -139,5 +141,23 @@ final class HomeController extends BaseController
             $this->addMsg("danger", $e->getMessage());
         }
         return true;
+    }
+    
+    public function changeGuild(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+      print("session= ");
+      print_r($this->session->get('guild'));
+      print("<br>");
+//      foreach ($this->session->all() as $key => $value) {
+//        print_r($key);print(" => ");print_r($value);
+//        print("<br>");
+//      }
+        print("POST= <br>");print_r($request->getParsedBody());print("<br>");
+        $form = $request->getParsedBody();
+        foreach ($this->_guildManager->getAll() as $guildId => $guild) {
+          if (isset($form[$guild->getName()])) {
+            $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
+          }
+        }
+        return $this->redirect($response, [$form['currentPageForm']]);
     }
 }

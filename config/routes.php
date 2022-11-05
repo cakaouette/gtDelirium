@@ -13,6 +13,7 @@ return function (App $app) {
             $home->map(['GET', 'POST'], '/connect', [C\HomeController::class, 'connect'])->setName('connect')->setArgument('content-title', 'Connexion');
             $home->map(['GET', 'POST'], '/register', [C\HomeController::class, 'register'])->setName('register')->setArgument('content-title', 'Enregistrement');
             $home->get('/disconnect', [C\HomeController::class, 'disconnect'])->setName('disconnect');
+            $home->post('/changeGuild', [C\HomeController::class, 'changeGuild'])->setName('change-guild');
         });
 // errors pages
         $group->group('/error', function ($error) {
@@ -74,6 +75,7 @@ return function (App $app) {
 // RAID page
         $group->group('/raid', function ($raid) {
             $raid->map(['GET', 'POST'], '/info', [C\RaidController::class, 'info'])->setName('raid-info')->setArgument('content-title', 'Informations raid');
+            $raid->post('/info/add', [C\RaidController::class, 'addInfo'])->setName('raid-info-add');
             $raid->get('/rank', [C\RaidController::class, 'rank'])->setName('raid-rank')->setArgument('content-title', 'Classement dans l\'alliance');
             $raid->get('/meteo[/{guildId}]', [C\RaidController::class, 'meteo'])->setName('raid-meteo');
             $raid->get('/followup[/{guildId}]', [C\RaidController::class, 'followup'])->setName('raid-followup');

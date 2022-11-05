@@ -37,7 +37,7 @@ class TwigGlobalsMiddleware
      * @return Response
      */
     public function __invoke(Request $request, RequestHandler $handler): Response
-    {
+    {            
         $route = RouteContext::fromRequest($request)->getRoute();
         $env = $this->twig->getEnvironment();
         $env->addGlobal('page', [
@@ -59,6 +59,7 @@ class TwigGlobalsMiddleware
             'name' => $this->session->get("guild")["name"],
             'color' => $this->session->get("guild")["color"]
         ] : []);
+        $env->addGlobal('guilds', $this->session->has("guilds") ? $this->session->get("guilds") : []);
         $env->addGlobal('members', ['pending' => $this->session->get('nbPending')]);
         $env->addGlobal('flash', $this->session->getFlash());
         $env->addGlobal('csrf', new class ($this->csrf, $request) {

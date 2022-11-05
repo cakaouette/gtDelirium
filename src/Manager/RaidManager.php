@@ -64,11 +64,8 @@ class RaidManager extends AbstractManager
             $c = $this->getColumns();
             $entities = Array();
             $results = $this->getResult();
-            if (empty($results)) {
-                throw new Exception("Aucun raid trouvé");
-            }
             foreach ($results as $line) {
-                $entities[] = new RaidDate(
+                $entities[(int) $line[$c[0]]] = new RaidDate(
                         $line[$c[0]],
                         $line[$c[1]],
                         $line[$c[2]],

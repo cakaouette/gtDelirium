@@ -1,4 +1,20 @@
 <!-- Left navbar links -->
+<style>
+  .btn-outline-lightblue {
+      border-color: lightblue;
+  } 
+  .btn-outline-lightblue:hover {
+      background-color: lightblue;
+      border-color: lightblue;
+  } 
+  .btn-outline-lime {
+      border-color: lime;
+  } 
+  .btn-outline-lime:hover {
+      background-color: lime;
+      border-color: lime;
+  } 
+</style>
 <ul class="navbar-nav">
     <li class="nav-item">
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
@@ -6,6 +22,19 @@
     <li class="nav-item d-none d-sm-inline-block">
         <a href="/index.php" class="nav-link">Home</a>
     </li>
+<form action="{{ url_for('change-guild') }}" method="post">
+{% include 'csrf.twig' %}
+<input id="currentPageFormId" name="currentPageForm" type="hidden" value="{{ page.current }}">
+{% for guildId, guildEntity in guilds %}
+    <li class="nav-item d-none d-sm-inline-block">
+        <button type="submit"
+                class="btn {{ guildId == guild.id ? "btn-outline-"~guildEntity.getColor : "" }} nav-link"
+                name="{{ guildEntity.getName }}">
+          {{ guildEntity.getName }}
+        </button>
+    </li>
+{% endfor %}
+</form>
 </ul>
 
 <!-- Right navbar links -->

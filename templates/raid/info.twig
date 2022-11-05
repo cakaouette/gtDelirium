@@ -9,15 +9,6 @@
   {% include 'csrf.twig' %}
   <div class="col-md-6">
     <div class="form-group row">
-      <div class="col-sm-3">
-        <select name="guildId"
-                id="guildId"
-                class="custom-select form-control-border border-width-2">
-            {% for id, guild in guilds %}
-                <option value="{{ id }}"{{ id == guildId ? 'selected' : ''}}>{{ guild.name }}</option>
-            {% endfor %}
-        </select>
-      </div>
       <label for="raidFormId" class="col-sm-2 col-form-label">Date de raid</label>
       <div class="col-sm-3">
         <select name="raidId"
@@ -35,27 +26,60 @@
   </div>
 </form>
 <div class="row">
+{% if  isPreview %}
+  <div class="col-12">
+    <div class="position-relative p-3 bg-gray" style="height: 60px">
+      <div class="ribbon-wrapper ribbon">
+        <div class="ribbon bg-warning">
+          Preview
+        </div>
+      </div>
+      Prochain raid !!
+    </div>
+  </div>
+{% endif %}
   <div class="col-lg-6">
+    <div class="row">
     <div class="card-body table-responsive p-0">
     <table class="table table-head-fixed table-hover">
       <tr>
-        <th>Nom</th>
-        <th>Type</th>
+        <th>Boss</th>
+        <th>Element</th>
       </tr>
       {% for boss in bosses %}
       <tr>
-        <td>{{ boss.name }}</td>
-        <td>{{ boss.element }}</td>
+        <td>
+          <img src="/dist/image/bosses/{{ boss.id }}.png"
+             class="img-fluid img-thumbnail"
+             style="padding: 0"
+             width="60" height="60"
+             alt="{{ boss.name }}">
+          {{ boss.name }}
+        </td>
+        <td>
+          <img src="/dist/image/elements/{{ boss.element }}.png"
+             class="img-fluid img-thumbnail"
+             style="padding: 0"
+             width="30" height="30"
+             alt="{{ boss.name }}">
+          {{ boss.e_name }}
+        </td>
       </tr>
       {% endfor %}
     </table>
     </div>
-    <a href='https://docs.google.com/spreadsheets/d/1_M7FHciakmedREJFP9XvbR3_rmWYIdkWRjuypfyh84Y/edit#gid=1997928964'>Link vers le google sheet</a>
+    </div>
+  <div class="card">
+    <div class="card-body">
+        <a href='https://docs.google.com/spreadsheets/d/1_M7FHciakmedREJFP9XvbR3_rmWYIdkWRjuypfyh84Y/edit#gid=1997928964'
+           target="_blank">
+          Google sheet des resistances
+        </a>
+    </div>
   </div>
   {% for ailmentId, info in ailments %}
-  <div class="col-lg-6">
-    <div class="card">
-      <div class="card-header">
+    <div class="card collapsed-card">
+      <div class="card-header" data-card-widget="collapse">
         <h3 class="card-title">
           <img src="/dist/image/resources/ailment_{{ ailmentId }}.png"
                class="img-fluid img-thumbnail"
@@ -87,7 +111,7 @@
           {% for weapon in info.weapons %}
             <tr>
               <td>
-                <img src="/dist/image/heros/{{ weapon.charac.id }}_weapon.png"
+                <img src="{{ imgHeros ~ weapon.charac.id }}_weapon.png"
                   class="img-fluid img-thumbnail"
                   data-toggle="tooltip" title="{{ weapon.charac.name }}"
                   style="padding: 0"
@@ -109,15 +133,72 @@
       <!-- /.card-body -->
     </div>
     <!-- /.card -->
-  </div>
   {% endfor %}
+  </div>
+
+  <div class="col-lg-6">
+    <div class="row">
+    <div class="card">
+      {% if  user.isGestion %}
+      <div class="card-header">
+        <form action="{{ url_for('raid-info-add') }}"
+              method="post"
+              enctype="multipart/form-data"
+              class="form-inline">
+          {% include 'csrf.twig' %}
+          <input id="raidIdFormId" name="raidIdForm" type="hidden" value="{{ raidId }}">
+          <div class="row">
+          <div class="form-group">
+            <input type="file" name="files[]" multiple="multiple"/>
+          </div>
+          <div class="form-group pr-4">
+            <label for="videoLinkFormId" class="col-form-label">Lien youtube: </label>
+            <input type="text" name="videoLinkForm" id="videoLinkFormId"/>
+          </div>
+          <div class="form-group">
+            <input type="submit" class="col-auto"/>
+          </div>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+      <div class="card-body">
+        <div class="row">
+            {% for info in infos %}
+            <div class="col-sm-2">
+              <a href="{{ info["source"] }}" data-toggle="lightbox" data-title="{{ info["originalName"] }}" data-gallery="mixedgallery">
+                <img src="{{ info["imgSrc"] }}" class="img-fluid mb-2" alt="{{ info["originalName"] }}"/>
+              </a>
+            </div>
+            {% endfor %}
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
+{% block styles %}
+  <!-- Ekko Lightbox -->
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/ekko-lightbox/ekko-lightbox.css">
+{% endblock %}
+
 {% block scripts %}
+<!-- Ekko Lightbox -->
+<script src="/dist/AdminLTE-3.1.0/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
 <script type="text/javascript">
 $(document).ready(function(){
   $('[data-toggle="tooltip"]').tooltip();
+});
+
+$(function () {
+  $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+    event.preventDefault();
+    $(this).ekkoLightbox({
+      alwaysShowClose: true
+    });
+  });
 });
 </script>
 {% endblock %}
