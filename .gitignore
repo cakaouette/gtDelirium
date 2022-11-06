@@ -4,5 +4,5 @@
 /logs/
 /vendor/
 composer.lock
-/public/dis/image/raidInfo/*
-!/public/dis/image/raidInfo/video.png
+/public/dist/image/raidInfo/*
+!/public/dist/image/raidInfo/video.png

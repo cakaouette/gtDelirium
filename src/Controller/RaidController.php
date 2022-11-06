@@ -41,34 +41,75 @@ final class RaidController extends BaseController
         $this->_raidImageManager = $bag->get(RaidInfoManager::class);
     }
     
-    static public function updateRaidInfo($session, $raidManager, $raidId = null) {
-      $raid = is_null($raidId) ? $raidManager->getLastByDate() : $raidManager->getDateById($raidId);
+    static public function initialiseRaidInfo($session, $raidManager) {
+      $raid = $raidManager->getLastByDate();
       
       $dateStart = strtotime($raid->getDate());
       $now = time();
       $diff = max(($now - $dateStart), 0);
       $dayNumber = floor((($diff / 60) / 60 ) / 24);
+      $isFinished = $dayNumber > ($raid->getDuration()-1);
+      
+      $preview = $raidManager->getPreviewDate();
+      if (!is_null($preview)) {
+        $session->set('raidPreview', [
+            'id' => $preview->getId(),
+            'dateRaid' => $preview->getDate(),
+            'usePreview' => $isFinished,
+        ]);
+      } else {
+        $session->set('raidPreview', NULL);
+      }
       
       $session->set('raidInfo', [
           "id" => $raid->getId(),
           "dateRaid" => date("Y-m-d", $dateStart),
           "duration" => $raid->getDuration(),
           "dateNumber" => min($dayNumber, ($raid->getDuration()-1)),
-          "isFinished" => $dayNumber > ($raid->getDuration()-1),
-          'isAutoSelected' => is_null($raidId)
+          "isFinished" => $isFinished,
+      ]);
+    }
+    
+    private function updateRaidInfo($session, $raidManager, $raidId) {
+      $raid = $raidManager->getDateById($raidId);
+      if (!is_null($this->session->get('raidPreview')))
+      {
+        $preview = $session->get('raidPreview');
+        if ($this->session->get('raidPreview')['id'] == $raidId) {
+          $preview['usePreview'] = true;
+          $session->set('raidPreview', $preview);
+          $raid = $raidManager->getDateById($this->session->get('raidInfo')['id']);
+        } else {
+          $preview['usePreview'] = false;
+          $session->set('raidPreview', $preview);
+        }
+      }
+      
+      $dateStart = strtotime($raid->getDate());
+      $now = time();
+      $diff = max(($now - $dateStart), 0);
+      $dayNumber = floor((($diff / 60) / 60 ) / 24);
+      $isFinished = $dayNumber > ($raid->getDuration()-1);
+      
+      $session->set('raidInfo', [
+          "id" => $raid->getId(),
+          "dateRaid" => date("Y-m-d", $dateStart),
+          "duration" => $raid->getDuration(),
+          "dateNumber" => min($dayNumber, ($raid->getDuration()-1)),
+          "isFinished" => $isFinished,
       ]);
     }
 
     public function info(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        $preview = $this->_raidManager->getPreviewDate();
         if ($request->getMethod() === "POST") {
           $form = $request->getParsedBody();
-          $usePreview = (!is_null($preview) and ($preview->getId() == $form['raidId']));
           $raidId = $form['raidId'];
-          RaidController::updateRaidInfo($this->session, $this->_raidManager, !$usePreview ? $raidId : NULL);
+          $this->updateRaidInfo($this->session, $this->_raidManager, $raidId);
+          $usePreview = $this->session->get('raidPreview')['usePreview'];
         } else {
-          $usePreview = ($this->session->get('raidInfo')['isAutoSelected'] and !is_null($preview));
-          $raidId = $usePreview ? $preview->getId() : $this->session->get('raidInfo')['id'];
+          $preview = $this->session->get('raidPreview');
+          $usePreview = (!is_null($preview) and $preview['usePreview']);
+          $raidId = $usePreview ? $preview['id'] : $this->session->get('raidInfo')['id'];
         }
 
         $raidDates = Array();

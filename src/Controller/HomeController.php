@@ -103,7 +103,7 @@ final class HomeController extends BaseController
                 $this->session->set("grade", $this->_permissionManager->getGradeById($member->getPermInfo()["id"]));
                 $this->session->set("guild", Array("id" => $guild->getId(), "name" => $guild->getName(), "color" => $guild->getColor()));
                 $this->session->set("guilds", $guilds);
-                RaidController::updateRaidInfo($this->session, $this->_raidManager);
+                RaidController::initialiseRaidInfo($this->session, $this->_raidManager);
                 $defaultPage = ['raid-info'];
                 if ($this->session->get("grade") <= $this->session->get("Officier"))
                 {
