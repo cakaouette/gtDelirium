@@ -16,6 +16,10 @@
         "twig/html-extra": "^3.3",
         "monolog/monolog": "^2.3",
         "odan/session": "^5.1",
-        "laminas/laminas-config": "^3.7"
+        "laminas/laminas-config": "^3.7",
+        "twig/markdown-extra": "^3.4",
+        "twig/extra-bundle": "^3.4",
+        "league/commonmark": "^2.3",
+        "league/html-to-markdown": "^5.1"
     }
 }

@@ -49,12 +49,14 @@
       {% for boss in bosses %}
       <tr>
         <td>
+          <a href="{{ url_for('boss', { 'id': boss.id }) }}">
           <img src="/dist/image/bosses/{{ boss.id }}.png"
              class="img-fluid img-thumbnail"
              style="padding: 0"
              width="60" height="60"
              alt="{{ boss.name }}">
           {{ boss.name }}
+          </a>
         </td>
         <td>
           <img src="/dist/image/elements/{{ boss.element }}.png"

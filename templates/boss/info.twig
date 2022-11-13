@@ -6,40 +6,105 @@
 
 {% block content %}
 <div class="row">
-<div class="col-lg-4 col-sm-6">
-<img src="/dist/image/bosses/{{ id }}.png"
-     class="img-fluid img-thumbnail"
-     style="padding: 0"
-     width="200" height="200"
-     alt="{{ name }}">
-</div>
-{% for ailmentId, ailment in ailments %}
-<div class="col-lg-4 col-sm-6">
+<div class="col-lg-6">
   <div class="card">
-    <div class="card-header">
-      <h3 class="card-title">
-        <img src="/dist/image/resources/ailment_{{ ailmentId }}.png"
+    <div class="card-body">
+      <div class="row">
+        <div class="col-sm-3">
+        <img src="/dist/image/bosses/{{ id }}.png"
              class="img-fluid img-thumbnail"
              style="padding: 0"
-             width="25" height="25"
-             alt="{{ ailment.name }}">
-        {{ ailment.name }}
-      </h3>
+             alt="{{ name }}">
+        </div>
+    {% for ailmentId, ailment in ailments %}
+        <div class="col-sm-3">
+          <img src="/dist/image/resources/ailment_{{ ailmentId }}.png"
+                     class="img-fluid img-thumbnail"
+                     style="padding: 0"
+                     width="50" height="50"
+                     alt="{{ ailment.name }}">
+        <span style="font-size:1.1rem;" class="badge bg-{{ ailment.average }}">
+          {{ ailment.fightsCount }} coups
+        </span>
+        </div>
+    {% endfor %}
+      </div>
     </div>
-    <!-- /.card-header -->
-    <div class="card-body">
-      <table class="table table-bordered">
+    <!-- /.card-body -->
+  </div><!-- /.card -->
+  
+  <div class="card">
+      {% if  user.isVolunteer %}
+      <div class="card-header">
+        <form action="{{ url_for('boss-info-add') }}"
+              method="post"
+              enctype="multipart/form-data"
+              class="form-inline">
+          {% include 'csrf.twig' %}
+          <input id="bossIdFormId" name="bossIdForm" type="hidden" value="{{ id }}">
+          <div class="row">
+          <div class="form-group">
+            <input type="file" name="files[]" multiple="multiple"/>
+          </div>
+          <div class="form-group pr-4">
+            <label for="videoLinkFormId" class="col-form-label">Lien youtube: </label>
+            <input type="text" name="videoLinkForm" id="videoLinkFormId"/>
+          </div>
+          <div class="form-group">
+            <input type="submit" class="col-auto"/>
+          </div>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+      <div class="card-body">
+        <div class="row">
+            {% for info in infos %}
+            <div class="col-sm-2">
+              <a href="{{ info["source"] }}" data-toggle="lightbox" data-title="{{ info["originalName"] }}" data-gallery="mixedgallery">
+                <img src="{{ info["imgSrc"] }}" class="img-fluid mb-2" alt="{{ info["originalName"] }}"/>
+              </a>
+            </div>
+            {% endfor %}
+        </div>
+      </div>
+  </div><!-- /.card -->
+  <div class="card">
+      {% if  user.isVolunteer %}
+      <div class="card-header">
+        <button type="button" class="btn btn-default" data-toggle="modal" data-target="#updateBossTextArea">
+          Modifier
+        </button>
+      </div>
+      {% endif %}
+      <div class="card-body">
+        {{ text|markdown_to_html }}
+      </div>
+    </div><!-- /.card -->
+</div>
+<div class="col-lg-6">
+  <div class="card">
+      <div class="card-body">
+      <table id="table-ailments" class="table table-bordered table-hover">
         <thead>
           <tr>
+            <th>typeName</th>
             <th>#</th>
-            <th>Arme</th>
-            <th style="width: 40px">Dégâts</th>
+            <th>Nom</th>
+            <th>% Dégâts</th>
           </tr>
         </thead>
         <tbody>
+        {% for ailmentId, ailment in ailments %}
         {% for wId, weapon in ailment.weapons %}
-          <tr>
+          <tr {#style="background-color: {{ fight.guildColor }}"#}>
+            <td>{{ ailment.name }}</td>
             <td>
+                <img src="/dist/image/resources/ailment_{{ ailmentId }}.png"
+                     class="img-fluid img-thumbnail"
+                     style="padding: 0"
+                     width="35" height="35"
+                     alt="{{ ailment.name }}">
                 {% if user.isJoueur %}
                 <button type="button" class="btn btn-default";
                         data-toggle="modal" 
@@ -59,22 +124,26 @@
                   style="padding: 0"
                   width="50" height="50"
                   alt="{{ weapon.name }}">
+                <img src="/dist/image/heros/{{ weapon.charac.id }}_icon.png"
+                  class="img-fluid img-thumbnail"
+                  data-toggle="tooltip" title="{{ weapon.charac.name }}"
+                  style="padding: 0"
+                  width="50" height="50"
+                  alt="{{ weapon.name }}">
                 {% if user.isJoueur %}
                 </button>
                 {% endif %}
             </td>
-            <td>{{ weapon.name }}</td>
+            <td><p>{{ weapon.name }} </p><p> {{ weapon.charac.name }}</p></td>
             <td><span style="font-size:1.1rem;" class="badge bg-{{ boss_break_color(weapon.rate) }}">{{ weapon.rate ?: '- ' }}%</span></td>
           </tr>
         {% endfor %}
+        {% endfor %}
         </tbody>
       </table>
-    </div>
-    <!-- /.card-body -->
-  </div>
-  <!-- /.card -->
+      </div>
+    </div><!-- /.card -->
 </div>
-{% endfor %}
 </div>
 {% endblock %}
 
@@ -127,10 +196,56 @@
   <!-- /.modal-dialog -->
 </div>
 {% endif %}
+{% if user.isVolunteer %}
+<div class="modal fade" id="updateBossTextArea">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Stratégies d'attaques</h4>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form class="form" role="form" action="{{ url_for('boss-strategy-add') }}" method="post">
+        {% include 'csrf.twig' %}
+        <input id="bossIdFormId" name="bossIdForm" type="hidden" value="{{ id }}">
+        <div class="modal-body">
+          <textarea class="form-control" id="strategyFormId" name="strategyForm" rows="12">{{ text }}</textarea>
+        </div>
+        <div class="modal-footer justify-content-between">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="submit"
+                  class="btn btn-primary buttonSubmit float-right"
+                  name="updateForm">Sauvegarder</button>
+        </div>
+      </form>
+    </div>
+    <!-- /.modal-content -->
+  </div>
+  <!-- /.modal-dialog -->
+</div>
+<!-- /.modal -->
+{% endif %}
+{% endblock %}
+
+{% block styles %}
+  <!-- Ekko Lightbox -->
+  <link rel="stylesheet" href="/dist/AdminLTE-3.1.0/plugins/ekko-lightbox/ekko-lightbox.css">
 {% endblock %}
 
 {% block scripts %}
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+<script src="/dist/AdminLTE-3.1.0/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+<!-- Ekko Lightbox -->
+<script src="/dist/AdminLTE-3.1.0/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
 <script type="text/javascript">
+$(document).ready(function(){
+  $('.dataTables_length').addClass('bs-select');
+});
 $(function () {
     $('#modalAll').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget); // Button that triggered the modal
@@ -147,6 +262,49 @@ $(function () {
           modal.find('#rateFormId').focus();
       }, 200);
     });
+
+  $(document).on('click', '[data-toggle="lightbox"]', function(event) {
+    event.preventDefault();
+    $(this).ekkoLightbox({
+      alwaysShowClose: true
+    });
+  });
+        
+  var tableAilment = $("#table-ailments").DataTable({
+    "responsive": true,
+    "lengthChange": false, //"lengthChange": true, pageLength: 5, lengthMenu: [10, 30, 20, 50, 100, 200, 500],
+    "searching": true,
+    "scrollCollapse": true, "scrollY": "500px",
+    "paging": false,
+    "columnDefs": [
+            {
+                "targets": [ 0 ],
+                "visible": false
+            }
+    ],
+    "order": [[3, 'desc']],
+    "buttons": [
+        {
+            text: 'All',
+            action: function ( e, dt, node, config ) {
+                tableAilment.search('').draw();
+{#                tableAilment.order([3, 'desc']);#}
+                tableAilment.draw();
+            }
+        }
+        {% for ailmentId, ailment in ailments %}
+        ,{
+            text: "{{ ailment.name }}",
+            action: function ( e, dt, node, config ) {
+                tableAilment.columns(0).search(this.text()).draw();
+{#                tableAilment.order([{{ loop.index }}, 'desc']);#}
+                tableAilment.draw();
+            }
+        }
+        {% endfor %}
+      ]
+  });
+  tableAilment.buttons().container().appendTo('#table-ailments_wrapper .col-md-6:eq(0)');
         
 });
 $(document).ready(function(){

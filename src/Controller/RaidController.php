@@ -160,8 +160,8 @@ final class RaidController extends BaseController
         $imgRaidPath = $this->configDirPath->get('imageRelative').$this->configDirPath->get('raidInfo');
         foreach ($this->_raidImageManager->getAllByRaid($raidId) as $infoId => $info) {
           if ($info->getType() == "image") {
-            $infos[] = ["source" => $imgRaidPath.$infoId.".".$info->getExtension(),
-                        "imgSrc" => $imgRaidPath.$infoId.".".$info->getExtension(),
+            $infos[] = ["source" => $imgRaidPath.$raidId."_".$infoId.".".$info->getExtension(),
+                        "imgSrc" => $imgRaidPath.$raidId."_".$infoId.".".$info->getExtension(),
                         "originalName" => $info->getSource()];
           } else if ($info->getType() == "video") {
             $infos[] = ["source" => $info->getSource(),
@@ -191,14 +191,13 @@ final class RaidController extends BaseController
       
       $infoId = empty($images) ? 0 : max(array_keys($images))+1;
       foreach ($uploadedFiles["files"] as $uploadedFile) {
-        print("file= ");print_r($uploadedFile);print("<br>");
         if ($uploadedFile->getError() === UPLOAD_ERR_OK
             and str_contains($uploadedFile->getClientMediaType(), 'image')) {
           $type = 'image';
           $extension = pathinfo($uploadedFile->getClientFilename(), PATHINFO_EXTENSION);
           $source = pathinfo($uploadedFile->getClientFilename(), PATHINFO_BASENAME);
           if ($this->_raidImageManager->addEntity($raidId, $infoId, $type, $extension, $source)) {
-            $uploadedFile->moveTo($directory.$infoId.".".$extension);
+            $uploadedFile->moveTo($directory.$raidId."_".$infoId.".".$extension);
             $infoId+=1;
           } else {
 

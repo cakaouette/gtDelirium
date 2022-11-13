@@ -31,6 +31,8 @@ return function (App $app) {
             $boss->get('', [C\BossController::class, 'index'])->setName('bosses')->setArgument('content-title', 'Liste des Boss');
             $boss->get('/{id}', [C\BossController::class, 'info'])->setName('boss');
             $boss->post('/{id}/ailment', [C\BossController::class, 'ailment'])->setName('boss-ailment');
+            $boss->post('/info/add', [C\BossController::class, 'addInfo'])->setName('boss-info-add');
+            $boss->post('/strategy/add', [C\BossController::class, 'addStrategy'])->setName('boss-strategy-add');
         })->add(Auth::class);
 // tips pages
         $group->group('/tip', function ($tip) {

@@ -9,6 +9,10 @@ use Laminas\Config\Config;
 use Slim\Factory\AppFactory;
 use Odan\Session\PhpSession;
 use Twig\Extra\Html\HtmlExtension;
+use Twig\Extra\Markdown\MarkdownExtension;
+use Twig\Extra\Markdown\DefaultMarkdown;
+use Twig\Extra\Markdown\MarkdownRuntime;
+use Twig\RuntimeLoader\RuntimeLoaderInterface;
 use Odan\Session\SessionInterface;
 use Slim\Middleware\ErrorMiddleware;
 use Psr\Container\ContainerInterface;
@@ -61,6 +65,14 @@ return [
     Twig::class => function (ContainerInterface $container) {
         $twig = Twig::create('../templates', ['cache' => false]);//'../cache' in prod
         $twig->addExtension(new HtmlExtension());
+        $twig->addExtension(new MarkdownExtension());
+        $twig->addRuntimeLoader(new class implements RuntimeLoaderInterface {
+            public function load($class) {
+                if (MarkdownRuntime::class === $class) {
+                    return new MarkdownRuntime(new DefaultMarkdown());
+                }
+            }
+        });
         return $twig;
     },
 

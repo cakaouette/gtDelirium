@@ -43,6 +43,7 @@ $settings['dirPath'] = [
     'imageRelative' => '/dist/image/',
     'raidInfo' => 'raidInfo/',
     'heros' => 'heros/',
+    'bossInfo' => 'bosses/info/',
 ];
 
 if (file_exists($settings['root'] . '/private/settings.php')) {

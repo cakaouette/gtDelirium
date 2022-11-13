@@ -6,3 +6,5 @@
 composer.lock
 /public/dist/image/raidInfo/*
 !/public/dist/image/raidInfo/video.png
+/public/dist/image/bosses/info/*
+!/public/dist/image/bosses/info/video.png

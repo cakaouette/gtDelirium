@@ -49,6 +49,7 @@ abstract class AbstractManager
         $this->_groups = array();
         $this->_limit = 0;
         $this->_result = array();
+        $this->_delimiterCharacter = "'";
     }
 
     public function excuseCustomQuery($queryString) {
@@ -122,6 +123,10 @@ abstract class AbstractManager
 
     public function getError(): string {
         return $this->_error;
+    }
+
+    public function setDelimiter(string $character) {
+        return $this->_delimiterCharacter = $character;
     }
 
     public function addColumns(array $columns, $withRename = false, $table = NULL, $prefix = NULL): AbstractManager {
@@ -221,8 +226,9 @@ abstract class AbstractManager
 
         // prepare queryString
         $columnNamesQueryString = implode(", ", $columns);
+        $c = $this->_delimiterCharacter;
         foreach ($values as  &$value) {
-            $value= is_null($value) ? "NULL" : "'".$value."'";
+            $value= is_null($value) ? "NULL" : $c.$value.$c;
         }
         $valuesQueryString = implode(", ", $values);
         $queryString = "INSERT INTO $this->_table ($columnNamesQueryString) VALUES ($valuesQueryString)";
@@ -282,8 +288,9 @@ abstract class AbstractManager
             return false;
         }
         $setQuery = Array();
+        $c = $this->_delimiterCharacter;
         foreach ($values as  &$value) {
-            $value= is_null($value) ? "NULL" : "'".$value."'";
+            $value= is_null($value) ? "NULL" : $c.$value.$c;
         }
         for ($i = 0; $i < sizeof($columns); $i++) {
             $setQuery[] = "$columns[$i]=$values[$i]";

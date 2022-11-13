@@ -45,4 +45,9 @@ class BaseController
             $url = $this->router->urlFor(...$args);
         return $response->withStatus(302)->withHeader('Location', $url);
     }
+    
+    protected function render(ResponseInterface $response, string $view, array $data) {
+        $data['flash'] = $this->session->getFlash();
+        return $this->view->render($response, $view, $data);
+    }
 }
