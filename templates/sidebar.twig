@@ -245,13 +245,29 @@
                     </p>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="{{ url_for('tip') }}" class="{{ _self.nav_link_class('tip') }}">
+        <!--Tips-->
+            <li class="{{ _self.nav_item_class('tips') }}">
+                <a href="#" class="{{ _self.nav_link_class('tips') }}">
                     <i class="nav-icon fas fa-question text-white"></i>
                     <p>
                         Astuces
+                        <i class="right fas fa-angle-left"></i>
                     </p>
                 </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="{{ url_for('tip-link') }}" class="{{ _self.nav_link_class('tip-link') }}">
+                            <i class="nav-icon fas fa-link text-white"></i>
+                            <p>Liens</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('tip-card') }}" class="{{ _self.nav_link_class('tip-card') }}">
+                            <i class="nav-icon fas fa-file text-white"></i>
+                            <p>Cartes</p>
+                        </a>
+                    </li>
+                </ul>
             </li>
         <!-- Discord -->
             <li class="nav-item">

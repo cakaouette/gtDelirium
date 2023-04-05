@@ -35,8 +35,9 @@ return function (App $app) {
             $boss->post('/strategy/add', [C\BossController::class, 'addStrategy'])->setName('boss-strategy-add');
         })->add(Auth::class);
 // tips pages
-        $group->group('/tip', function ($tip) {
-            $tip->get('', fn ($request, $response) => $this->get(Twig::class)->render($response, 'tip/index.twig'))->setName('tip')->setArgument('content-title', 'Liens & Astuces');
+        $group->group('/tips', function ($tip) {
+            $tip->get('/links', fn ($request, $response) => $this->get(Twig::class)->render($response, 'tip/index.twig'))->setName('tip-link')->setArgument('content-title', 'Liens vers d\'autres sites');
+            $tip->get('/cards', fn ($request, $response) => $this->get(Twig::class)->render($response, 'tip/cards.twig'))->setName('tip-card')->setArgument('content-title', 'Les cartes');
         });
 // conquest pages
         $group->group('/conquest', function ($tip) {
