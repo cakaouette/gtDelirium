@@ -77,7 +77,7 @@ final class MemberController extends BaseController
         }
         try {
             $v_guilds = [];
-            foreach ($this->__guildManager->getAll() as $guild) {
+            foreach ($this->_guildManager->getAll() as $guild) {
               $v_guilds[] = ['id' => $guild->getId(), 'name' => $guild->getName()];
             }
         } catch (Exception $e){

@@ -32,7 +32,7 @@ final class AllianceController extends BaseController
         $v_info = Array();
         try {
             $counts = $this->_memberManager->countMemberByGuildId();
-            $ranks = $this->_rankManager->getAll();
+            $ranks = $this->_rankManager->getAllGroupByGuildId();
             $objectives = $this->_rankGoalManager->getAll();
             $raids = $this->_raidManager->getDates();
         } catch (Exception $e) {
@@ -41,11 +41,15 @@ final class AllianceController extends BaseController
             $this->addMsg("warning", "erreur interne");
         }
         foreach ($guilds as $guildId => $guild) {
+          $guildRank = null;
+          if (array_key_exists($guildId, $ranks)) {
+            $guildRank = end($ranks[$guildId])["rank"];
+          }
             $v_info[$guildId] = Array(
                 "guild" => ["name" => $guild->getName(), "color" => $guild->getColor()],
                 "memberNumber" => $counts[$guildId],
                 "ranks" => $ranks[$guildId],
-                "lastRank" => end($ranks[$guildId])["rank"]
+                "lastRank" => $guildRank
             );
         }
         foreach ($objectives as $guildId => $objective) {

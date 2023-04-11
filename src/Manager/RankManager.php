@@ -11,7 +11,7 @@ class RankManager extends AbstractManager
 
     protected function getTable() { return [RankManager::DB_PREFIX, RankManager::DB_NAME]; }
     
-    public function getAll() {
+    public function getAllGroupByGuildId() {
         $this->reset();
         $this->addColumns(Array("guildId", "raidId", "rank", "damage"))
              ->addColumns(Array("date"), false, RaidManager::DB_NAME, RaidManager::DB_PREFIX)
